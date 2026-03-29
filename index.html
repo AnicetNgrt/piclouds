@@ -6,6 +6,39 @@
 	<meta charset="utf-8"/>
 	<script type="text/javascript" src="phaser.min.js"></script>
 	<script>
+
+/* ===== Theme definitions ===== */
+var THEMES = {
+	'default': { stageColor: '#4488AA', bodyBg: 'rgb(67,169,223)' },
+	'dark':    { stageColor: '#0a1628', bodyBg: '#050810' },
+	'sunset':  { stageColor: '#8B2500', bodyBg: '#c0392b' },
+	'storm':   { stageColor: '#1a2533', bodyBg: '#2c3e50' },
+	'dawn':    { stageColor: '#3d1a5e', bodyBg: '#6a3093' },
+	'golden':  { stageColor: '#7a5500', bodyBg: '#b8860b' }
+};
+
+var currentTheme = localStorage.getItem('piclouds-theme') || 'default';
+
+function applyTheme(name) {
+	if (!THEMES[name]) return;
+	currentTheme = name;
+	localStorage.setItem('piclouds-theme', name);
+
+	// Update body class
+	document.body.className = 'theme-' + name;
+
+	// Update Phaser stage background (if game is ready)
+	if (game && game.stage) {
+		game.stage.backgroundColor = THEMES[name].stageColor;
+	}
+
+	// Update active button state
+	var btns = document.querySelectorAll('.theme-btn');
+	btns.forEach(function(btn) {
+		btn.classList.toggle('active', btn.getAttribute('data-theme') === name);
+	});
+}
+
 var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds', { preload: preload, create: create, update: update }, false, false);
 var nuages = []; var densityDivider = 4; var velocityDivider = 0.6;
 var nuages2 = []; var field; var fond; var fond2;
@@ -41,7 +74,7 @@ function preload() {
 }
 function create() {
 	game.time.desiredFps = 30;
-	game.stage.backgroundColor = "#4488AA";
+	game.stage.backgroundColor = THEMES[currentTheme].stageColor;
 	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
 	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
 	order0 = game.add.group();
@@ -158,21 +191,29 @@ function update() {
 
 
 </head>
-<body style="background-color: rgb(67,169,223);">
-	<div id="game" style="
-		cursor: none;
-		position: absolute;
-		TOP: 0px;
-		LEFT: 0px;
+<body>
+	<div id="game"></div>
 
-
-		image-rendering: optimizeSpeed;
-		image-rendering: -moz-crisp-edges;
-		image-rendering: -o-crisp-edges;
-		image-rendering: -webkit-optimize-contrast;
-		image-rendering: optimize-contrast;
-		-ms-interpolation-mode: nearest-neighbor;
-		image-rendering : pixelated;">
+	<!-- Theme switcher -->
+	<div id="theme-switcher">
+		<button class="theme-btn" data-theme="default" title="Default"></button>
+		<button class="theme-btn" data-theme="dark"    title="Dark"></button>
+		<button class="theme-btn" data-theme="sunset"  title="Sunset"></button>
+		<button class="theme-btn" data-theme="storm"   title="Storm"></button>
+		<button class="theme-btn" data-theme="dawn"    title="Dawn"></button>
+		<button class="theme-btn" data-theme="golden"  title="Golden"></button>
 	</div>
+
+	<script>
+		// Apply saved/default theme on load
+		applyTheme(currentTheme);
+
+		// Wire up buttons
+		document.querySelectorAll('.theme-btn').forEach(function(btn) {
+			btn.addEventListener('click', function() {
+				applyTheme(this.getAttribute('data-theme'));
+			});
+		});
+	</script>
 </body>
 </html>

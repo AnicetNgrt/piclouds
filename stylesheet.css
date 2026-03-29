@@ -1,0 +1,121 @@
+/* ===== Base Reset & Layout ===== */
+* {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	overflow: hidden;
+	transition: background-color 0.6s ease;
+}
+
+#game {
+	cursor: none;
+	position: absolute;
+	top: 0;
+	left: 0;
+	image-rendering: optimizeSpeed;
+	image-rendering: -moz-crisp-edges;
+	image-rendering: -o-crisp-edges;
+	image-rendering: -webkit-optimize-contrast;
+	image-rendering: optimize-contrast;
+	-ms-interpolation-mode: nearest-neighbor;
+	image-rendering: pixelated;
+}
+
+/* ===== Theme Switcher UI ===== */
+#theme-switcher {
+	position: fixed;
+	top: 12px;
+	right: 12px;
+	z-index: 1000;
+	display: flex;
+	gap: 6px;
+	align-items: center;
+}
+
+.theme-btn {
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	border: 3px solid rgba(255, 255, 255, 0.8);
+	cursor: pointer;
+	transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.theme-btn:hover {
+	transform: scale(1.15);
+	border-color: #fff;
+	box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
+}
+
+.theme-btn.active {
+	border-color: #fff;
+	box-shadow: 0 0 0 2px rgba(255,255,255,0.5), 0 3px 10px rgba(0,0,0,0.4);
+	transform: scale(1.1);
+}
+
+/* ===== Theme Colour Swatches ===== */
+
+/* Theme 1 – Default (daytime sky) */
+.theme-btn[data-theme="default"] {
+	background: linear-gradient(135deg, #4488aa 0%, #43a9df 100%);
+}
+
+/* Theme 2 – Dark (night sky) */
+.theme-btn[data-theme="dark"] {
+	background: linear-gradient(135deg, #0a0e1a 0%, #1a2a4a 100%);
+}
+
+/* Placeholders for themes 3-6 – colours to be defined per theme */
+.theme-btn[data-theme="sunset"] {
+	background: linear-gradient(135deg, #c0392b 0%, #f39c12 100%);
+}
+
+.theme-btn[data-theme="storm"] {
+	background: linear-gradient(135deg, #2c3e50 0%, #4a5568 100%);
+}
+
+.theme-btn[data-theme="dawn"] {
+	background: linear-gradient(135deg, #6a3093 0%, #a044ff 50%, #ff7b54 100%);
+}
+
+.theme-btn[data-theme="golden"] {
+	background: linear-gradient(135deg, #b8860b 0%, #ffd700 100%);
+}
+
+/* ===== Theme: Default (daytime sky) ===== */
+body.theme-default {
+	background-color: rgb(67, 169, 223);
+}
+
+/* ===== Theme: Dark (night sky) ===== */
+body.theme-dark {
+	background-color: #050810;
+}
+
+body.theme-dark #game canvas {
+	filter: brightness(0.82) saturate(0.6) hue-rotate(200deg);
+}
+
+/* ===== Theme: Sunset (placeholder) ===== */
+body.theme-sunset {
+	background-color: #c0392b;
+}
+
+/* ===== Theme: Storm (placeholder) ===== */
+body.theme-storm {
+	background-color: #2c3e50;
+}
+
+/* ===== Theme: Dawn (placeholder) ===== */
+body.theme-dawn {
+	background-color: #6a3093;
+}
+
+/* ===== Theme: Golden (placeholder) ===== */
+body.theme-golden {
+	background-color: #b8860b;
+}
