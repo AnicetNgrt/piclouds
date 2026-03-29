@@ -1,178 +1,383 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-	<title>Nuages de Pi</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Pi Clouds: Neon Arcade</title>
 	<link href="stylesheet.css" rel="stylesheet">
-	<meta charset="utf-8"/>
-	<script type="text/javascript" src="phaser.min.js"></script>
+	<script src="phaser.min.js"></script>
+</head>
+<body class="theme-neon-arcade">
+	<div class="app-shell">
+		<header class="hud">
+			<div>
+				<p class="hud__eyebrow">Theme Variant</p>
+				<h1 class="hud__title">Neon Arcade</h1>
+			</div>
+			<div class="hud__stats">
+				<div class="hud__stat">
+					<span class="hud__label">Digits Played</span>
+					<span class="hud__value" id="digits-played">0</span>
+				</div>
+				<div class="hud__stat">
+					<span class="hud__label">Last Digit</span>
+					<span class="hud__value" id="last-digit">3</span>
+				</div>
+				<div class="hud__stat">
+					<span class="hud__label">Lane Speed</span>
+					<span class="hud__value" id="lane-speed">0.0x</span>
+				</div>
+			</div>
+		</header>
+		<div class="game-frame">
+			<div class="game-frame__bezel"></div>
+			<div class="game-frame__glow"></div>
+			<div id="game"></div>
+		</div>
+		<p class="theme-note">Pi digits pulse mirrored signal clouds through a synth skyline. Bigger digits hit harder, faster, and brighter.</p>
+	</div>
+
 	<script>
-var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds', { preload: preload, create: create, update: update }, false, false);
-var nuages = []; var densityDivider = 4; var velocityDivider = 0.6;
-var nuages2 = []; var field; var fond; var fond2;
-var nn = 0; var jj = 0; var sum = 0; var lock = 0;
+var GAME_WIDTH = 1300;
+var GAME_HEIGHT = 700;
+var HORIZON_Y = 360;
+var HUD = {
+	digitsPlayed: document.getElementById('digits-played'),
+	lastDigit: document.getElementById('last-digit'),
+	laneSpeed: document.getElementById('lane-speed')
+};
+
+var ACTIVE_THEME = {
+	name: 'Neon Arcade',
+	stageColor: '#060816',
+	skyTop: '#060816',
+	skyBottom: '#1b1140',
+	floorTop: '#0c1434',
+	floorBottom: '#05060e',
+	horizonGlow: '#4af5ff',
+	sunCore: '#ff7bf7',
+	sunOuter: '#ff4d9b',
+	frameGlow: '#4af5ff',
+	grid: '#16d9ff',
+	scanline: 'rgba(102, 209, 255, 0.08)',
+	cloudCore: '#fff3ff',
+	digitColors: ['#61f2ff', '#87ff65', '#ffd166', '#ff8df2', '#ff6b6b', '#7af5b8', '#8b80ff', '#ffad5a', '#7bf3ff', '#ff77a8']
+};
+
+var game = new Phaser.Game(
+	GAME_WIDTH,
+	GAME_HEIGHT,
+	Phaser.CANVAS,
+	'game',
+	{ preload: preload, create: create, update: update },
+	false,
+	false
+);
+
+var pi = [
+	3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,8,4,1,9,7,1,6,9,3,9,9,3,7,5,1,0,5,8,2,0,9,7,4,9,4,4,5,9,2,3,0,7,8,1,6,4,0,6,2,8,6,2,0,8,9,9,8,6,2,8,0,3,4,8,2,5,3,4,2,1,1,7,0,6,7,9,8,2,1,4,8,0,8,6,5,1,3,2,8,2,3,0,6,6,4,7,0,9,3,8,4,4,6,0,9,5,5,0,5,8,2,2,3,1,7,2,5,3,5,9,4,0,8,1,2,8,4,8,1,1,1,7,4,5,0,2,8,4,1,0,2,7,0,1,9,3,8,5,2,1,1,0,5,5,5,9,6,4,4,6,2,2,9,4,8,9,5,4,9,3,0,3,8,1,9,6,4,4,2,8,8,1,0,9,7,5,6,6,5,9,3,3,4,4,6,1,2,8,4,7,5,6,4,8,2,3,3,7,8,6,7,8,3,1,6,5,2,7,1,2,0,1,9,0,9,1,4,5,6,4,8,5,6,6,9,2,3,4,6,0,3,4,8,6,1,0,4,5,4,3,2,6,6,4,8,2,1,3,3,9,3,6,0,7,2,6,0,2,4,9,1,4,1,2,7,3,7,2,4,5,8,7,0,0,6,6,0,6,3,1,5,5,8,8,1,7,4,8,8,1,5,2,0,9,2,0,9,6,2,8,2,9,2,5,4,0,9,1,7,1,5,3,6,4,3,6,7,8,9,2,5,9,0,3,6,0,0,1,1,3,3,0,5,3,0,5,4,8,8,2,0,4,6,6,5,2,1,3,8,4,1,4,6,9,5,1,9,4,1,5,1,1,6,0,9,4,3,3,0,5,7,2,7,0,3,6,5,7,5,9,5,9,1,9,5,3,0,9,2,1,8,6,1,1,7,3,8,1,9,3,2,6,1,1,7,9,3,1,0,5,1,1,8,5,4,8,0,7,4,4,6,2,3,7,9,9,6,2,7,4,9,5,6,7,3,5,1,8,8,5,7,5,2,7,2,4,8,9,1,2,2,7,9,3,8,1,8,3,0,1,1,9,4,9,1,2,9,8,3,3,6,7,3,3,6,2,4,4,0,6,5,6,6,4,3,0,8,6,0,2,1,3,9,4,9,4,6,3,9,5,2,2,4,7,3,7,1,9,0,7,0,2,1,7,9,8,6,0,9,4,3,7,0,2,7,7,0,5,3,9,2,1,7,1,7,6,2,9,3,1,7,6,7,5,2,3,8,4,6,7,4,8,1,8,4,6,7,6,6,9,4,0,5,1,3,2,0,0,0,5,6,8,1,2,7,1,4,5,2,6,3,5,6,0,8,2,7,7,8,5,7,7,1,3,4,2,7,5,7,7,8,9,6,0,9,1,7,3,6,3,7,1,7,8,7,2,1,4,6,8,4,4,0,9,0,1,2,2,4,9,5,3,4,3,0,1,4,6,5,4,9,5,8,5,3,7,1,0,5,0,7,9,2,2,7,9,6,8,9,2,5,8,9,2,3,5,4,2,0,1,9,9,5,6,1,1,2,1,2,9,0,2,1,9,6,0,8,6,4,0,3,4,4,1,8,1,5,9,8,1,3,6,2,9,7,7,4,7,7,1,3,0,9,9,6,0,5,1,8,7,0,7,2,1,1,3,4,9,9,9,9,9,9,8,3,7,2,9,7,8,0,4,9,9,5,1,0,5,9,7,3,1,7,3,2,8,1,6,0,9,6,3,1,8,5,9,5,0,2,4,4,5,9,4,5,5,3,4,6,9,0,8,3,0,2,6,4,2,5,2,2,3,0,8,2,5,3,3,4,4,6,8,5,0,3,5,2,6,1,9,3,1,1,8,8,1,7,1,0,1,0,0,0,3,1,3,7,8,3,8,7,5,2,8,8,6,5,8,7,5,3,3,2,0,8,3,8,1,4,2,0
+];
+
+var densityDivider = 4;
+var velocityDivider = 0.6;
+var timer = 0;
 var decimal = -1;
-var pi = [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,8,4,1,9,7,1,6,9,3,9,9,3,7,5,1,0,5,8,2,0,9,7,4,9,4,4,5,9,2,3,0,7,8,1,6,4,0,6,2,8,6,2,0,8,9,9,8,6,2,8,0,3,4,8,2,5,3,4,2,1,1,7,0,6,7,9,8,2,1,4,8,0,8,6,5,1,3,2,8,2,3,0,6,6,4,7,0,9,3,8,4,4,6,0,9,5,5,0,5,8,2,2,3,1,7,2,5,3,5,9,4,0,8,1,2,8,4,8,1,1,1,7,4,5,0,2,8,4,1,0,2,7,0,1,9,3,8,5,2,1,1,0,5,5,5,9,6,4,4,6,2,2,9,4,8,9,5,4,9,3,0,3,8,1,9,6,4,4,2,8,8,1,0,9,7,5,6,6,5,9,3,3,4,4,6,1,2,8,4,7,5,6,4,8,2,3,3,7,8,6,7,8,3,1,6,5,2,7,1,2,0,1,9,0,9,1,4,5,6,4,8,5,6,6,9,2,3,4,6,0,3,4,8,6,1,0,4,5,4,3,2,6,6,4,8,2,1,3,3,9,3,6,0,7,2,6,0,2,4,9,1,4,1,2,7,3,7,2,4,5,8,7,0,0,6,6,0,6,3,1,5,5,8,8,1,7,4,8,8,1,5,2,0,9,2,0,9,6,2,8,2,9,2,5,4,0,9,1,7,1,5,3,6,4,3,6,7,8,9,2,5,9,0,3,6,0,0,1,1,3,3,0,5,3,0,5,4,8,8,2,0,4,6,6,5,2,1,3,8,4,1,4,6,9,5,1,9,4,1,5,1,1,6,0,9,4,3,3,0,5,7,2,7,0,3,6,5,7,5,9,5,9,1,9,5,3,0,9,2,1,8,6,1,1,7,3,8,1,9,3,2,6,1,1,7,9,3,1,0,5,1,1,8,5,4,8,0,7,4,4,6,2,3,7,9,9,6,2,7,4,9,5,6,7,3,5,1,8,8,5,7,5,2,7,2,4,8,9,1,2,2,7,9,3,8,1,8,3,0,1,1,9,4,9,1,2,9,8,3,3,6,7,3,3,6,2,4,4,0,6,5,6,6,4,3,0,8,6,0,2,1,3,9,4,9,4,6,3,9,5,2,2,4,7,3,7,1,9,0,7,0,2,1,7,9,8,6,0,9,4,3,7,0,2,7,7,0,5,3,9,2,1,7,1,7,6,2,9,3,1,7,6,7,5,2,3,8,4,6,7,4,8,1,8,4,6,7,6,6,9,4,0,5,1,3,2,0,0,0,5,6,8,1,2,7,1,4,5,2,6,3,5,6,0,8,2,7,7,8,5,7,7,1,3,4,2,7,5,7,7,8,9,6,0,9,1,7,3,6,3,7,1,7,8,7,2,1,4,6,8,4,4,0,9,0,1,2,2,4,9,5,3,4,3,0,1,4,6,5,4,9,5,8,5,3,7,1,0,5,0,7,9,2,2,7,9,6,8,9,2,5,8,9,2,3,5,4,2,0,1,9,9,5,6,1,1,2,1,2,9,0,2,1,9,6,0,8,6,4,0,3,4,4,1,8,1,5,9,8,1,3,6,2,9,7,7,4,7,7,1,3,0,9,9,6,0,5,1,8,7,0,7,2,1,1,3,4,9,9,9,9,9,9,8,3,7,2,9,7,8,0,4,9,9,5,1,0,5,9,7,3,1,7,3,2,8,1,6,0,9,6,3,1,8,5,9,5,0,2,4,4,5,9,4,5,5,3,4,6,9,0,8,3,0,2,6,4,2,5,2,2,3,0,8,2,5,3,3,4,4,6,8,5,0,3,5,2,6,1,9,3,1,1,8,8,1,7,1,0,1,0,0,0,3,1,3,7,8,3,8,7,5,2,8,8,6,5,8,7,5,3,3,2,0,8,3,8,1,4,2,0];
+var clouds = [];
+var themeTextures = { upper: [], lower: [] };
+var backgroundLayer;
+var skylineLayer;
+var playfieldGlow;
+var horizonPulse;
+var cabinetOverlay;
 
 function randInt(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-		
-for (var i = 0; i<10000; i++) {
-	pi.push(randInt(0,9));
-	console.log(pi[886+i]);
+
+for (var filler = 0; filler < 10000; filler++) {
+	pi.push(randInt(0, 9));
 }
 
-var timer = 0;
+function preload() {}
 
-function sleep(milliseconds) {
-	var start = new Date().getTime();
-	for (var i = 0; i < 1e7; i++) {
-		if ((new Date().getTime() - start) > milliseconds){
-		 break;
-		}
-	}
-}
-function preload() {
-	game.load.image('nuage','nuage.png');
-	game.load.image('nuage2','nuage2.png');
-	game.load.image('field','field.png');
-	game.load.image('fond','fond.png');
-	game.load.image('fond2','fond2.png');
-}
 function create() {
 	game.time.desiredFps = 30;
-	game.stage.backgroundColor = "#4488AA";
-	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
-	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
-	order0 = game.add.group();
-	order1 = game.add.group();
-	order2 = game.add.group();
-	order3 = game.add.group();
-	order4 = game.add.group();
-	order5 = game.add.group();
-	order6 = game.add.group();
-	order7 = game.add.group();
-	order8 = game.add.group();
-	order9 = game.add.group();
-	//fond2.angle = 180;
-	fond2.alpha = 0.9;
-	//field = game.add.tileSprite(0, 465, 1300, 300, 'field');
-	//field.alpha = 0.2;
+	game.stage.backgroundColor = ACTIVE_THEME.stageColor;
+	backgroundLayer = game.add.image(0, 0, createBackdropBitmap());
+	skylineLayer = game.add.image(0, 0, createSkylineBitmap());
+	playfieldGlow = game.add.image(0, 0, createPlayfieldGlowBitmap());
+	horizonPulse = game.add.graphics(0, 0);
+	horizonPulse.blendMode = PIXI.blendModes.ADD;
+	horizonPulse.alpha = 0.35;
+	cabinetOverlay = game.add.group();
 
+	buildCloudTextures();
+	createCabinetDecor();
+	updateHud(0, 3);
 }
+
 function update() {
-
 	timer++;
+	animateDecor();
 
-	if (timer > (pi[decimal+1])*densityDivider) {
-
+	if (timer > pi[decimal + 1] * densityDivider) {
 		decimal++;
 		timer = 0;
-		nuages.push(game.add.tileSprite(-200, 400-(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage'));
-		nuages[decimal].anchor.x = 0.7;
-		nuages[decimal].anchor.y = 0.5;
-		nuages[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
-		nuages[decimal].alpha = 0.9;
-		//sum += pi[decimal];
-		nuages2.push(game.add.tileSprite(-200, 400+(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage2'));
-		nuages2[decimal].anchor.x = 0.7;
-		nuages2[decimal].anchor.y = 0.5;
-		nuages2[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
-		nuages[decimal].alpha = 0.99;
+		spawnDigitCloud(pi[decimal]);
+	}
 
-		switch(pi[decimal]) {
-		case 0:
-			order0.add(nuages[decimal]);
-			order0.add(nuages2[decimal]);
-			break;
-		case 1:
-			order1.add(nuages[decimal]);
-			order1.add(nuages2[decimal]);
-			break;
-		case 2:
-			order2.add(nuages[decimal]);
-			order2.add(nuages2[decimal]);
-			break;
-		case 3:
-			order3.add(nuages[decimal]);
-			order3.add(nuages2[decimal]);
-			break;
-		case 4:
-			order4.add(nuages[decimal]);
-			order4.add(nuages2[decimal]);
-			break;
-		case 5:
-			order5.add(nuages[decimal]);
-			order5.add(nuages2[decimal]);
-			break;
-		case 6:
-			order6.add(nuages[decimal]);
-			order6.add(nuages2[decimal]);
-			break;
-		case 7:
-			order7.add(nuages[decimal]);
-			order7.add(nuages2[decimal]);
-			break;
-		case 8:
-			order8.add(nuages[decimal]);
-			order8.add(nuages2[decimal]);
-			break;
-		case 9:
-			order9.add(nuages[decimal]);
-			order9.add(nuages2[decimal]);
-			break;
+	for (var i = clouds.length - 1; i >= 0; i--) {
+		var cloud = clouds[i];
+		cloud.upper.x += cloud.velocity;
+		cloud.lower.x += cloud.velocity;
+		cloud.upper.rotation = Math.sin((timer + cloud.seed) / 24) * 0.015;
+		cloud.lower.rotation = -Math.sin((timer + cloud.seed) / 24) * 0.015;
+
+		if (cloud.upper.x > GAME_WIDTH + 260) {
+			cloud.upper.destroy();
+			cloud.lower.destroy();
+			clouds.splice(i, 1);
 		}
 	}
 
-	while (jj <= decimal ) {
-		if (nuages[jj].x > 1800) {
-			nuages[jj].destroy();
-		}
-		nuages[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		nuages2[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		//nuages[jj].angle += (1/(pi[jj]))*3;
-		jj++;
-		//if (nuages[jj].x > 1300) {
-		//}
-	}
-	jj = 0;
-
-	game.world.bringToTop(order0);
-	game.world.bringToTop(order1);
-	game.world.bringToTop(order2);
-	game.world.bringToTop(order3);
-	game.world.bringToTop(order4);
-	game.world.bringToTop(order5);
-	game.world.bringToTop(order6);
-	game.world.bringToTop(order7);
-	game.world.bringToTop(order8);
-	game.world.bringToTop(order9);
-	fond2.bringToTop();
+	game.world.bringToTop(cabinetOverlay);
 }
 
+function spawnDigitCloud(digit) {
+	var x = -220;
+	var yOffset = digit * 24 - 12;
+	var scale = 0.56 + digit * 0.09;
+	var velocity = digit / Math.abs(velocityDivider);
+	var upper = game.add.image(x, HORIZON_Y - yOffset, themeTextures.upper[digit]);
+	var lower = game.add.image(x, HORIZON_Y + yOffset, themeTextures.lower[digit]);
 
+	upper.anchor.set(0.5);
+	lower.anchor.set(0.5);
+	upper.scale.set(scale);
+	lower.scale.set(scale);
+	upper.alpha = 0.95;
+	lower.alpha = 0.88;
 
-  </script>
+	clouds.push({
+		digit: digit,
+		velocity: velocity,
+		seed: decimal,
+		upper: upper,
+		lower: lower
+	});
 
+	updateHud(decimal + 1, digit);
+}
 
+function updateHud(totalDigits, digit) {
+	HUD.digitsPlayed.textContent = totalDigits;
+	HUD.lastDigit.textContent = digit;
+	HUD.laneSpeed.textContent = (digit / Math.abs(velocityDivider)).toFixed(1) + 'x';
+}
 
+function animateDecor() {
+	var pulse = 0.55 + Math.sin(game.time.now / 260) * 0.12;
+	playfieldGlow.alpha = pulse;
+	horizonPulse.clear();
+	horizonPulse.lineStyle(3, parseInt(ACTIVE_THEME.horizonGlow.replace('#', ''), 16), 0.8);
+	horizonPulse.moveTo(40, HORIZON_Y + 18);
+	horizonPulse.lineTo(GAME_WIDTH - 40, HORIZON_Y + 18);
+}
 
-</head>
-<body style="background-color: rgb(67,169,223);">
-	<div id="game" style="
-		cursor: none;
-		position: absolute;
-		TOP: 0px;
-		LEFT: 0px;
+function buildCloudTextures() {
+	for (var digit = 0; digit <= 9; digit++) {
+		themeTextures.upper[digit] = createCloudBitmap(digit, false);
+		themeTextures.lower[digit] = createCloudBitmap(digit, true);
+	}
+}
 
+function createBackdropBitmap() {
+	var bmd = game.add.bitmapData(GAME_WIDTH, GAME_HEIGHT);
+	var ctx = bmd.ctx;
+	var skyGradient = ctx.createLinearGradient(0, 0, 0, HORIZON_Y);
+	var floorGradient = ctx.createLinearGradient(0, HORIZON_Y, 0, GAME_HEIGHT);
 
-		image-rendering: optimizeSpeed;
-		image-rendering: -moz-crisp-edges;
-		image-rendering: -o-crisp-edges;
-		image-rendering: -webkit-optimize-contrast;
-		image-rendering: optimize-contrast;
-		-ms-interpolation-mode: nearest-neighbor;
-		image-rendering : pixelated;">
-	</div>
+	skyGradient.addColorStop(0, ACTIVE_THEME.skyTop);
+	skyGradient.addColorStop(1, ACTIVE_THEME.skyBottom);
+	floorGradient.addColorStop(0, ACTIVE_THEME.floorTop);
+	floorGradient.addColorStop(1, ACTIVE_THEME.floorBottom);
+
+	ctx.fillStyle = skyGradient;
+	ctx.fillRect(0, 0, GAME_WIDTH, HORIZON_Y);
+	ctx.fillStyle = floorGradient;
+	ctx.fillRect(0, HORIZON_Y, GAME_WIDTH, GAME_HEIGHT - HORIZON_Y);
+
+	for (var star = 0; star < 120; star++) {
+		var starX = randInt(0, GAME_WIDTH);
+		var starY = randInt(10, HORIZON_Y - 80);
+		var starSize = Math.random() * 2.2 + 0.4;
+		ctx.fillStyle = 'rgba(255,255,255,' + (0.25 + Math.random() * 0.6) + ')';
+		ctx.fillRect(starX, starY, starSize, starSize);
+	}
+
+	var sunGradient = ctx.createRadialGradient(GAME_WIDTH / 2, 210, 16, GAME_WIDTH / 2, 210, 170);
+	sunGradient.addColorStop(0, ACTIVE_THEME.sunCore);
+	sunGradient.addColorStop(0.65, ACTIVE_THEME.sunOuter);
+	sunGradient.addColorStop(1, 'rgba(255, 77, 155, 0)');
+	ctx.fillStyle = sunGradient;
+	ctx.beginPath();
+	ctx.arc(GAME_WIDTH / 2, 210, 170, 0, Math.PI * 2);
+	ctx.fill();
+
+	ctx.fillStyle = 'rgba(7, 10, 24, 0.52)';
+	for (var stripe = 0; stripe < 8; stripe++) {
+		ctx.fillRect(GAME_WIDTH / 2 - 170, 125 + stripe * 28, 340, 10);
+	}
+
+	var horizonGradient = ctx.createLinearGradient(0, HORIZON_Y - 40, 0, HORIZON_Y + 90);
+	horizonGradient.addColorStop(0, 'rgba(74, 245, 255, 0)');
+	horizonGradient.addColorStop(0.45, 'rgba(74, 245, 255, 0.35)');
+	horizonGradient.addColorStop(1, 'rgba(74, 245, 255, 0)');
+	ctx.fillStyle = horizonGradient;
+	ctx.fillRect(0, HORIZON_Y - 40, GAME_WIDTH, 130);
+
+	ctx.lineWidth = 1;
+	ctx.strokeStyle = 'rgba(22, 217, 255, 0.38)';
+	for (var line = 0; line < 18; line++) {
+		var y = HORIZON_Y + line * 20;
+		ctx.beginPath();
+		ctx.moveTo(0, y);
+		ctx.lineTo(GAME_WIDTH, y);
+		ctx.stroke();
+	}
+
+	for (var perspective = -10; perspective <= 10; perspective++) {
+		ctx.beginPath();
+		ctx.moveTo(GAME_WIDTH / 2, HORIZON_Y);
+		ctx.lineTo(GAME_WIDTH / 2 + perspective * 92, GAME_HEIGHT);
+		ctx.stroke();
+	}
+
+	ctx.fillStyle = ACTIVE_THEME.scanline;
+	for (var scan = 0; scan < GAME_HEIGHT; scan += 4) {
+		ctx.fillRect(0, scan, GAME_WIDTH, 1);
+	}
+
+	bmd.dirty = true;
+	return bmd;
+}
+
+function createSkylineBitmap() {
+	var bmd = game.add.bitmapData(GAME_WIDTH, GAME_HEIGHT);
+	var ctx = bmd.ctx;
+	var buildings = [
+		{ x: 80, width: 110, height: 110 },
+		{ x: 220, width: 160, height: 170 },
+		{ x: 430, width: 90, height: 140 },
+		{ x: 560, width: 180, height: 230 },
+		{ x: 790, width: 120, height: 150 },
+		{ x: 940, width: 170, height: 210 },
+		{ x: 1160, width: 90, height: 120 }
+	];
+
+	ctx.fillStyle = 'rgba(5, 8, 18, 0.92)';
+	for (var i = 0; i < buildings.length; i++) {
+		var building = buildings[i];
+		ctx.fillRect(building.x, HORIZON_Y - building.height, building.width, building.height);
+		ctx.fillStyle = 'rgba(74, 245, 255, 0.85)';
+		for (var row = 0; row < building.height - 20; row += 24) {
+			for (var col = 0; col < building.width - 18; col += 22) {
+				if ((row + col + i) % 3 === 0) {
+					ctx.fillRect(building.x + 10 + col, HORIZON_Y - building.height + 10 + row, 10, 12);
+				}
+			}
+		}
+		ctx.fillStyle = 'rgba(5, 8, 18, 0.92)';
+	}
+
+	bmd.dirty = true;
+	return bmd;
+}
+
+function createPlayfieldGlowBitmap() {
+	var bmd = game.add.bitmapData(GAME_WIDTH, GAME_HEIGHT);
+	var ctx = bmd.ctx;
+	var sideGlow = ctx.createLinearGradient(0, 0, 180, 0);
+
+	sideGlow.addColorStop(0, 'rgba(74, 245, 255, 0.28)');
+	sideGlow.addColorStop(1, 'rgba(74, 245, 255, 0)');
+	ctx.fillStyle = sideGlow;
+	ctx.fillRect(0, 0, 180, GAME_HEIGHT);
+
+	var rightGlow = ctx.createLinearGradient(GAME_WIDTH, 0, GAME_WIDTH - 180, 0);
+	rightGlow.addColorStop(0, 'rgba(255, 77, 155, 0.3)');
+	rightGlow.addColorStop(1, 'rgba(255, 77, 155, 0)');
+	ctx.fillStyle = rightGlow;
+	ctx.fillRect(GAME_WIDTH - 180, 0, 180, GAME_HEIGHT);
+
+	bmd.dirty = true;
+	return bmd;
+}
+
+function createCabinetDecor() {
+	var rails = game.add.graphics(0, 0, cabinetOverlay);
+	rails.lineStyle(4, 0x4af5ff, 0.55);
+	rails.drawRoundedRect(20, 20, GAME_WIDTH - 40, GAME_HEIGHT - 40, 18);
+	rails.lineStyle(2, 0xff4d9b, 0.7);
+	rails.drawRoundedRect(32, 32, GAME_WIDTH - 64, GAME_HEIGHT - 64, 16);
+
+	var markers = game.add.graphics(0, 0, cabinetOverlay);
+	markers.beginFill(0x4af5ff, 0.9);
+	markers.drawRect(72, 58, 120, 8);
+	markers.drawRect(GAME_WIDTH - 192, 58, 120, 8);
+	markers.endFill();
+}
+
+function createCloudBitmap(digit, invert) {
+	var width = 300;
+	var height = 170;
+	var bmd = game.add.bitmapData(width, height);
+	var ctx = bmd.ctx;
+	var accent = ACTIVE_THEME.digitColors[digit];
+	var verticalShift = invert ? 14 : -14;
+	var yBase = invert ? 95 : 75;
+
+	ctx.shadowBlur = 28;
+	ctx.shadowColor = accent;
+	ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+	drawCloudCore(ctx, 70, yBase + verticalShift, 46);
+	drawCloudCore(ctx, 128, yBase - 12 + verticalShift, 58);
+	drawCloudCore(ctx, 192, yBase + 5 + verticalShift, 50);
+	drawCloudCore(ctx, 238, yBase + 14 + verticalShift, 32);
+
+	ctx.shadowBlur = 0;
+	ctx.globalAlpha = 0.95;
+	ctx.strokeStyle = accent;
+	ctx.lineWidth = 4;
+	ctx.beginPath();
+	ctx.moveTo(42, yBase + 18 + verticalShift);
+	ctx.bezierCurveTo(82, yBase - 58 + verticalShift, 154, yBase - 60 + verticalShift, 186, yBase - 4 + verticalShift);
+	ctx.bezierCurveTo(236, yBase - 8 + verticalShift, 276, yBase + 18 + verticalShift, 258, yBase + 44 + verticalShift);
+	ctx.bezierCurveTo(206, yBase + 72 + verticalShift, 108, yBase + 74 + verticalShift, 56, yBase + 42 + verticalShift);
+	ctx.closePath();
+	ctx.stroke();
+
+	ctx.globalAlpha = 0.24;
+	ctx.fillStyle = accent;
+	ctx.fillRect(76, yBase + 2 + verticalShift, 132, 5);
+	ctx.fillRect(98, yBase + 18 + verticalShift, 96, 5);
+
+	ctx.globalAlpha = 1;
+	ctx.fillStyle = ACTIVE_THEME.cloudCore;
+	ctx.font = 'bold 56px "Trebuchet MS", sans-serif';
+	ctx.textAlign = 'center';
+	ctx.textBaseline = 'middle';
+	ctx.fillText(String(digit), 150, yBase + 18 + verticalShift);
+
+	bmd.dirty = true;
+	return bmd;
+}
+
+function drawCloudCore(ctx, x, y, radius) {
+	ctx.beginPath();
+	ctx.arc(x, y, radius, 0, Math.PI * 2);
+	ctx.fill();
+}
+	</script>
 </body>
 </html>
