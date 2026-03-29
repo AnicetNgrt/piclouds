@@ -6,6 +6,175 @@
 	<meta charset="utf-8"/>
 	<script type="text/javascript" src="phaser.min.js"></script>
 	<script>
+
+/* ============================================================
+   THEME SYSTEM
+   ============================================================ */
+var THEMES = {
+	sky: {
+		name:       'Sky',
+		stageColor: '#4488AA',
+		bodyBg:     '#43A9DF',
+		cloudTint:  0xFFFFFF,
+		cloud2Tint: 0xFFFFFF,
+		fondTint:   0xFFFFFF,
+		fond2Tint:  0xFFFFFF
+	},
+	ocean: {
+		name:       'Ocean',
+		stageColor: '#001833',
+		bodyBg:     '#001020',
+		cloudTint:  0x7FFFD4,   /* aquamarine  – upper bubbles   */
+		cloud2Tint: 0x20B2AA,   /* light-sea-green – deep bubbles */
+		fondTint:   0x2255BB,   /* blue-tinted upper water        */
+		fond2Tint:  0x004455    /* dark-teal deep water           */
+	},
+	sunset: {
+		name:       'Sunset',
+		stageColor: '#7B2500',
+		bodyBg:     '#A0300D',
+		cloudTint:  0xFFAB40,
+		cloud2Tint: 0xFF6D00,
+		fondTint:   0xFF8C42,
+		fond2Tint:  0xC62828
+	},
+	storm: {
+		name:       'Storm',
+		stageColor: '#0D1B2A',
+		bodyBg:     '#1B2838',
+		cloudTint:  0x90A4AE,
+		cloud2Tint: 0x546E7A,
+		fondTint:   0x37474F,
+		fond2Tint:  0x1C313A
+	}
+};
+
+var currentTheme = localStorage.getItem('piclouds-theme') || 'sky';
+
+function applyTheme(name) {
+	var t = THEMES[name] || THEMES.sky;
+	currentTheme = name;
+	localStorage.setItem('piclouds-theme', name);
+
+	/* Phaser updates */
+	if (typeof game !== 'undefined' && game.stage) {
+		game.stage.backgroundColor = t.stageColor;
+		if (fond)  fond.tint  = t.fondTint;
+		if (fond2) fond2.tint = t.fond2Tint;
+
+		/* Re-tint all existing clouds */
+		for (var i = 0; i <= decimal; i++) {
+			if (nuages[i]  && nuages[i].alive)  nuages[i].tint  = t.cloudTint;
+			if (nuages2[i] && nuages2[i].alive) nuages2[i].tint = t.cloud2Tint;
+		}
+	}
+
+	/* DOM updates */
+	document.body.style.backgroundColor = t.bodyBg;
+	document.body.className = 'theme-' + name;
+
+	/* Active button highlight */
+	var btns = document.querySelectorAll('.theme-btn');
+	for (var b = 0; b < btns.length; b++) {
+		btns[b].classList.toggle('active', btns[b].getAttribute('data-theme') === name);
+	}
+}
+
+/* Build the floating theme-switcher buttons */
+function createThemeSwitcher() {
+	var switcher = document.getElementById('theme-switcher');
+	var order = ['sky', 'ocean', 'sunset', 'storm'];
+	for (var i = 0; i < order.length; i++) {
+		(function(key) {
+			var btn = document.createElement('button');
+			btn.className = 'theme-btn';
+			btn.setAttribute('data-theme', key);
+			btn.setAttribute('data-name', THEMES[key].name);
+			btn.setAttribute('title', THEMES[key].name);
+			btn.addEventListener('click', function() { applyTheme(key); });
+			switcher.appendChild(btn);
+		})(order[i]);
+	}
+}
+
+/* Populate #ocean-effects with bubbles, waves, seafoam, coral */
+function createOceanEffects() {
+	var el = document.getElementById('ocean-effects');
+	if (!el) return;
+
+	/* Bubbles: [left%, size-px, duration-s, negativeDelay-s, drift-px] */
+	var bubbles = [
+		[4,   8, 12, 0.0,  18], [10, 14, 18, 2.0, -14], [18,  6,  9, 3.5,  10],
+		[25, 20, 23, 1.0, -24], [33, 10, 14, 5.5,  16], [40, 16, 20, 2.8, -11],
+		[47,  8, 11, 7.0,  20], [54, 26, 26, 0.3, -18], [62, 12, 16, 4.5,  14],
+		[70,  7, 10, 2.2, -17], [76, 18, 19, 1.4,  23], [83,  9, 13, 4.0, -13],
+		[89, 15, 17, 3.2,  19], [94, 11, 21, 6.0,  -9], [8,  22, 25, 8.0,  11],
+		[15,  5,  8, 0.7,  -7], [44, 30, 31, 2.5,  28], [59,  6, 10, 5.0, -15],
+		[74, 19, 24, 1.8,  21], [87, 13, 15, 6.8, -19], [30, 11, 17, 3.8,  15],
+		[51, 17, 22, 0.9, -22], [66,  4,  7, 5.7,   8], [79, 23, 28, 2.3,  25],
+		[96,  9, 13, 7.5, -11]
+	];
+
+	for (var i = 0; i < bubbles.length; i++) {
+		var d  = bubbles[i];
+		var bel = document.createElement('div');
+		bel.className = 'ocean-bubble';
+		bel.style.left            = d[0] + '%';
+		bel.style.width           = d[1] + 'px';
+		bel.style.height          = d[1] + 'px';
+		bel.style.animationDuration  = d[2] + 's';
+		bel.style.animationDelay     = '-' + d[3] + 's';
+		bel.style.setProperty('--drift', d[4] + 'px');
+		el.appendChild(bel);
+	}
+
+	/* Wave bands */
+	['wave-1', 'wave-2', 'wave-3'].forEach(function(cls) {
+		var w = document.createElement('div');
+		w.className = 'ocean-wave ' + cls;
+		el.appendChild(w);
+	});
+
+	/* Seafoam line */
+	var sf = document.createElement('div');
+	sf.className = 'ocean-seafoam';
+	el.appendChild(sf);
+
+	/* Coral accent dots: [left%, top%, size-px, duration-s, delay-s, colour] */
+	var corals = [
+		[2,  90, 5, 3.0, 0.0, 'rgba(255,87,87,0.65)'],
+		[5,  93, 7, 4.2, 1.1, 'rgba(255,120,60,0.55)'],
+		[9,  88, 4, 3.8, 0.5, 'rgba(255,60,100,0.60)'],
+		[91, 91, 6, 3.5, 0.8, 'rgba(255,90,70,0.60)'],
+		[95, 95, 5, 4.0, 1.4, 'rgba(255,70,110,0.55)'],
+		[98, 89, 4, 3.2, 0.2, 'rgba(255,110,50,0.60)'],
+		[3,  96, 8, 5.0, 0.6, 'rgba(255,60,80,0.50)'],
+		[97, 85, 7, 4.5, 1.8, 'rgba(255,100,55,0.50)']
+	];
+
+	for (var j = 0; j < corals.length; j++) {
+		var c  = corals[j];
+		var cel = document.createElement('div');
+		cel.className = 'ocean-coral';
+		cel.style.left              = c[0] + '%';
+		cel.style.top               = c[1] + '%';
+		cel.style.width             = c[2] + 'px';
+		cel.style.height            = c[2] + 'px';
+		cel.style.background        = c[5];
+		cel.style.animationDuration = c[3] + 's';
+		cel.style.animationDelay    = '-' + c[4] + 's';
+		el.appendChild(cel);
+	}
+
+	/* Depth glow at bottom */
+	var dg = document.createElement('div');
+	dg.className = 'ocean-depth-glow';
+	el.appendChild(dg);
+}
+
+/* ============================================================
+   PHASER GAME
+   ============================================================ */
 var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds', { preload: preload, create: create, update: update }, false, false);
 var nuages = []; var densityDivider = 4; var velocityDivider = 0.6;
 var nuages2 = []; var field; var fond; var fond2;
@@ -16,10 +185,9 @@ var pi = [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,
 function randInt(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-		
-for (var i = 0; i<10000; i++) {
-	pi.push(randInt(0,9));
-	console.log(pi[886+i]);
+
+for (var i = 0; i < 10000; i++) {
+	pi.push(randInt(0, 9));
 }
 
 var timer = 0;
@@ -27,23 +195,25 @@ var timer = 0;
 function sleep(milliseconds) {
 	var start = new Date().getTime();
 	for (var i = 0; i < 1e7; i++) {
-		if ((new Date().getTime() - start) > milliseconds){
-		 break;
-		}
+		if ((new Date().getTime() - start) > milliseconds) { break; }
 	}
 }
+
 function preload() {
-	game.load.image('nuage','nuage.png');
-	game.load.image('nuage2','nuage2.png');
-	game.load.image('field','field.png');
-	game.load.image('fond','fond.png');
-	game.load.image('fond2','fond2.png');
+	game.load.image('nuage',  'nuage.png');
+	game.load.image('nuage2', 'nuage2.png');
+	game.load.image('field',  'field.png');
+	game.load.image('fond',   'fond.png');
+	game.load.image('fond2',  'fond2.png');
 }
+
 function create() {
 	game.time.desiredFps = 30;
-	game.stage.backgroundColor = "#4488AA";
-	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
+	game.stage.backgroundColor = '#4488AA';
+
+	fond  = game.add.tileSprite(0,   0, 1300, 400, 'fond');
 	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
+
 	order0 = game.add.group();
 	order1 = game.add.group();
 	order2 = game.add.group();
@@ -54,86 +224,59 @@ function create() {
 	order7 = game.add.group();
 	order8 = game.add.group();
 	order9 = game.add.group();
-	//fond2.angle = 180;
+
 	fond2.alpha = 0.9;
-	//field = game.add.tileSprite(0, 465, 1300, 300, 'field');
-	//field.alpha = 0.2;
 
+	/* Initialise ocean effects and theme switcher */
+	createOceanEffects();
+	createThemeSwitcher();
+
+	/* Apply stored/default theme */
+	applyTheme(currentTheme);
 }
-function update() {
 
+function update() {
 	timer++;
 
-	if (timer > (pi[decimal+1])*densityDivider) {
-
+	if (timer > (pi[decimal + 1]) * densityDivider) {
 		decimal++;
 		timer = 0;
-		nuages.push(game.add.tileSprite(-200, 400-(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage'));
+
+		nuages.push(game.add.tileSprite(-200, 400 - (pi[decimal] * 34 - 15), 768, 312, 'nuage'));
 		nuages[decimal].anchor.x = 0.7;
 		nuages[decimal].anchor.y = 0.5;
-		nuages[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
-		nuages[decimal].alpha = 0.9;
-		//sum += pi[decimal];
-		nuages2.push(game.add.tileSprite(-200, 400+(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage2'));
-		nuages2[decimal].anchor.x = 0.7;
-		nuages2[decimal].anchor.y = 0.5;
-		nuages2[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
+		nuages[decimal].scale.setTo(pi[decimal] / 10, pi[decimal] / 10);
 		nuages[decimal].alpha = 0.99;
 
-		switch(pi[decimal]) {
-		case 0:
-			order0.add(nuages[decimal]);
-			order0.add(nuages2[decimal]);
-			break;
-		case 1:
-			order1.add(nuages[decimal]);
-			order1.add(nuages2[decimal]);
-			break;
-		case 2:
-			order2.add(nuages[decimal]);
-			order2.add(nuages2[decimal]);
-			break;
-		case 3:
-			order3.add(nuages[decimal]);
-			order3.add(nuages2[decimal]);
-			break;
-		case 4:
-			order4.add(nuages[decimal]);
-			order4.add(nuages2[decimal]);
-			break;
-		case 5:
-			order5.add(nuages[decimal]);
-			order5.add(nuages2[decimal]);
-			break;
-		case 6:
-			order6.add(nuages[decimal]);
-			order6.add(nuages2[decimal]);
-			break;
-		case 7:
-			order7.add(nuages[decimal]);
-			order7.add(nuages2[decimal]);
-			break;
-		case 8:
-			order8.add(nuages[decimal]);
-			order8.add(nuages2[decimal]);
-			break;
-		case 9:
-			order9.add(nuages[decimal]);
-			order9.add(nuages2[decimal]);
-			break;
+		nuages2.push(game.add.tileSprite(-200, 400 + (pi[decimal] * 34 - 15), 768, 312, 'nuage2'));
+		nuages2[decimal].anchor.x = 0.7;
+		nuages2[decimal].anchor.y = 0.5;
+		nuages2[decimal].scale.setTo(pi[decimal] / 10, pi[decimal] / 10);
+
+		/* Apply current theme tint to newly created cloud pair */
+		var t = THEMES[currentTheme] || THEMES.sky;
+		nuages[decimal].tint  = t.cloudTint;
+		nuages2[decimal].tint = t.cloud2Tint;
+
+		switch (pi[decimal]) {
+		case 0: order0.add(nuages[decimal]); order0.add(nuages2[decimal]); break;
+		case 1: order1.add(nuages[decimal]); order1.add(nuages2[decimal]); break;
+		case 2: order2.add(nuages[decimal]); order2.add(nuages2[decimal]); break;
+		case 3: order3.add(nuages[decimal]); order3.add(nuages2[decimal]); break;
+		case 4: order4.add(nuages[decimal]); order4.add(nuages2[decimal]); break;
+		case 5: order5.add(nuages[decimal]); order5.add(nuages2[decimal]); break;
+		case 6: order6.add(nuages[decimal]); order6.add(nuages2[decimal]); break;
+		case 7: order7.add(nuages[decimal]); order7.add(nuages2[decimal]); break;
+		case 8: order8.add(nuages[decimal]); order8.add(nuages2[decimal]); break;
+		case 9: order9.add(nuages[decimal]); order9.add(nuages2[decimal]); break;
 		}
 	}
 
-	while (jj <= decimal ) {
-		if (nuages[jj].x > 1800) {
-			nuages[jj].destroy();
-		}
-		nuages[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		nuages2[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		//nuages[jj].angle += (1/(pi[jj]))*3;
+	while (jj <= decimal) {
+		if (nuages[jj].x > 1800) { nuages[jj].destroy(); }
+		nuages[jj].x  += pi[jj] / Math.abs(velocityDivider);
+		nuages2[jj].x += pi[jj] / Math.abs(velocityDivider);
 		jj++;
-		//if (nuages[jj].x > 1300) {
-		//}
 	}
 	jj = 0;
 
@@ -150,29 +293,23 @@ function update() {
 	fond2.bringToTop();
 }
 
-
-
-  </script>
-
-
-
-
+	</script>
 </head>
 <body style="background-color: rgb(67,169,223);">
-	<div id="game" style="
+	<div id="PIclouds" style="
 		cursor: none;
 		position: absolute;
-		TOP: 0px;
-		LEFT: 0px;
-
-
+		top: 0px;
+		left: 0px;
 		image-rendering: optimizeSpeed;
 		image-rendering: -moz-crisp-edges;
 		image-rendering: -o-crisp-edges;
 		image-rendering: -webkit-optimize-contrast;
 		image-rendering: optimize-contrast;
 		-ms-interpolation-mode: nearest-neighbor;
-		image-rendering : pixelated;">
+		image-rendering: pixelated;">
 	</div>
+	<div id="ocean-effects"></div>
+	<div id="theme-switcher"></div>
 </body>
 </html>

@@ -1,0 +1,292 @@
+/* ============================================================
+   Nuages de Pi – Stylesheet
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  transition: background-color 0.8s ease;
+}
+
+/* ============================================================
+   THEME SWITCHER
+   ============================================================ */
+#theme-switcher {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
+.theme-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.theme-btn:hover {
+  transform: scale(1.25);
+  border-color: rgba(255, 255, 255, 0.9);
+}
+
+.theme-btn.active {
+  border-color: #fff;
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.85);
+  transform: scale(1.15);
+}
+
+/* Label tooltip on hover */
+.theme-btn::before {
+  content: attr(data-name);
+  position: absolute;
+  right: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.72);
+  color: #fff;
+  font-family: sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+
+.theme-btn:hover::before { opacity: 1; }
+
+/* Per-theme button gradients */
+.theme-btn[data-theme="sky"]    { background: linear-gradient(135deg, #87CEEB 0%, #4488AA 100%); }
+.theme-btn[data-theme="ocean"]  { background: linear-gradient(135deg, #00BCD4 0%, #001833 100%); }
+.theme-btn[data-theme="sunset"] { background: linear-gradient(135deg, #FF6B35 0%, #7B2500 100%); }
+.theme-btn[data-theme="storm"]  { background: linear-gradient(135deg, #78909C 0%, #0D1B2A 100%); }
+
+/* ============================================================
+   OCEAN THEME – body class: theme-ocean
+   ============================================================ */
+
+/* Underwater caustic light shafts from above */
+body.theme-ocean::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 45%;
+  background:
+    radial-gradient(ellipse 30% 60% at 20% 0%, rgba(0, 200, 230, 0.14) 0%, transparent 70%),
+    radial-gradient(ellipse 25% 50% at 55% 0%, rgba(0, 220, 210, 0.11) 0%, transparent 65%),
+    radial-gradient(ellipse 20% 55% at 80% 0%, rgba(0, 188, 212, 0.13) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 501;
+  animation: causticPulse 5s ease-in-out infinite;
+}
+
+/* Deep-water vignette */
+body.theme-ocean::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse at 50% 40%,
+    transparent 35%,
+    rgba(0, 5, 20, 0.55) 100%);
+  pointer-events: none;
+  z-index: 502;
+}
+
+@keyframes causticPulse {
+  0%,  100% { opacity: 0.55; transform: scaleX(1)   scaleY(1); }
+  33%       { opacity: 0.90; transform: scaleX(1.06) scaleY(1.04); }
+  66%       { opacity: 0.70; transform: scaleX(0.97) scaleY(1.02); }
+}
+
+/* ============================================================
+   OCEAN EFFECTS LAYER  (#ocean-effects)
+   ============================================================ */
+#ocean-effects {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 500;
+  overflow: hidden;
+}
+
+body.theme-ocean #ocean-effects { display: block; }
+
+/* ── Bubbles ─────────────────────────────────────────────── */
+.ocean-bubble {
+  position: absolute;
+  bottom: -80px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 32%,
+    rgba(255, 255, 255, 0.75) 0%,
+    rgba(127, 255, 212, 0.35) 28%,
+    rgba(0,   188, 212, 0.12) 65%,
+    transparent 100%);
+  border: 1px solid rgba(127, 255, 212, 0.55);
+  animation: bubbleRise linear infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes bubbleRise {
+  0% {
+    transform: translateY(0)        translateX(0px);
+    opacity: 0;
+  }
+  4%  { opacity: 0.82; }
+  50% {
+    transform: translateY(-52vh)    translateX(var(--drift, 12px));
+  }
+  92% { opacity: 0.45; }
+  100% {
+    transform: translateY(-108vh)   translateX(calc(var(--drift, 12px) * -0.6));
+    opacity: 0;
+  }
+}
+
+/* ── Wave bands at the horizon ───────────────────────────── */
+.ocean-wave {
+  position: absolute;
+  left: -60%;
+  width: 220%;
+  pointer-events: none;
+  border-radius: 48%;
+  animation: waveScroll linear infinite;
+  will-change: transform;
+}
+
+.ocean-wave.wave-1 {
+  top: calc(57% - 22px);
+  height: 44px;
+  background: rgba(0, 200, 220, 0.14);
+  animation-duration: 11s;
+}
+.ocean-wave.wave-2 {
+  top: calc(57% - 12px);
+  height: 28px;
+  background: rgba(100, 240, 220, 0.09);
+  animation-duration: 16s;
+  animation-direction: reverse;
+}
+.ocean-wave.wave-3 {
+  top: calc(57% - 4px);
+  height: 18px;
+  background: rgba(0, 160, 190, 0.18);
+  animation-duration: 8s;
+  animation-delay: -3s;
+}
+
+@keyframes waveScroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(27.3%); }
+}
+
+/* ── Seafoam line at horizon ─────────────────────────────── */
+.ocean-seafoam {
+  position: absolute;
+  top: 57%;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg,
+    transparent          0%,
+    rgba(152,251,152,0.3) 15%,
+    rgba(127,255,212,0.85) 35%,
+    rgba(0,  206,209,0.90) 50%,
+    rgba(127,255,212,0.85) 65%,
+    rgba(152,251,152,0.3) 85%,
+    transparent          100%);
+  animation: seafoamShimmer 4s ease-in-out infinite;
+}
+
+@keyframes seafoamShimmer {
+  0%,  100% { opacity: 0.55; transform: scaleX(0.97); }
+  50%       { opacity: 1.00; transform: scaleX(1.00); }
+}
+
+/* ── Coral accent particles (decorative dots) ────────────── */
+.ocean-coral {
+  position: absolute;
+  border-radius: 50%;
+  animation: coralFloat ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes coralFloat {
+  0%,  100% { transform: translateY(0)    scale(1);    opacity: 0.55; }
+  50%       { transform: translateY(-8px) scale(1.05); opacity: 0.80; }
+}
+
+/* ── Deep-water ambient glow (bottom edge) ───────────────── */
+.ocean-depth-glow {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background: linear-gradient(to top,
+    rgba(0, 20, 60, 0.55) 0%,
+    transparent           100%);
+}
+
+/* ============================================================
+   SUNSET THEME – body class: theme-sunset
+   ============================================================ */
+body.theme-sunset::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: radial-gradient(ellipse at 50% 110%,
+    rgba(255, 120, 0, 0.18) 0%,
+    transparent 65%);
+  pointer-events: none;
+  z-index: 501;
+}
+
+/* ============================================================
+   STORM THEME – body class: theme-storm
+   ============================================================ */
+body.theme-storm::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: radial-gradient(ellipse at 50% -10%,
+    rgba(100, 140, 180, 0.15) 0%,
+    transparent 60%);
+  pointer-events: none;
+  z-index: 501;
+  animation: stormFlicker 7s ease-in-out infinite;
+}
+
+@keyframes stormFlicker {
+  0%, 85%, 100% { opacity: 1; }
+  87%           { opacity: 0.3; }
+  89%           { opacity: 1; }
+  91%           { opacity: 0.5; }
+  93%           { opacity: 1; }
+}
