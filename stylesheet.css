@@ -1,0 +1,163 @@
+:root {
+	--bg: #07040b;
+	--panel: rgba(19, 9, 18, 0.82);
+	--panel-edge: rgba(218, 165, 191, 0.28);
+	--text: #f3e8f2;
+	--muted: #b89cb3;
+	--gold: #cfb57a;
+	--blood: #a54460;
+	--glow: rgba(169, 77, 116, 0.35);
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	min-height: 100%;
+	background:
+		radial-gradient(circle at top, rgba(95, 24, 61, 0.22), transparent 34%),
+		radial-gradient(circle at 20% 20%, rgba(204, 176, 131, 0.08), transparent 26%),
+		linear-gradient(180deg, #12060f 0%, #050308 100%);
+	color: var(--text);
+	font-family: Baskerville, "Palatino Linotype", "Book Antiqua", Garamond, serif;
+}
+
+body {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 28px;
+}
+
+.page-shell {
+	width: min(1440px, 100%);
+	display: grid;
+	grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+	gap: 28px;
+	align-items: start;
+}
+
+.theme-copy,
+.play-frame {
+	position: relative;
+	background: var(--panel);
+	border: 1px solid var(--panel-edge);
+	box-shadow:
+		0 0 0 1px rgba(255, 235, 248, 0.05) inset,
+		0 18px 60px rgba(0, 0, 0, 0.55),
+		0 0 80px var(--glow);
+	backdrop-filter: blur(10px);
+}
+
+.theme-copy {
+	padding: 30px 26px;
+	border-radius: 22px;
+}
+
+.eyebrow {
+	margin: 0 0 12px;
+	text-transform: uppercase;
+	letter-spacing: 0.18em;
+	font-size: 0.72rem;
+	color: var(--gold);
+}
+
+.theme-copy h1 {
+	margin: 0;
+	font-size: clamp(2.4rem, 5vw, 4.1rem);
+	line-height: 0.92;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.lede {
+	margin: 20px 0 0;
+	font-size: 1rem;
+	line-height: 1.7;
+	color: var(--muted);
+}
+
+.play-frame {
+	padding: 22px;
+	border-radius: 26px;
+}
+
+#game {
+	position: relative;
+	width: 1300px;
+	height: 700px;
+	max-width: 100%;
+	margin: 0 auto;
+	border-radius: 14px;
+	overflow: hidden;
+	border: 1px solid rgba(245, 222, 233, 0.14);
+	background: #08060d;
+	box-shadow:
+		0 0 0 1px rgba(255, 244, 250, 0.04) inset,
+		0 16px 40px rgba(0, 0, 0, 0.56);
+	image-rendering: pixelated;
+}
+
+#game canvas {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+
+.frame-ornament {
+	position: absolute;
+	left: 50%;
+	width: calc(100% - 104px);
+	height: 18px;
+	transform: translateX(-50%);
+	pointer-events: none;
+	opacity: 0.7;
+	background:
+		radial-gradient(circle at center, rgba(233, 201, 164, 0.8) 0 2px, transparent 3px),
+		linear-gradient(90deg, transparent 0%, rgba(207, 181, 122, 0.55) 12%, rgba(207, 181, 122, 0.55) 88%, transparent 100%);
+	background-size: 84px 18px, 100% 1px;
+	background-position: center center, center center;
+	background-repeat: repeat-x, no-repeat;
+}
+
+.frame-ornament-top {
+	top: 8px;
+}
+
+.frame-ornament-bottom {
+	bottom: 8px;
+}
+
+@media (max-width: 1380px) {
+	.page-shell {
+		grid-template-columns: 1fr;
+	}
+
+	.theme-copy {
+		max-width: 780px;
+	}
+
+	#game {
+		width: 100%;
+		height: auto;
+		aspect-ratio: 13 / 7;
+	}
+}
+
+@media (max-width: 720px) {
+	body {
+		padding: 14px;
+	}
+
+	.theme-copy,
+	.play-frame {
+		border-radius: 18px;
+	}
+
+	.play-frame {
+		padding: 12px;
+	}
+}

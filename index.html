@@ -1,178 +1,360 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
-	<title>Nuages de Pi</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Nuages de Pi | Gothic Occult Variant</title>
 	<link href="stylesheet.css" rel="stylesheet">
-	<meta charset="utf-8"/>
-	<script type="text/javascript" src="phaser.min.js"></script>
+	<script src="phaser.min.js"></script>
 	<script>
-var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds', { preload: preload, create: create, update: update }, false, false);
-var nuages = []; var densityDivider = 4; var velocityDivider = 0.6;
-var nuages2 = []; var field; var fond; var fond2;
-var nn = 0; var jj = 0; var sum = 0; var lock = 0;
+var GAME_WIDTH = 1300;
+var GAME_HEIGHT = 700;
+var SKYLINE_Y = 428;
+var nuages = [];
+var nuages2 = [];
+var halos = [];
+var densityDivider = 4;
+var velocityDivider = 0.6;
+var timer = 0;
 var decimal = -1;
+var jj = 0;
+var orderGroups = [];
+var hudDigit;
+var hudCount;
+var ritualPulse = 0;
+var parallaxMist;
+var emberMist;
+var theme = {
+	background: "#08060d",
+	pageGlow: "#3d1838",
+	text: "#efe3f2",
+	muted: "#b196b4",
+	accent: "#d7a7ff",
+	blood: "#b4455f",
+	gold: "#cfb57a",
+	moon: "#f6d8e6",
+	cloudTints: [
+		0xc7a9cb, 0xd6b5de, 0xe0b0bd, 0xb996d5, 0xe6bcc5,
+		0xc7b3e6, 0xf0d7de, 0xb095c5, 0xf5dce9, 0xdca2b2
+	]
+};
 var pi = [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,8,4,1,9,7,1,6,9,3,9,9,3,7,5,1,0,5,8,2,0,9,7,4,9,4,4,5,9,2,3,0,7,8,1,6,4,0,6,2,8,6,2,0,8,9,9,8,6,2,8,0,3,4,8,2,5,3,4,2,1,1,7,0,6,7,9,8,2,1,4,8,0,8,6,5,1,3,2,8,2,3,0,6,6,4,7,0,9,3,8,4,4,6,0,9,5,5,0,5,8,2,2,3,1,7,2,5,3,5,9,4,0,8,1,2,8,4,8,1,1,1,7,4,5,0,2,8,4,1,0,2,7,0,1,9,3,8,5,2,1,1,0,5,5,5,9,6,4,4,6,2,2,9,4,8,9,5,4,9,3,0,3,8,1,9,6,4,4,2,8,8,1,0,9,7,5,6,6,5,9,3,3,4,4,6,1,2,8,4,7,5,6,4,8,2,3,3,7,8,6,7,8,3,1,6,5,2,7,1,2,0,1,9,0,9,1,4,5,6,4,8,5,6,6,9,2,3,4,6,0,3,4,8,6,1,0,4,5,4,3,2,6,6,4,8,2,1,3,3,9,3,6,0,7,2,6,0,2,4,9,1,4,1,2,7,3,7,2,4,5,8,7,0,0,6,6,0,6,3,1,5,5,8,8,1,7,4,8,8,1,5,2,0,9,2,0,9,6,2,8,2,9,2,5,4,0,9,1,7,1,5,3,6,4,3,6,7,8,9,2,5,9,0,3,6,0,0,1,1,3,3,0,5,3,0,5,4,8,8,2,0,4,6,6,5,2,1,3,8,4,1,4,6,9,5,1,9,4,1,5,1,1,6,0,9,4,3,3,0,5,7,2,7,0,3,6,5,7,5,9,5,9,1,9,5,3,0,9,2,1,8,6,1,1,7,3,8,1,9,3,2,6,1,1,7,9,3,1,0,5,1,1,8,5,4,8,0,7,4,4,6,2,3,7,9,9,6,2,7,4,9,5,6,7,3,5,1,8,8,5,7,5,2,7,2,4,8,9,1,2,2,7,9,3,8,1,8,3,0,1,1,9,4,9,1,2,9,8,3,3,6,7,3,3,6,2,4,4,0,6,5,6,6,4,3,0,8,6,0,2,1,3,9,4,9,4,6,3,9,5,2,2,4,7,3,7,1,9,0,7,0,2,1,7,9,8,6,0,9,4,3,7,0,2,7,7,0,5,3,9,2,1,7,1,7,6,2,9,3,1,7,6,7,5,2,3,8,4,6,7,4,8,1,8,4,6,7,6,6,9,4,0,5,1,3,2,0,0,0,5,6,8,1,2,7,1,4,5,2,6,3,5,6,0,8,2,7,7,8,5,7,7,1,3,4,2,7,5,7,7,8,9,6,0,9,1,7,3,6,3,7,1,7,8,7,2,1,4,6,8,4,4,0,9,0,1,2,2,4,9,5,3,4,3,0,1,4,6,5,4,9,5,8,5,3,7,1,0,5,0,7,9,2,2,7,9,6,8,9,2,5,8,9,2,3,5,4,2,0,1,9,9,5,6,1,1,2,1,2,9,0,2,1,9,6,0,8,6,4,0,3,4,4,1,8,1,5,9,8,1,3,6,2,9,7,7,4,7,7,1,3,0,9,9,6,0,5,1,8,7,0,7,2,1,1,3,4,9,9,9,9,9,9,8,3,7,2,9,7,8,0,4,9,9,5,1,0,5,9,7,3,1,7,3,2,8,1,6,0,9,6,3,1,8,5,9,5,0,2,4,4,5,9,4,5,5,3,4,6,9,0,8,3,0,2,6,4,2,5,2,2,3,0,8,2,5,3,3,4,4,6,8,5,0,3,5,2,6,1,9,3,1,1,8,8,1,7,1,0,1,0,0,0,3,1,3,7,8,3,8,7,5,2,8,8,6,5,8,7,5,3,3,2,0,8,3,8,1,4,2,0];
 
-function randInt(min, max) {
-	return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-		
-for (var i = 0; i<10000; i++) {
-	pi.push(randInt(0,9));
-	console.log(pi[886+i]);
+for (var i = 0; i < 10000; i++) {
+	pi.push(Math.floor(Math.random() * 10));
 }
 
-var timer = 0;
+var game = new Phaser.Game(
+	GAME_WIDTH,
+	GAME_HEIGHT,
+	Phaser.CANVAS,
+	"game",
+	{ preload: preload, create: create, update: update },
+	false,
+	false
+);
 
-function sleep(milliseconds) {
-	var start = new Date().getTime();
-	for (var i = 0; i < 1e7; i++) {
-		if ((new Date().getTime() - start) > milliseconds){
-		 break;
+function preload() {
+	game.load.image("nuage", "nuage.png");
+	game.load.image("nuage2", "nuage2.png");
+}
+
+function buildGradientTexture(key, palette, withNoise) {
+	var bmd = game.add.bitmapData(GAME_WIDTH, GAME_HEIGHT);
+	var gradient = bmd.ctx.createLinearGradient(0, 0, 0, GAME_HEIGHT);
+	for (var i = 0; i < palette.length; i++) {
+		gradient.addColorStop(palette[i].stop, palette[i].color);
+	}
+	bmd.ctx.fillStyle = gradient;
+	bmd.ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+	if (withNoise) {
+		for (var n = 0; n < 220; n++) {
+			var x = Math.random() * GAME_WIDTH;
+			var y = Math.random() * (GAME_HEIGHT * 0.62);
+			var size = (Math.random() * 2.4) + 0.4;
+			var alpha = (Math.random() * 0.35) + 0.12;
+			bmd.ctx.fillStyle = "rgba(255,230,244," + alpha + ")";
+			bmd.ctx.beginPath();
+			bmd.ctx.arc(x, y, size, 0, Math.PI * 2);
+			bmd.ctx.fill();
 		}
 	}
+
+	bmd.dirty = true;
+	game.cache.addBitmapData(key, bmd);
+	return bmd;
 }
-function preload() {
-	game.load.image('nuage','nuage.png');
-	game.load.image('nuage2','nuage2.png');
-	game.load.image('field','field.png');
-	game.load.image('fond','fond.png');
-	game.load.image('fond2','fond2.png');
+
+function createOccultBackdrop() {
+	var skyTexture = buildGradientTexture("occultSky", [
+		{ stop: 0, color: "#040208" },
+		{ stop: 0.38, color: "#160914" },
+		{ stop: 0.72, color: "#281219" },
+		{ stop: 1, color: "#09050a" }
+	], true);
+	game.add.image(0, 0, skyTexture);
+
+	var moonBmd = game.add.bitmapData(260, 260);
+	moonBmd.ctx.fillStyle = "rgba(240, 213, 227, 0.9)";
+	moonBmd.ctx.beginPath();
+	moonBmd.ctx.arc(130, 130, 92, 0, Math.PI * 2);
+	moonBmd.ctx.fill();
+	moonBmd.ctx.fillStyle = "rgba(56, 16, 36, 0.94)";
+	moonBmd.ctx.beginPath();
+	moonBmd.ctx.arc(158, 120, 72, 0, Math.PI * 2);
+	moonBmd.ctx.fill();
+	moonBmd.ctx.strokeStyle = "rgba(224, 182, 197, 0.35)";
+	moonBmd.ctx.lineWidth = 4;
+	moonBmd.ctx.beginPath();
+	moonBmd.ctx.arc(130, 130, 108, 0, Math.PI * 2);
+	moonBmd.ctx.stroke();
+	moonBmd.dirty = true;
+	var moon = game.add.image(915, 56, moonBmd);
+	moon.alpha = 0.92;
+
+	var sigil = game.add.graphics(0, 0);
+	sigil.lineStyle(2, 0xcfa0d2, 0.18);
+	sigil.drawCircle(0, 0, 280);
+	sigil.drawCircle(0, 0, 214);
+	sigil.drawCircle(0, 0, 138);
+	sigil.moveTo(-140, 0);
+	sigil.lineTo(140, 0);
+	sigil.moveTo(0, -140);
+	sigil.lineTo(0, 140);
+	sigil.moveTo(-99, -99);
+	sigil.lineTo(99, 99);
+	sigil.moveTo(99, -99);
+	sigil.lineTo(-99, 99);
+	sigil.lineStyle(3, 0xe3c4d9, 0.14);
+	sigil.drawPolygon([0, -118, 112, 64, -112, 64]);
+	sigil.x = 650;
+	sigil.y = 314;
+
+	var cathedral = game.add.graphics(0, 0);
+	cathedral.beginFill(0x09060b, 0.95);
+	cathedral.drawRect(0, SKYLINE_Y, GAME_WIDTH, GAME_HEIGHT - SKYLINE_Y);
+	cathedral.drawRect(65, 372, 104, 328);
+	cathedral.drawRect(195, 408, 152, 292);
+	cathedral.drawRect(370, 344, 92, 356);
+	cathedral.drawRect(500, 398, 124, 302);
+	cathedral.drawRect(664, 336, 88, 364);
+	cathedral.drawRect(792, 392, 130, 308);
+	cathedral.drawRect(952, 356, 96, 344);
+	cathedral.drawRect(1088, 404, 164, 296);
+	cathedral.drawPolygon([93, 372, 117, 292, 141, 372]);
+	cathedral.drawPolygon([247, 408, 271, 348, 295, 408]);
+	cathedral.drawPolygon([406, 344, 416, 246, 426, 344]);
+	cathedral.drawPolygon([708, 336, 718, 224, 728, 336]);
+	cathedral.drawPolygon([990, 356, 1000, 276, 1010, 356]);
+	cathedral.drawPolygon([1140, 404, 1170, 320, 1200, 404]);
+	cathedral.endFill();
+
+	var windows = game.add.graphics(0, 0);
+	windows.beginFill(0xdb96ae, 0.32);
+	for (var wx = 88; wx < GAME_WIDTH; wx += 138) {
+		for (var wy = 452; wy < 640; wy += 60) {
+			windows.drawRoundedRect(wx, wy, 22, 34, 8);
+		}
+	}
+	windows.endFill();
+
+	var floorGlow = game.add.graphics(0, 0);
+	floorGlow.beginFill(0x451120, 0.42);
+	floorGlow.drawEllipse(650, 594, 900, 160);
+	floorGlow.endFill();
+
+	var mistTexture = game.add.bitmapData(512, 160);
+	var mistGradient = mistTexture.ctx.createLinearGradient(0, 0, 0, 160);
+	mistGradient.addColorStop(0, "rgba(224, 180, 204, 0)");
+	mistGradient.addColorStop(0.5, "rgba(224, 180, 204, 0.2)");
+	mistGradient.addColorStop(1, "rgba(18, 7, 14, 0.78)");
+	mistTexture.ctx.fillStyle = mistGradient;
+	mistTexture.ctx.fillRect(0, 0, 512, 160);
+	for (var m = 0; m < 28; m++) {
+		mistTexture.ctx.fillStyle = "rgba(255,220,230,0.08)";
+		mistTexture.ctx.beginPath();
+		mistTexture.ctx.ellipse(Math.random() * 512, 72 + (Math.random() * 64), 60 + (Math.random() * 120), 14 + (Math.random() * 28), 0, 0, Math.PI * 2);
+		mistTexture.ctx.fill();
+	}
+	mistTexture.dirty = true;
+	parallaxMist = game.add.tileSprite(0, 492, GAME_WIDTH, 208, mistTexture);
+	parallaxMist.alpha = 0.72;
+
+	var emberTexture = game.add.bitmapData(320, 320);
+	for (var e = 0; e < 50; e++) {
+		var alpha = 0.08 + (Math.random() * 0.15);
+		emberTexture.ctx.fillStyle = "rgba(255, 185, 147, " + alpha + ")";
+		emberTexture.ctx.beginPath();
+		emberTexture.ctx.arc(Math.random() * 320, Math.random() * 320, 1 + (Math.random() * 3), 0, Math.PI * 2);
+		emberTexture.ctx.fill();
+	}
+	emberTexture.dirty = true;
+	emberMist = game.add.tileSprite(0, 0, GAME_WIDTH, GAME_HEIGHT, emberTexture);
+	emberMist.blendMode = PIXI.blendModes.SCREEN;
+	emberMist.alpha = 0.36;
+
+	var vignette = game.add.graphics(0, 0);
+	vignette.beginFill(0x000000, 0.2);
+	vignette.drawRect(0, 0, GAME_WIDTH, 42);
+	vignette.drawRect(0, GAME_HEIGHT - 42, GAME_WIDTH, 42);
+	vignette.drawRect(0, 0, 42, GAME_HEIGHT);
+	vignette.drawRect(GAME_WIDTH - 42, 0, 42, GAME_HEIGHT);
+	vignette.endFill();
 }
+
+function createHud() {
+	hudDigit = game.add.text(42, 30, "Digit 3", {
+		font: "32px Georgia",
+		fill: theme.text,
+		fontWeight: "bold"
+	});
+	hudDigit.setShadow(0, 2, "rgba(0,0,0,0.85)", 8);
+
+	hudCount = game.add.text(42, 72, "Clouds conjured: 0", {
+		font: "18px Georgia",
+		fill: theme.muted,
+		letterSpacing: 1
+	});
+
+	var title = game.add.text(42, 628, "NUAGES DE PI", {
+		font: "28px Georgia",
+		fill: theme.gold,
+		fontWeight: "bold"
+	});
+	title.alpha = 0.92;
+
+	var subtitle = game.add.text(42, 662, "Gothic occult variant · digits rise as mirrored wraith-clouds", {
+		font: "16px Georgia",
+		fill: theme.muted
+	});
+	subtitle.alpha = 0.95;
+
+	var seal = game.add.graphics(1174, 102);
+	seal.lineStyle(2, 0xcfb57a, 0.34);
+	seal.drawCircle(0, 0, 104);
+	seal.drawCircle(0, 0, 76);
+	seal.moveTo(-34, -34);
+	seal.lineTo(34, 34);
+	seal.moveTo(34, -34);
+	seal.lineTo(-34, 34);
+	seal.lineStyle(3, 0xdb96ae, 0.28);
+	seal.drawPolygon([0, -44, 42, 24, -42, 24]);
+}
+
 function create() {
 	game.time.desiredFps = 30;
-	game.stage.backgroundColor = "#4488AA";
-	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
-	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
-	order0 = game.add.group();
-	order1 = game.add.group();
-	order2 = game.add.group();
-	order3 = game.add.group();
-	order4 = game.add.group();
-	order5 = game.add.group();
-	order6 = game.add.group();
-	order7 = game.add.group();
-	order8 = game.add.group();
-	order9 = game.add.group();
-	//fond2.angle = 180;
-	fond2.alpha = 0.9;
-	//field = game.add.tileSprite(0, 465, 1300, 300, 'field');
-	//field.alpha = 0.2;
+	game.stage.backgroundColor = theme.background;
+	createOccultBackdrop();
 
-}
-function update() {
-
-	timer++;
-
-	if (timer > (pi[decimal+1])*densityDivider) {
-
-		decimal++;
-		timer = 0;
-		nuages.push(game.add.tileSprite(-200, 400-(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage'));
-		nuages[decimal].anchor.x = 0.7;
-		nuages[decimal].anchor.y = 0.5;
-		nuages[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
-		nuages[decimal].alpha = 0.9;
-		//sum += pi[decimal];
-		nuages2.push(game.add.tileSprite(-200, 400+(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage2'));
-		nuages2[decimal].anchor.x = 0.7;
-		nuages2[decimal].anchor.y = 0.5;
-		nuages2[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
-		nuages[decimal].alpha = 0.99;
-
-		switch(pi[decimal]) {
-		case 0:
-			order0.add(nuages[decimal]);
-			order0.add(nuages2[decimal]);
-			break;
-		case 1:
-			order1.add(nuages[decimal]);
-			order1.add(nuages2[decimal]);
-			break;
-		case 2:
-			order2.add(nuages[decimal]);
-			order2.add(nuages2[decimal]);
-			break;
-		case 3:
-			order3.add(nuages[decimal]);
-			order3.add(nuages2[decimal]);
-			break;
-		case 4:
-			order4.add(nuages[decimal]);
-			order4.add(nuages2[decimal]);
-			break;
-		case 5:
-			order5.add(nuages[decimal]);
-			order5.add(nuages2[decimal]);
-			break;
-		case 6:
-			order6.add(nuages[decimal]);
-			order6.add(nuages2[decimal]);
-			break;
-		case 7:
-			order7.add(nuages[decimal]);
-			order7.add(nuages2[decimal]);
-			break;
-		case 8:
-			order8.add(nuages[decimal]);
-			order8.add(nuages2[decimal]);
-			break;
-		case 9:
-			order9.add(nuages[decimal]);
-			order9.add(nuages2[decimal]);
-			break;
-		}
+	for (var groupIndex = 0; groupIndex < 10; groupIndex++) {
+		orderGroups[groupIndex] = game.add.group();
 	}
 
-	while (jj <= decimal ) {
+	createHud();
+	decimal = 0;
+	spawnCloudPair(pi[decimal]);
+	updateHud();
+}
+
+function spawnCloudPair(value) {
+	var x = -60;
+	var upperY = SKYLINE_Y - (value * 34 - 15);
+	var lowerY = SKYLINE_Y + (value * 34 - 15);
+	var scale = Math.max(0.22, value / 10);
+	var tint = theme.cloudTints[value];
+
+	var upper = game.add.tileSprite(x, upperY, 768, 312, "nuage");
+	upper.anchor.setTo(0.7, 0.5);
+	upper.scale.setTo(scale, scale);
+	upper.alpha = 0.98;
+	upper.tint = tint;
+
+	var lower = game.add.tileSprite(x, lowerY, 768, 312, "nuage2");
+	lower.anchor.setTo(0.7, 0.5);
+	lower.scale.setTo(scale, scale);
+	lower.alpha = 0.98;
+	lower.tint = tint;
+
+	nuages.push(upper);
+	nuages2.push(lower);
+	orderGroups[value].add(upper);
+	orderGroups[value].add(lower);
+
+	var halo = game.add.graphics(upper.x + 30, (upperY + lowerY) / 2);
+	halo.beginFill(0xd08ca3, 0.12);
+	halo.drawEllipse(0, 0, 460 * scale, 88 + (value * 4));
+	halo.endFill();
+	orderGroups[value].add(halo);
+	halos.push(halo);
+}
+
+function updateHud() {
+	var nextValue = pi[Math.max(decimal, 0)];
+	hudDigit.setText("Digit " + nextValue);
+	hudCount.setText("Clouds conjured: " + (decimal + 1));
+}
+
+function update() {
+	timer++;
+	ritualPulse += 0.018;
+
+	if (parallaxMist) {
+		parallaxMist.tilePosition.x -= 0.18;
+		parallaxMist.tilePosition.y = Math.sin(ritualPulse) * 2;
+	}
+	if (emberMist) {
+		emberMist.tilePosition.x -= 0.3;
+		emberMist.tilePosition.y += 0.08;
+	}
+
+	if (timer > (pi[decimal + 1]) * densityDivider) {
+		decimal++;
+		timer = 0;
+		spawnCloudPair(pi[decimal]);
+		updateHud();
+	}
+
+	while (jj <= decimal) {
 		if (nuages[jj].x > 1800) {
 			nuages[jj].destroy();
+			nuages2[jj].destroy();
+			if (halos[jj]) {
+				halos[jj].destroy();
+			}
+		} else {
+			nuages[jj].x += pi[jj] / Math.abs(velocityDivider);
+			nuages2[jj].x += pi[jj] / Math.abs(velocityDivider);
+			if (halos[jj]) {
+				halos[jj].x = nuages[jj].x + 30;
+			}
 		}
-		nuages[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		nuages2[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		//nuages[jj].angle += (1/(pi[jj]))*3;
 		jj++;
-		//if (nuages[jj].x > 1300) {
-		//}
 	}
 	jj = 0;
 
-	game.world.bringToTop(order0);
-	game.world.bringToTop(order1);
-	game.world.bringToTop(order2);
-	game.world.bringToTop(order3);
-	game.world.bringToTop(order4);
-	game.world.bringToTop(order5);
-	game.world.bringToTop(order6);
-	game.world.bringToTop(order7);
-	game.world.bringToTop(order8);
-	game.world.bringToTop(order9);
-	fond2.bringToTop();
+	for (var groupIndex = 0; groupIndex < orderGroups.length; groupIndex++) {
+		game.world.bringToTop(orderGroups[groupIndex]);
+	}
+	if (hudDigit) {
+		hudDigit.bringToTop();
+		hudCount.bringToTop();
+	}
 }
-
-
-
-  </script>
-
-
-
-
+	</script>
 </head>
-<body style="background-color: rgb(67,169,223);">
-	<div id="game" style="
-		cursor: none;
-		position: absolute;
-		TOP: 0px;
-		LEFT: 0px;
-
-
-		image-rendering: optimizeSpeed;
-		image-rendering: -moz-crisp-edges;
-		image-rendering: -o-crisp-edges;
-		image-rendering: -webkit-optimize-contrast;
-		image-rendering: optimize-contrast;
-		-ms-interpolation-mode: nearest-neighbor;
-		image-rendering : pixelated;">
-	</div>
+<body>
+	<main class="page-shell">
+		<section class="theme-copy">
+			<p class="eyebrow">Playable Theme Variant</p>
+			<h1>Nuages De Pi</h1>
+			<p class="lede">A gothic occult treatment of the original Pi-cloud toy: eclipse sky, cathedral silhouettes, ritual geometry, and mirrored wraith-clouds keyed to each digit.</p>
+		</section>
+		<section class="play-frame">
+			<div class="frame-ornament frame-ornament-top"></div>
+			<div class="frame-ornament frame-ornament-bottom"></div>
+			<div id="game" aria-label="Nuages de Pi Gothic Occult game"></div>
+		</section>
+	</main>
 </body>
 </html>
