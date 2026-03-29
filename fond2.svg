@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1300" height="700" viewBox="0 0 1300 700">
+  <defs>
+    <linearGradient id="lower" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#f0b16f"/>
+      <stop offset="55%" stop-color="#dc7b55"/>
+      <stop offset="100%" stop-color="#9e574a"/>
+    </linearGradient>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.82" numOctaves="1" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer>
+        <feFuncA type="table" tableValues="0 0.06"/>
+      </feComponentTransfer>
+    </filter>
+  </defs>
+  <rect width="1300" height="700" fill="url(#lower)"/>
+  <path d="M0 120c92 10 186 37 284 31 92-5 140-39 228-42 94-4 152 29 245 34 126 6 215-39 341-25 81 9 140 22 202 40v542H0z" fill="#c96d50"/>
+  <path d="M0 176c70 19 127 57 209 65 110 10 173-44 281-42 89 2 129 35 216 47 120 16 218-18 339-9 79 6 153 27 255 60v403H0z" fill="#ad5f4f"/>
+  <path d="M0 248c100-10 216 37 331 35 97-2 176-41 272-36 87 4 158 45 247 56 153 20 289-45 450-44v441H0z" fill="#8f544d"/>
+  <ellipse cx="268" cy="526" rx="128" ry="72" fill="#ffcd77" opacity="0.88"/>
+  <ellipse cx="268" cy="546" rx="116" ry="46" fill="#ffb45f" opacity="0.95"/>
+  <ellipse cx="1028" cy="494" rx="148" ry="86" fill="#6ec8da" opacity="0.9"/>
+  <ellipse cx="1028" cy="518" rx="136" ry="52" fill="#4ea9c9" opacity="0.95"/>
+  <path d="M0 560c153-24 253-7 355 17 105 25 183 57 299 59 115 3 181-22 288-45 152-33 225-38 358-1v110H0z" fill="#6d443d"/>
+  <path d="M0 616c121-12 224 13 333 29 114 16 211 15 325-3 92-14 177-39 271-44 130-7 231 20 371 60v46H0z" fill="#533430"/>
+  <rect width="1300" height="700" fill="#ffffff" filter="url(#grain)" opacity="0.7"/>
+</svg>

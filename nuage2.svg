@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="768" height="312" viewBox="0 0 768 312">
+  <defs>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="1" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer>
+        <feFuncA type="table" tableValues="0 0.05"/>
+      </feComponentTransfer>
+    </filter>
+  </defs>
+  <g>
+    <path d="M18 80c33 3 47 11 56 27 13 22 31 34 54 34 7 39 39 67 80 67 15 0 30-3 42-10 17 42 58 72 106 72 28 0 54-10 74-26 23 26 57 42 94 42 59 0 109-39 125-93 13 5 27 8 42 8 50 0 90-35 97-83 18-8 30-26 30-47 0-28-22-51-49-51H67c-27 0-49 23-49 51 0 4 0 6 0 9z" fill="#f3d5ab"/>
+    <path d="M44 68c31 2 45 8 52 21 10 18 26 28 47 28 6 31 33 54 66 54 13 0 24-3 34-8 15 33 46 57 82 57 24 0 46-8 62-22 19 20 48 33 77 33 48 0 88-31 102-74 10 4 22 6 35 6 39 0 72-27 79-64 15-6 25-20 25-37 0-22-18-42-41-42H88c-23 0-42 20-42 42 0 2 0 4-2 6z" fill="#f8e4c6"/>
+    <path d="M34 72c56-17 135-22 217-14 74 7 118 29 186 27 81-3 114-29 192-34 50-3 91 4 139 16" fill="none" stroke="#fff1d3" stroke-width="12" stroke-linecap="round" opacity="0.38"/>
+    <path d="M34 72c53 0 61-17 91-17 34 0 44 16 78 16s44-15 78-15c32 0 42 15 74 15 34 0 44-18 79-18 35 0 43 15 79 15 36 0 44-14 79-14 32 0 42 12 76 12 34 0 43-8 94-8" fill="none" stroke="#7d4c42" stroke-width="16" stroke-linecap="round"/>
+    <path d="M36 79c51-2 71-11 95-11 28 0 38 10 66 10 31 0 42-8 74-8 32 0 40 11 71 11 31 0 43-12 76-12 32 0 42 10 75 10 33 0 43-10 77-10 35 0 46 8 81 8 34 0 44-6 94-6" fill="none" stroke="#d78f6e" stroke-width="7" stroke-linecap="round" opacity="0.7"/>
+  </g>
+  <rect width="768" height="312" fill="#ffffff" filter="url(#grain)" opacity="0.75"/>
+</svg>

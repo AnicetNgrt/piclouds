@@ -1,0 +1,231 @@
+:root {
+  --page-top: #8bc8f1;
+  --page-bottom: #f8d9a7;
+  --frame: #f46853;
+  --frame-shadow: #b64c3e;
+  --frame-highlight: #ffb19f;
+  --panel: #fff4dc;
+  --panel-shadow: #d9b98a;
+  --text-main: #4b3328;
+  --text-soft: #7b5f4e;
+  --accent: #f79f4f;
+  --accent-2: #68b9d8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.28), transparent 38%),
+    linear-gradient(180deg, var(--page-top) 0%, #b5e2f6 42%, var(--page-bottom) 100%);
+  color: var(--text-main);
+  font-family: "Trebuchet MS", "Avenir Next", "Gill Sans", sans-serif;
+}
+
+.app-shell {
+  width: min(100%, 1410px);
+}
+
+.toybox-frame {
+  position: relative;
+  padding: 22px;
+  border-radius: 34px;
+  background: linear-gradient(180deg, var(--frame-highlight) 0%, var(--frame) 45%, #db5a4d 100%);
+  box-shadow:
+    0 26px 48px rgba(88, 53, 35, 0.26),
+    inset 0 -10px 0 var(--frame-shadow),
+    inset 0 10px 0 rgba(255, 228, 210, 0.55);
+}
+
+.toybox-frame::before,
+.toybox-frame::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  border-radius: 28px;
+}
+
+.toybox-frame::before {
+  inset: 10px;
+  border: 4px dashed rgba(255, 244, 220, 0.42);
+}
+
+.toybox-frame::after {
+  inset: 18px;
+  box-shadow: inset 0 0 0 3px rgba(118, 45, 37, 0.14);
+}
+
+.hud {
+  position: absolute;
+  inset: 18px 18px auto;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  pointer-events: none;
+}
+
+.hud-card,
+.hud-status {
+  max-width: min(100%, 350px);
+  padding: 14px 18px;
+  border-radius: 22px;
+  background: rgba(255, 244, 220, 0.88);
+  box-shadow:
+    0 12px 24px rgba(88, 53, 35, 0.16),
+    inset 0 -5px 0 rgba(181, 132, 84, 0.22),
+    inset 0 5px 0 rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(6px);
+}
+
+.eyebrow {
+  display: inline-block;
+  margin-bottom: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fffaf1;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hud h1 {
+  margin: 0;
+  font-size: clamp(1.7rem, 2.6vw, 2.3rem);
+  line-height: 0.98;
+}
+
+.hud p {
+  margin: 8px 0 0;
+  font-size: 0.96rem;
+  line-height: 1.35;
+  color: var(--text-soft);
+}
+
+.hud-status {
+  display: grid;
+  gap: 8px;
+  min-width: 220px;
+  text-align: right;
+}
+
+.stat-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 18px;
+  font-weight: 700;
+}
+
+.stat-row span:last-child {
+  color: var(--accent-2);
+  font-size: 1.15rem;
+}
+
+.game-wrap {
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px;
+  background: linear-gradient(180deg, #8fcdf3 0%, #f8d8a4 100%);
+  box-shadow:
+    inset 0 0 0 5px rgba(255, 244, 220, 0.52),
+    inset 0 -10px 0 rgba(109, 62, 44, 0.15);
+}
+
+#game {
+  width: min(100%, 1300px);
+  margin: 84px auto 0;
+  line-height: 0;
+  cursor: none;
+  image-rendering: optimizeSpeed;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -o-crisp-edges;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: optimize-contrast;
+  -ms-interpolation-mode: nearest-neighbor;
+  image-rendering: pixelated;
+}
+
+#game canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.footer-note {
+  position: absolute;
+  inset: auto 24px 18px;
+  z-index: 2;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(75, 51, 40, 0.14);
+  color: #fffaf1;
+  font-size: 0.84rem;
+  letter-spacing: 0.03em;
+}
+
+.footer-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ffe694;
+  box-shadow: 0 0 0 4px rgba(255, 230, 148, 0.22);
+}
+
+@media (max-width: 900px) {
+  body {
+    padding: 14px;
+    overflow: auto;
+  }
+
+  .toybox-frame {
+    padding: 14px;
+    border-radius: 24px;
+  }
+
+  .hud {
+    position: relative;
+    inset: auto;
+    flex-direction: column;
+    padding: 4px 4px 14px;
+  }
+
+  .hud-card,
+  .hud-status {
+    max-width: none;
+    text-align: left;
+  }
+
+  .stat-row {
+    justify-content: flex-start;
+  }
+
+  #game {
+    margin-top: 0;
+  }
+
+  .footer-note {
+    position: relative;
+    inset: auto;
+    margin: 14px;
+  }
+}
