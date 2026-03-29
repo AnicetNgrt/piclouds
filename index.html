@@ -82,6 +82,7 @@ var THEMES = {
 };
 
 var currentTheme = localStorage.getItem('piclouds-theme') || 'default';
+if (!THEMES[currentTheme]) currentTheme = 'default';
 
 function applyTheme(name) {
 	if (!THEMES[name]) return;
