@@ -1,0 +1,242 @@
+/* ===== Base Reset & Layout ===== */
+* {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	overflow: hidden;
+	transition: background-color 0.5s ease;
+}
+
+#PIclouds {
+	cursor: none;
+	position: absolute;
+	top: 0;
+	left: 0;
+	image-rendering: optimizeSpeed;
+	image-rendering: -moz-crisp-edges;
+	image-rendering: -o-crisp-edges;
+	image-rendering: -webkit-optimize-contrast;
+	image-rendering: optimize-contrast;
+	-ms-interpolation-mode: nearest-neighbor;
+	image-rendering: pixelated;
+}
+
+/* ===== CRT Overlay (hidden unless retro theme) ===== */
+#crt-overlay {
+	display: none;
+	position: fixed;
+	inset: 0;
+	pointer-events: none;
+	z-index: 500;
+}
+
+/* ===== Theme Label Badge ===== */
+#theme-label {
+	position: fixed;
+	bottom: 14px;
+	right: 18px;
+	font-family: 'Courier New', monospace;
+	font-size: 11px;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	padding: 4px 10px;
+	border-radius: 3px;
+	border: 1px solid transparent;
+	pointer-events: none;
+	z-index: 600;
+	transition: color 0.4s, background 0.4s, border-color 0.4s, font-family 0.1s;
+}
+
+/* ===== Theme Switcher UI ===== */
+#theme-switcher {
+	position: fixed;
+	top: 12px;
+	right: 12px;
+	z-index: 600;
+	display: flex;
+	gap: 6px;
+	align-items: center;
+}
+
+.theme-btn {
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	border: 3px solid rgba(255, 255, 255, 0.8);
+	cursor: pointer;
+	transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.theme-btn:hover {
+	transform: scale(1.2);
+	border-color: #fff;
+	box-shadow: 0 3px 12px rgba(0, 0, 0, 0.5);
+}
+
+.theme-btn.active {
+	border-color: #fff;
+	box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5), 0 3px 10px rgba(0, 0, 0, 0.4);
+	transform: scale(1.12);
+}
+
+/* ===== Theme Colour Swatches ===== */
+
+.theme-btn[data-theme="default"] {
+	background: linear-gradient(135deg, #4488aa 0%, #43a9df 100%);
+}
+
+.theme-btn[data-theme="dark"] {
+	background: linear-gradient(135deg, #0a0e1a 0%, #1a2a4a 100%);
+}
+
+.theme-btn[data-theme="retro"] {
+	background: linear-gradient(135deg, #000011 0%, #003300 50%, #55FF55 100%);
+	border-radius: 0;           /* square — pixel art style */
+	border: 3px solid #55FF55;
+	image-rendering: pixelated;
+}
+
+.theme-btn[data-theme="retro"]:hover {
+	box-shadow: 0 0 10px #55FF55, 0 0 20px rgba(85, 255, 85, 0.4);
+	border-color: #55FF55;
+}
+
+.theme-btn[data-theme="retro"].active {
+	box-shadow: 0 0 0 2px rgba(85, 255, 85, 0.6), 0 0 14px #55FF55;
+	border-color: #55FF55;
+}
+
+.theme-btn[data-theme="sunset"] {
+	background: linear-gradient(135deg, #c0392b 0%, #f39c12 100%);
+}
+
+.theme-btn[data-theme="storm"] {
+	background: linear-gradient(135deg, #2c3e50 0%, #4a5568 100%);
+}
+
+.theme-btn[data-theme="dawn"] {
+	background: linear-gradient(135deg, #6a3093 0%, #a044ff 50%, #ff7b54 100%);
+}
+
+.theme-btn[data-theme="golden"] {
+	background: linear-gradient(135deg, #b8860b 0%, #ffd700 100%);
+}
+
+/* ===================================================================
+   RETRO / PIXEL THEME
+   NES/SNES limited palette, CRT scanlines, pixel font, arcade vibes
+   =================================================================== */
+
+body.theme-retro {
+	background-color: #080808;
+	/* Slight phosphor green tint on the whole body */
+	color: #55FF55;
+}
+
+/* Pixelated canvas rendering hint */
+body.theme-retro #PIclouds canvas {
+	image-rendering: pixelated;
+	/* Phosphor glow: green tint + subtle bloom */
+	filter: saturate(1.3) brightness(1.05)
+	        drop-shadow(0 0 3px rgba(85, 255, 85, 0.18))
+	        drop-shadow(0 0 8px rgba(85, 255, 255, 0.10));
+}
+
+/* Show the CRT overlay */
+body.theme-retro #crt-overlay {
+	display: block;
+	/* Horizontal scanlines */
+	background:
+		repeating-linear-gradient(
+			0deg,
+			rgba(0, 0, 0, 0.18) 0px,
+			rgba(0, 0, 0, 0.18) 1px,
+			transparent 1px,
+			transparent 3px
+		);
+	/* CRT vignette — darkens corners like an old monitor */
+	box-shadow: inset 0 0 120px 40px rgba(0, 0, 0, 0.55);
+	/* Subtle flicker animation */
+	animation: crt-flicker 8s infinite;
+}
+
+/* Vertical RGB phosphor stripes (very subtle) */
+body.theme-retro #crt-overlay::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: repeating-linear-gradient(
+		90deg,
+		rgba(255, 0,   0,   0.012) 0px,
+		rgba(0,   255, 0,   0.012) 1px,
+		rgba(0,   0,   255, 0.012) 2px,
+		transparent 3px
+	);
+	pointer-events: none;
+}
+
+/* Pixel font for the retro theme label */
+body.theme-retro #theme-label {
+	font-family: 'Press Start 2P', 'Courier New', monospace !important;
+	font-size: 9px;
+	letter-spacing: 0.05em;
+	padding: 6px 10px;
+	border-radius: 0;            /* square pixel corners */
+	text-shadow: 0 0 6px currentColor, 0 0 12px rgba(85, 255, 85, 0.4);
+	animation: pixel-blink-border 1.5s step-end infinite;
+}
+
+/* Pixel square corners for the retro switcher panel */
+body.theme-retro #theme-switcher {
+	gap: 5px;
+}
+
+/* All buttons look pixel-styled when retro is active */
+body.theme-retro .theme-btn {
+	border-radius: 0;
+	border-color: rgba(85, 255, 85, 0.5);
+}
+
+body.theme-retro .theme-btn:hover {
+	border-color: #55FF55;
+	box-shadow: 0 0 8px rgba(85, 255, 85, 0.6);
+}
+
+body.theme-retro .theme-btn.active {
+	border-color: #55FF55;
+	box-shadow: 0 0 0 2px rgba(85, 255, 85, 0.5), 0 0 10px rgba(85, 255, 85, 0.5);
+}
+
+/* === Animations === */
+
+@keyframes crt-flicker {
+	0%,  19%,  21%,  23%,  25%,  54%,  56%, 100% {
+		opacity: 1;
+	}
+	20%,  24%,  55% {
+		opacity: 0.88;
+	}
+}
+
+@keyframes pixel-blink-border {
+	0%,  49% { border-color: #55FF55; }
+	50%, 100% { border-color: transparent; }
+}
+
+/* ===== Other theme body backgrounds ===== */
+
+body.theme-default { background-color: rgb(67, 169, 223); }
+body.theme-dark    { background-color: #050810; }
+body.theme-sunset  { background-color: #c0392b; }
+body.theme-storm   { background-color: #2c3e50; }
+body.theme-dawn    { background-color: #6a3093; }
+body.theme-golden  { background-color: #b8860b; }
+
+/* Dark theme canvas desaturation */
+body.theme-dark #PIclouds canvas {
+	filter: brightness(0.82) saturate(0.6) hue-rotate(200deg);
+}
