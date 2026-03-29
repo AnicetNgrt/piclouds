@@ -132,7 +132,7 @@ function update() {
 		updatePiDisplay();
 	}
 
-	while (jj <= decimal ) {
+	while (!isPaused && jj <= decimal ) {
 		if (nuages[jj].x > 1800) {
 			nuages[jj].destroy();
 		}
@@ -185,11 +185,15 @@ function resetVisualization() {
 }
 
 function updateStats() {
-	var cloudCount = nuages.filter(n => n && !n.destroy).length;
+	var cloudCount = nuages.filter(n => n && n.alive).length;
 	document.getElementById('cloud-count').textContent = cloudCount;
 	document.getElementById('clouds-created').textContent = cloudStartCount;
-	document.getElementById('speed-val').textContent = (speedMultiplier * 100).toFixed(0) + '%';
-	document.getElementById('density-val').textContent = (densityMultiplier * 100).toFixed(0) + '%';
+	var speedText = (speedMultiplier * 100).toFixed(0) + '%';
+	var densityText = (densityMultiplier * 100).toFixed(0) + '%';
+	document.getElementById('speed-val').textContent = speedText;
+	document.getElementById('density-val').textContent = densityText;
+	document.getElementById('speed-val-ctrl').textContent = speedText;
+	document.getElementById('density-val-ctrl').textContent = densityText;
 }
 
 function updatePiDisplay() {
@@ -289,7 +293,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		<div class="control-group">
 			<div class="control-label">
 				<span>Speed</span>
-				<span class="control-value" id="speed-val">100%</span>
+				<span class="control-value" id="speed-val-ctrl">100%</span>
 			</div>
 			<input type="range" id="speed-slider" min="0.1" max="3" step="0.1" value="1">
 			<div style="font-size: 11px; color: #999; margin-top: 4px;">Shift animations</div>
@@ -298,7 +302,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		<div class="control-group">
 			<div class="control-label">
 				<span>Density</span>
-				<span class="control-value" id="density-val">100%</span>
+				<span class="control-value" id="density-val-ctrl">100%</span>
 			</div>
 			<input type="range" id="density-slider" min="0.2" max="2" step="0.1" value="1">
 			<div style="font-size: 11px; color: #999; margin-top: 4px;">Cloud spawn rate</div>
