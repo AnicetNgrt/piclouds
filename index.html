@@ -2,177 +2,366 @@
 <html>
 <head>
 	<title>Nuages de Pi</title>
-	<link href="stylesheet.css" rel="stylesheet">
 	<meta charset="utf-8"/>
 	<script type="text/javascript" src="phaser.min.js"></script>
-	<script>
-var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds', { preload: preload, create: create, update: update }, false, false);
-var nuages = []; var densityDivider = 4; var velocityDivider = 0.6;
-var nuages2 = []; var field; var fond; var fond2;
-var nn = 0; var jj = 0; var sum = 0; var lock = 0;
-var decimal = -1;
-var pi = [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,8,4,1,9,7,1,6,9,3,9,9,3,7,5,1,0,5,8,2,0,9,7,4,9,4,4,5,9,2,3,0,7,8,1,6,4,0,6,2,8,6,2,0,8,9,9,8,6,2,8,0,3,4,8,2,5,3,4,2,1,1,7,0,6,7,9,8,2,1,4,8,0,8,6,5,1,3,2,8,2,3,0,6,6,4,7,0,9,3,8,4,4,6,0,9,5,5,0,5,8,2,2,3,1,7,2,5,3,5,9,4,0,8,1,2,8,4,8,1,1,1,7,4,5,0,2,8,4,1,0,2,7,0,1,9,3,8,5,2,1,1,0,5,5,5,9,6,4,4,6,2,2,9,4,8,9,5,4,9,3,0,3,8,1,9,6,4,4,2,8,8,1,0,9,7,5,6,6,5,9,3,3,4,4,6,1,2,8,4,7,5,6,4,8,2,3,3,7,8,6,7,8,3,1,6,5,2,7,1,2,0,1,9,0,9,1,4,5,6,4,8,5,6,6,9,2,3,4,6,0,3,4,8,6,1,0,4,5,4,3,2,6,6,4,8,2,1,3,3,9,3,6,0,7,2,6,0,2,4,9,1,4,1,2,7,3,7,2,4,5,8,7,0,0,6,6,0,6,3,1,5,5,8,8,1,7,4,8,8,1,5,2,0,9,2,0,9,6,2,8,2,9,2,5,4,0,9,1,7,1,5,3,6,4,3,6,7,8,9,2,5,9,0,3,6,0,0,1,1,3,3,0,5,3,0,5,4,8,8,2,0,4,6,6,5,2,1,3,8,4,1,4,6,9,5,1,9,4,1,5,1,1,6,0,9,4,3,3,0,5,7,2,7,0,3,6,5,7,5,9,5,9,1,9,5,3,0,9,2,1,8,6,1,1,7,3,8,1,9,3,2,6,1,1,7,9,3,1,0,5,1,1,8,5,4,8,0,7,4,4,6,2,3,7,9,9,6,2,7,4,9,5,6,7,3,5,1,8,8,5,7,5,2,7,2,4,8,9,1,2,2,7,9,3,8,1,8,3,0,1,1,9,4,9,1,2,9,8,3,3,6,7,3,3,6,2,4,4,0,6,5,6,6,4,3,0,8,6,0,2,1,3,9,4,9,4,6,3,9,5,2,2,4,7,3,7,1,9,0,7,0,2,1,7,9,8,6,0,9,4,3,7,0,2,7,7,0,5,3,9,2,1,7,1,7,6,2,9,3,1,7,6,7,5,2,3,8,4,6,7,4,8,1,8,4,6,7,6,6,9,4,0,5,1,3,2,0,0,0,5,6,8,1,2,7,1,4,5,2,6,3,5,6,0,8,2,7,7,8,5,7,7,1,3,4,2,7,5,7,7,8,9,6,0,9,1,7,3,6,3,7,1,7,8,7,2,1,4,6,8,4,4,0,9,0,1,2,2,4,9,5,3,4,3,0,1,4,6,5,4,9,5,8,5,3,7,1,0,5,0,7,9,2,2,7,9,6,8,9,2,5,8,9,2,3,5,4,2,0,1,9,9,5,6,1,1,2,1,2,9,0,2,1,9,6,0,8,6,4,0,3,4,4,1,8,1,5,9,8,1,3,6,2,9,7,7,4,7,7,1,3,0,9,9,6,0,5,1,8,7,0,7,2,1,1,3,4,9,9,9,9,9,9,8,3,7,2,9,7,8,0,4,9,9,5,1,0,5,9,7,3,1,7,3,2,8,1,6,0,9,6,3,1,8,5,9,5,0,2,4,4,5,9,4,5,5,3,4,6,9,0,8,3,0,2,6,4,2,5,2,2,3,0,8,2,5,3,3,4,4,6,8,5,0,3,5,2,6,1,9,3,1,1,8,8,1,7,1,0,1,0,0,0,3,1,3,7,8,3,8,7,5,2,8,8,6,5,8,7,5,3,3,2,0,8,3,8,1,4,2,0];
+	<style>
+		* { margin: 0; padding: 0; box-sizing: border-box; }
+		body { background-color: rgb(67,169,223); overflow: hidden; font-family: 'Georgia', serif; }
+		#PIclouds { cursor: none; image-rendering: pixelated; }
 
-function randInt(min, max) {
-	return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-		
-for (var i = 0; i<10000; i++) {
-	pi.push(randInt(0,9));
-	console.log(pi[886+i]);
-}
-
-var timer = 0;
-
-function sleep(milliseconds) {
-	var start = new Date().getTime();
-	for (var i = 0; i < 1e7; i++) {
-		if ((new Date().getTime() - start) > milliseconds){
-		 break;
+		#ui-overlay {
+			position: fixed;
+			top: 0; left: 0; right: 0; bottom: 0;
+			pointer-events: none;
+			z-index: 10;
 		}
+
+		/* Constant selector panel */
+		#constant-panel {
+			position: absolute;
+			top: 18px;
+			left: 50%;
+			transform: translateX(-50%);
+			display: flex;
+			gap: 10px;
+			align-items: center;
+			pointer-events: all;
+			background: rgba(0,0,0,0.22);
+			border-radius: 30px;
+			padding: 8px 18px;
+			backdrop-filter: blur(4px);
+			border: 1px solid rgba(255,255,255,0.18);
+		}
+		#constant-panel .label {
+			color: rgba(255,255,255,0.7);
+			font-size: 11px;
+			letter-spacing: 2px;
+			text-transform: uppercase;
+			margin-right: 4px;
+		}
+		.const-btn {
+			background: rgba(255,255,255,0.15);
+			border: 1px solid rgba(255,255,255,0.3);
+			color: rgba(255,255,255,0.8);
+			padding: 6px 16px;
+			border-radius: 20px;
+			cursor: pointer;
+			font-size: 17px;
+			font-family: 'Georgia', serif;
+			transition: all 0.2s ease;
+			letter-spacing: 1px;
+		}
+		.const-btn:hover {
+			background: rgba(255,255,255,0.3);
+			color: #fff;
+			transform: scale(1.05);
+		}
+		.const-btn.active {
+			background: rgba(255,255,255,0.85);
+			color: #1a6080;
+			font-weight: bold;
+			border-color: rgba(255,255,255,0.9);
+			box-shadow: 0 2px 12px rgba(255,255,255,0.4);
+		}
+
+		/* Digit display - top right */
+		#digit-display {
+			position: absolute;
+			top: 16px;
+			right: 24px;
+			text-align: right;
+			color: rgba(255,255,255,0.85);
+			text-shadow: 0 1px 6px rgba(0,0,0,0.4);
+		}
+		#current-digit {
+			font-size: 52px;
+			font-family: 'Georgia', serif;
+			line-height: 1;
+			font-weight: bold;
+			opacity: 0.9;
+			transition: transform 0.15s ease;
+		}
+		#digit-index {
+			font-size: 11px;
+			letter-spacing: 2px;
+			text-transform: uppercase;
+			opacity: 0.6;
+			margin-top: 2px;
+		}
+
+		/* Frequency chart - bottom */
+		#freq-panel {
+			position: absolute;
+			bottom: 0;
+			left: 50%;
+			transform: translateX(-50%);
+			width: 580px;
+			padding: 14px 24px 12px;
+			background: rgba(0,0,0,0.25);
+			backdrop-filter: blur(6px);
+			border-top-left-radius: 16px;
+			border-top-right-radius: 16px;
+			border: 1px solid rgba(255,255,255,0.15);
+			border-bottom: none;
+		}
+		#freq-title {
+			color: rgba(255,255,255,0.55);
+			font-size: 10px;
+			letter-spacing: 2.5px;
+			text-transform: uppercase;
+			text-align: center;
+			margin-bottom: 10px;
+		}
+		#freq-bars {
+			display: flex;
+			align-items: flex-end;
+			gap: 6px;
+			height: 52px;
+			justify-content: center;
+		}
+		.bar-col {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 3px;
+			flex: 1;
+			max-width: 46px;
+		}
+		.bar-wrap {
+			width: 100%;
+			height: 42px;
+			display: flex;
+			align-items: flex-end;
+		}
+		.bar {
+			width: 100%;
+			background: rgba(255,255,255,0.55);
+			border-radius: 3px 3px 0 0;
+			min-height: 2px;
+			transition: height 0.4s ease;
+		}
+		.bar.active-digit {
+			background: rgba(255,255,255,0.95);
+			box-shadow: 0 0 8px rgba(255,255,255,0.6);
+		}
+		.bar-label {
+			color: rgba(255,255,255,0.5);
+			font-size: 10px;
+			letter-spacing: 1px;
+		}
+	</style>
+</head>
+<body>
+	<div id="ui-overlay">
+		<div id="constant-panel">
+			<span class="label">Constant</span>
+			<button class="const-btn active" data-const="pi">π</button>
+			<button class="const-btn" data-const="e">e</button>
+			<button class="const-btn" data-const="phi">φ</button>
+		</div>
+
+		<div id="digit-display">
+			<div id="current-digit">3</div>
+			<div id="digit-index">digit #1</div>
+		</div>
+
+		<div id="freq-panel">
+			<div id="freq-title">Digit frequency distribution</div>
+			<div id="freq-bars"></div>
+		</div>
+	</div>
+
+<script>
+// ─── Mathematical constant digit arrays ────────────────────────────────────────
+var CONSTANTS = {
+	pi: {
+		name: 'π',
+		digits: [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,8,4,1,9,7,1,6,9,3,9,9,3,7,5,1,0,5,8,2,0,9,7,4,9,4,4,5,9,2,3,0,7,8,1,6,4,0,6,2,8,6,2,0,8,9,9,8,6,2,8,0,3,4,8,2,5,3,4,2,1,1,7,0,6,7,9,8,2,1,4,8,0,8,6,5,1,3,2,8,2,3,0,6,6,4,7,0,9,3,8,4,4,6,0,9,5,5,0,5,8,2,2,3,1,7,2,5,3,5,9,4,0,8,1,2,8,4,8,1,1,1,7,4,5,0,2,8,4,1,0,2,7,0,1,9,3,8,5,2,1,1,0,5,5,5,9,6,4,4,6,2,2,9,4,8,9,5,4,9,3,0,3,8,1,9,6,4,4,2,8,8,1,0,9,7,5,6,6,5,9,3,3,4,4,6,1,2,8,4,7,5,6,4,8,2,3,3,7,8,6,7,8,3,1,6,5,2,7,1,2,0,1,9,0,9,1,4,5,6,4,8,5,6,6,9,2,3,4,6,0,3,4,8,6,1,0,4,5,4,3,2,6,6,4,8,2,1,3,3,9,3,6,0,7,2,6,0,2,4,9,1,4,1,2,7,3,7,2,4,5,8,7,0,0,6,6,0,6,3,1,5,5,8,8,1,7,4,8,8,1,5,2,0,9,2,0,9,6,2,8,2,9,2,5,4,0,9,1,7,1,5,3,6,4,3,6,7,8,9,2,5,9,0,3,6,0,0,1,1,3,3,0,5,3,0,5,4,8,8,2,0,4,6,6,5,2,1,3,8,4,1,4,6,9,5,1,9,4,1,5,1,1,6,0,9,4,3,3,0,5,7,2,7,0,3,6,5,7,5,9,5,9,1,9,5,3,0,9,2,1,8,6,1,1,7,3,8,1,9,3,2,6,1,1,7,9,3,1,0,5,1,1,8,5,4,8,0,7,4,4,6,2,3,7,9,9,6,2,7,4,9,5,6,7,3,5,1,8,8,5,7,5,2,7,2,4,8,9,1,2,2,7,9,3,8,1,8,3,0,1,1,9,4,9,1,2,9,8,3,3,6,7,3,3,6,2,4,4,0,6,5,6,6,4,3,0,8,6,0,2,1,3,9,4,9,4,6,3,9,5,2,2,4,7,3,7,1,9,0,7,0,2,1,7,9,8,6,0,9,4,3,7,0,2,7,7,0,5,3,9,2,1,7,1,7,6,2,9,3,1,7,6,7,5,2,3,8,4,6,7,4,8,1,8,4,6,7,6,6,9,4,0,5,1,3,2,0,0,0,5,6,8,1,2,7,1,4,5,2,6,3,5,6,0,8,2,7,7,8,5,7,7,1,3,4,2,7,5,7,7,8,9,6,0,9,1,7,3,6,3,7,1,7,8,7,2,1,4,6,8,4,4,0,9,0,1,2,2,4,9,5,3,4,3,0,1,4,6,5,4,9,5,8,5,3,7,1,0,5,0,7,9,2,2,7,9,6,8,9,2,5,8,9,2,3,5,4,2,0,1,9,9,5,6,1,1,2,1,2,9,0,2,1,9,6,0,8,6,4,0,3,4,4,1,8,1,5,9,8,1,3,6,2,9,7,7,4,7,7,1,3,0,9,9,6,0,5,1,8,7,0,7,2,1,1,3,4,9,9,9,9,9,8,3,7,2,9,7,8,0,4,9,9,5,1,0,5,9,7,3,1,7,3,2,8,1,6,0,9,6,3,1,8,5,9,5,0,2,4,4,5,9,4,5,5,3,4,6,9,0,8,3,0,2,6,4,2,5,2,2,3,0,8,2,5,3,3,4,4,6,8,5,0,3,5,2,6,1,9,3,1,1,8,8,1,7,1,0,1,0,0,0,3,1,3,7,8,3,8,7,5,2,8,8,6,5,8,7,5,3,3,2,0,8,3,8,1,4,2,0]
+	},
+	e: {
+		name: 'e',
+		digits: [2,7,1,8,2,8,1,8,2,8,4,5,9,0,4,5,2,3,5,3,6,0,2,8,7,4,7,1,3,5,2,6,6,2,4,9,7,7,5,7,2,4,7,0,9,3,6,9,9,9,5,9,5,7,4,9,6,6,9,6,7,6,2,7,7,2,4,0,7,6,6,3,0,3,5,3,5,4,7,5,9,4,5,7,1,3,8,2,1,7,8,5,2,5,1,6,6,4,2,7,4,2,7,4,6,6,3,9,1,9,3,2,0,0,3,0,5,9,9,2,1,8,1,7,4,1,3,5,9,6,6,2,9,0,4,3,5,7,2,9,0,0,3,3,4,2,9,5,2,6,0,5,9,5,6,3,0,7,3,8,1,3,2,3,2,8,6,2,7,9,4,3,4,9,0,7,6,3,2,3,3,8,2,9,8,8,0,7,5,3,1,9,5,2,5,1,0,1,9,0,1,1,5,7,3,8,3,4,1,8,7,9,3,0,7,0,2,1,5,4,0,8,9,1,4,9,9,3,4,8,8,4,1,6,7,5,0,9,2,4,4,7,6,1,4,6,0,6,6,8,0,8,2,2,6,4,8,0,0,1,6,8,4,7,7,4,1,1,8,5,3,7,4,2,3,4,5,4,4,2,4,3,7,1,0,7,5,3,9,0,7,7,7,4,4,9,9,2,0,6,9,5,5,1,7,0,2,7,6,1,8,3,8,6,0,6,2,6,1,3,3,1,3,8,4,5,8,3,0,0,0,7,5,2,0,4,4,9,3,3,8,2,6,5,6,0,2,9,7,6,0,6,7,3,7,1,1,3,2,0,0,7,0,9,3,2,8,7,0,9,1,2,7,4,4,3,7,4,7,0,4,7,2,3,0,6,9,6,9,7,7,2,0,9,3,1,0,1,4,1,6,9,2,8,3,6,8,1,9,0,2,5,5,1,5,1,0,8,6,5,7,4,6,3,7,7,2,1,1,1,2,5,2,3,8,9,7,8,4,4,2,5,0,5,6,9,5,3,6,9,6,7,7,0,7,8,5,4,4,9,9,6,9,9,6,7,9,4,6,8,6,4,4,5,4,9,0,5,9,8,7,9,3,1,6,3,6,8,8,9,2,3,0,0,9,8,7,9,3,1,2,7,7,3,6,1,7,8,2,1,5,4,2,4,9,9,9,2,2,9,5,7,6,3,5,1,4,8,2,2,0,8,2,6,9,8,9,5,1,9,3,6,6,8,0,3,3,1,8,2,5,2,8,8,6,9,3,9,8,4,9,6,4,6,5,1,0,5,8,2,0,9,3,9,2,3,9,8,2,9,4,8,8,7,9,3,3,2,0,3,6,2,5,0,9,4,4,3,1,1,7,3,0,1,2,3,8,1,9,7,0,6,8,4,1,6,1,4,0,3,9,7,0,1,9,8,3,7,6,7,9,3,2,0,6,8,3,2,8,2,3,7,6,4,6,4,8,0,4,2,9,5,3,1,1,8,0,2,3,2,8,7,8,2,5,0,9,8,1,9,4,5,5,8,1,5,3,0,1,7,5,6,7,1,7,3,6,1,3,3,2,0,6,9,8,1,1,2,5,0,9,9,6,1,8,1,8,8,1,5,9,3,0,4,1,6,9,0,3,5,1,5,9,8,8,8,8,5,1,9,3,4,5,8,0,7,2,7,3,8,6,6,7,3,8,5,8,9,4,2,2,8,7,9,2,2,8,4,9,9,8,9,2,0,8,6,8,5,8,4,5,7,8,3,1,6,3,0,5,7,7,7,7,5,6,0,6,8,8,8,7,6,4,4,6,2,4,8,2,4,6,8,5,7,9,2,6,0,3,9,5,3,5,2,7,7,3,4,8,0,3,0,4,8,0,2,9,0,0,5,8,7,6,0,7,5,8,2,5,1,0,4,7,5,2,1,6,2,0,5,6,9,6,6,0,2,4,0,5,8,0,3,8,1,5,0,1,9,3,5,1,1,2,5,3,3,8,2,4,3,0,0,3,5,5,8,7,6,4,0,2,4,7,4,9,6,4,7,3,2,6,3,9,1,4,1,9,9,2,7,2,6,0,4,2,6,9,9,2,2,7,9,6,7,8,2,3,5,4,7,8,1,6,3,6,0,0,9,3,4,1,7,2,1,6,4,1,2,1,9,9,2,4,5,8,6,3,1,5,0,3,0,2,8,6,1,8,2,9,7,4,5,5,5,7,0,6,7,4,9,8,3,8,5,0,5,4,9,4,5,8,8,5,8,6,9,2,6,9,9,5,6,9,0,9,2,7,2,1,0,7,9,7,5,0,9,3,0,2,9,5,5,3,2,1,1,6,5,3,4,4,9,8,7,2,0,2,7,5,5,9,6,0,2,3,6,4,8,0,6,6,5,4,9,9,1,1,9,8,8,1,8,3,4,7,9,7,7,5,3,5,6,6,3,6,9,8,0,7,4,2,6,5,4,2,5,2,7,8,6,2,5,5,1,8,1,8,4,1,7,5,7,4,6,7,2,8,9,0,9,7,7,7,7,2,7,9,3,8,0,0,0,8,1,6,4,7,0,6,0,0,1,6,1,4,5,2,4,9,1,9,2,1,7,3,2,1,7,2,1,4,7,7,2,3,5,0,1,4,1,4,4,1,9,7,3,5,6,8,5,4,8,1,6,1,3,6,1,1,5,7,3,5,2,5,5,2,1,3,3,4,7,5,7,4,1,8,4,9,4,6,8,4,3,8,5,2,3,3,2,3,9,0,7,3,9,4,1,4,3,3,3,4,5,4,7,7,6,2,4,1,6,8,6,2,5,1,8,9,8,3,5,6,9,4,8,5,5,6,2,0,9,9,2,1,9,2,2,2,1,8,4,2,7,2,5,5,0,2,5,4,2,5,6,8,8,7,6,7,1,7,9,0,4,9,4,6,0,1,6,5,3,4,6,6,8,0,4,9,8,8,6,2,7,2,3,2,7,9,1,7,8,6,0,8,5,7,8,4,3,8,3,8,2,7,9,6,7,9,7,6,6,8,1,4,5,4,1,0,0,9,5,3,8,8,3,7,8,6,3,6,0,9,5,0,6,8,0,0,6,4,2,2,5,1,2,5,2,0,5,1,1,7,3,9,2,9,8,4,8,9,6,0,8,4,1,2,8,4,8,8,6,2,6,9,4,5,6,0,4,2,4,1,9,6,5,2,8,5,0,2,2,2,1,0,6,6,1,1,8,6,3]
+	},
+	phi: {
+		name: 'φ',
+		digits: [1,6,1,8,0,3,3,9,8,8,7,4,9,8,9,4,8,4,8,2,0,4,5,8,6,8,3,4,3,6,5,6,3,8,1,1,7,7,2,0,3,0,9,1,7,9,8,0,5,7,6,2,8,6,2,1,3,5,4,4,8,6,2,2,7,0,5,2,6,0,4,6,2,8,1,8,9,0,2,4,4,9,7,0,7,2,0,7,2,0,4,1,8,9,3,9,1,1,3,7,4,8,4,7,5,4,0,8,8,0,7,5,3,8,6,8,9,1,7,5,2,1,2,6,6,3,3,8,6,2,2,2,3,5,3,6,9,3,1,7,9,3,1,8,0,0,6,0,7,6,6,7,2,6,3,5,4,4,3,3,3,8,9,0,8,6,5,9,5,9,3,9,5,8,2,9,0,5,6,3,8,3,2,2,6,6,1,3,1,9,9,2,8,2,9,0,2,6,7,8,8,0,6,7,5,2,0,8,7,6,6,8,9,2,5,0,1,7,1,1,6,9,6,2,0,7,0,3,2,2,2,1,0,4,3,2,1,6,2,6,9,5,4,8,6,2,6,2,9,6,3,1,3,6,1,4,4,3,8,1,4,9,7,5,8,7,0,1,2,2,0,3,4,0,8,0,5,8,8,7,9,5,4,4,5,4,7,4,9,2,4,6,1,8,5,6,9,5,3,6,4,8,6,4,4,4,9,2,4,1,0,4,4,3,2,0,7,7,1,3,4,4,9,4,7,0,4,9,5,6,5,8,4,6,7,8,8,5,0,9,8,7,4,3,3,9,4,4,2,2,1,2,5,4,4,8,7,7,0,6,6,4,7,8,0,9,1,5,8,8,4,6,0,7,4,9,9,8,8,7,1,2,4,0,0,7,6,5,2,1,7,0,5,7,5,1,7,9,7,8,8,3,4,1,6,6,2,5,6,2,4,9,4,0,7,5,8,9,1,8,5,7,9,5,2,7,4,4,8,3,7,4,1,5,5,5,9,7,5,6,6,3,6,9,8,6,9,4,8,7,5,3,5,9,6,3,5,9,6,8,4,4,7,1,2,4,4,6,7,6,2,3,6,1,3,6,9,5,2,4,3,6,9,6,5,0,9,5,4,7,1,0,2,0,1,8,9,4,0,7,1,0,1,5,3,2,3,2,2,3,0,4,5,3,3,7,1,3,3,9,3,3,7,4,8,2,3,2,8,0,2,7,6,7,8,1,5,2,1,5,0,5,5,0,3,0,7,9,0,2,4,2,4,1,8,8,4,9,7,4,1,9,5,4,3,1,0,0,0,3,6,8,9,3,2,8,7,0,8,4,8,7,2,7,2,7,1,7,5,1,5,6,3,4,4,5,5,0,0,8,2,1,1,6,2,6,6,3,2,5,4,8,5,8,4,9,9,1,9,1,5,3,7,0,9,7,8,5,0,5,0,5,9,6,3,4,4,8,7,2,8,5,6,1,2,2,5,7,2,3,0,5,4,3,5,5,5,1,8,0,3,7,7,8,0,2,0,6,1,2,1,3,1,1,1,0,4,4,9,8,1,8,0,5,8,4,1,9,2,3,1,1,1,5,9,5,7,3,3,4,8,1,4,9,0,6,1,9,0,5,3,0,1,0,0,7,8,4,6,8,2,1,2,6,9,0,4,0,2,4,3,6,0,6,9,8,7,6,5,0,1,6,3,1,4,5,7,4,3,1,5,5,2,2,7,4,3,8,8,5,1,6,0,3,1,7,1,5,0,0,3,7,7,6,5,1,3,1,5,7,5,4,3,1,1,9,7,2,0,0,4,5,2,9,8,4,0,5,5,6,4,2,6,9,4,4,6,7,4,2,7,2,5,7,8,5,2,6,6,8,2,0,6,3,9,7,6,8,2,1,4,6,9,3,5,5,9,5,1,2,2,1,5,3,4,6,1,2,1,9,8,3,8,0,3,3,0,4,5,7,7,2,5,3,4,7,1,1,0,6,0,1,7,0,8,1,8,2,7,2,0,6,9,8,5,2,2,3,0,7,3,2,6,3,7,3,5,1,4,1,3,3,8,6,5,7,2,1,1,3,6,4,1,1,3,3,9,6,7,2,4,0,5,7,9,9,5,7,0,2,3,8,6,8,2,6,3,8,1,0,2,3,1,4,9,3,4,7,3,0,4,2,4,3,5,6,7,7,5,0,4,3,9,3,7,7,1,3,0,5,1,0,0,5,3,6,9,8,9,0,7,5,9,6,2,5,7,3,3,1,1,1,2,7,0,9,3,3,5,3,1,3,4,6,6,6,1,5,4,6,3,6,4,6,4,7,1,8,8,2,1,5,2,5,0,3,7,1,9,3,9,9,3,5,9,4,7,4,5,3,9,4,9,6,6,6,7,3,1,4,9,8,1,7,2,2,6,4,1,2,3,8,3,4,9,2,2,0,9,4,7,7,5,3,9,6,5,7,4,8,3,1,7,9,4,8,8,2,9,0,5,2,9,2,2,0,2,1,3,1,4,4,1,7,8,5,9,2,2,4,2,8,3,0,2,2,7,6,4,9,4,3,1,0,5,9,4,6,6,3,6,8,0,1,9,8,5,4,6,4,5,6,7,5,6,5,9,2,2,5,8,6,7,4,3,0,3,8,8,4,4,3,9,6,2,6,2,7,1,9,3,1,6,5,2,0,8,8,5,4,0,2,9,1,8,2,4,4,0,0,8,1,2,7,7,5,6,1,5,2,8,4,5,3,1,4,8,5,2,5,9,5,9,7,4,3,6,4,4,4,5,6,4,9,8,8,7,3,3,2,1,3,3,1,8,1,4,2,0,6,3,0,5,5,6,1,7,6,5,5,2,8,9,5,5,1,8,7,4,4,1,7,5,3,8,6,7,9,6,7,9,9,7,0,9,0,9,2,6,0,5,6,2,1,0,0,9,5,0,7,5,3,9,0,8,9,6,2,0,0,0,1,8,0,1,7,0,0,5,2,1,1,3,6,7,7,2,8,2,5,2,4,4,6,5,4,9,2,3,3,6,3,3,7,4,0,7,9,3,8,7,3,9,1,1,7,4,6,2,4,4,7,5,6,7,5,4,3,5,3,5,2,3,7,9,4,6,8,0,0,8,9,0,9,8,6,5,7,0,6,6,1,2,6,8,2,6,2,2,3,9,5,2,8,5,2,0,5,1,6,6,8,4,9,1,9,7,1,0,4,9,6,6,3,9,3,2,7,4,7,9,3,5,0,8,8,4,2,7,0,8,7,0,5,2,6,9,0,4,4,7,8,5,5,7,1,6,6,0,4,3,6,1,5,1,1,4,8,6,6,7,8,3,1,9,6,4,3,9,0,2,9,0,8,4,9,2,8,5,4,1,4,9,3,2,9,5,3,8,7,1,3,0,7,3,5,1,4,1,2,6,0,6,8,6,7,0,7,7,0,5,7,8,9,2,5,2,5,8,0,9,3,2,5,1,5,0,4,5,4,4,8,1,7,7,1,3,5,8,9,0,3,9,7,3,5,6,6,4,9,9,1,0,8,7,2,1,8,7,7,1,3,1,0,6,5,8,1,1,9,6,5,7,1,2,2,4,5,8,4,5,7,0,8,7,0,9,6,8,3,1,3,3,9,0,4,7,8,7,0,3,4,8,7,1,5,2,9,2,8,6,0,8,4,8,2,0,5,1,8,6,6,5,9,3,9,2,8,8,2,4,8,2,3,7,8,0,6,8,4,3,8,3,1,8,1,3,2,0,7,0,5,9,2,9,5,7,3,2,1,1,6,1,9,6,9,2,0,3,2,7,4,8,9,0,1,7,4,8,5,2,6,9,3,9,1,1,1,3,5,5,2,1,5,1,0,9,0,4,0,4,5,3,0,8,0,5,8,2,5,7,5,3,2,5,5,0,7,6,6,8,3,9,2,6,7,8,7,7,6,8,1,7,0,0,3,5,8,4,5,0,4,9,5,0,5,3,3,5,3,2,2,7,0,4,0,4,7,7,9,3,3,7,2,5,7,4,3,2,3,6,3,0,4,7,7,2,2,6,6,6,2,6,5,8,4,4,9,6,5,6,5,6,4,5,0,8,0,8,3,4,1,9,3,4,1,5,9,7,2,5,8,6,4,5,9,7,4,9,9,2,1,5,6,5,7,4,7,5,2,7,3,2,8,1,3,8,4,8,3,3,8,0,4,3,4,7,3,9,6,8,1,9,6,1,5,0,7,1,4,0,3,7,6,7,1,7,9,7,1,2,2,8,2,4,2,3,5,5,7,4,5,1,4,9,7,0,5,3,8,3,2,2,4,8,7,5,4,0,3,5,4,1,0,5,4,9,0,1,1,3,3,0,9,0,0,3,9,5,4,9,2,7,0,8,3,5,5,0,4,3,1,2,7,0,7,5,5,7,4,8,2,1,9,1,6,2,8,9,1,0,0,5,8,0,5,6,5,1,1,3,4,0,4,4,9,9,8,0,7,4,7,4,7,6,5,9,5,1,5,0,4,4,5,8,6,2,9,8,5,8,5,2,3,4,1,8,9,8,3,5,4,3,2,3,3,5,9,8,0,9,3,9,3,2,7,1,8,5,4,0,3,7,0,7,1,5,7,4,8,0,5,3,0,7,2,3,9,6,1,1,2,0,4,3,2,6,6,1,5,3,7,2,1,5,2,8,2,4,7,9,0,9,2,1,0,3,1,0,7,2,1,5,0,2,3,4,0,5,9,2,6,5,6,3,1,9,3,0,9,7,5,4,5,1,4,7,8,2,6,3,1,9,4,6,8,0,3,0,0,7,4,5,4,4,5,7,0,2,2,7,9,3,3,6,8,0,1,2,0,9,0,9,8,8,8,7,0,3,7,6,6,8,4,8,0,6,2,3,0,5,4,0,7,9,7,5,1,9,3,8,0,2,3,6,7,5,6,1,3,1,4,1,4,2,7,1,5,9,5,0,7,0,0,4,6,2,5,3,3,1,7,5,6,5,8,7,3,7,0,6,2,1,5,1,4,5,5,7,7,4,4,1,3,1,0,0,8,9,6,4,9,3,4,7,9,4,9,2,8,8,5,3,4,1,9,8,6,6,4,6,1,3,0,8,8,5,3,0,4,8,0,7,7,7,0,6,0,4,7,1,2,1,0,5,3,7,9,0,3,0,7,1,7,9,9,6,0,7,6,3,8,4,5,8,3,4,9,6,6,1,1,4,6,2,1,8,9,8,0,1,3,4,4,2,5,0,5,3,0,5,1,3,5,8,2,5,2,0,4,1,1,7,3,3,7,7,8,7,2,7,5,4,1,4,0,0,7,8,3,1,0,4,3,7,2,9,2,6,7,0,9,7,1,9,5,6,6,7,6,8,8,2,4,3,1,8,0,0,2,9,0,5,4,3,5,5,4,8,2,3,6,0,9,3,5,8,8,6,2,7,1,8,2,7,1,1,5,2,3,4,6,8,2,8,5,1,4,1,9,3,4,5,0,4,8,2,8,2,0,5,8,7,2,1,9,7,7,2,7,5,4,3,0,1,0,1,5,1,2,6,3,0,7,1,5,5,0,0,2,7,4,6,2,3,6,3,8,3,6,4,2,2,1,2,1,3,8,5,3,7,8,1,8,2,3,5,8,3,2,0,1,9,5,2,0,0,0,2,0,3,2,0,8,9,4,5,3,1,2,4,2,3,5,0,4,8,0,4,0,2,1,5,8,2,1,2,6,3,5,3,3,0,6,5,8,0,3,1,7,4,7,8,6,8,9,4,0,0,5,5,6,5,5,0,4,0,0,8,7,3,2,2,3,3,2,4,5,4,5,6,1,2,0,4,4,8,9,8,3,4,7,4,5,0,5,9,2,1,2,4,8,3,6,2,7,1,7,3,5,4,3,3,4,3,7,6,7,7,1,5,2,3,6,9,8,0,1,3,4,5,1,0,8,5,3,4,9,6,9,2,4,8,8,4,5,0,8,0,0,1,3,3,5,2,7,4,2,7,7,2,7,9,3,7,7,6,8,6,6,6,0,0,0,1,2,3,2,9,8,2,0,0,0,9,4,7,7,9,6,4,0,5,1,7,0,5,5,4,8,5,6,7,7,6,6,5,2,1,6,2,3,0,6,4,6,6,3,2,9,0,6,8,5,3,0,5,2,5,7,0,9,0,3,3,9,7,2,7,7,5,0,9,5,3,6,6,3,7,9,9,2,7,6,5,4,9,1,0,5,6,6,8,9,7,6,5,2,6,0,2,0,6,9,6,7,7,5,4,6,5,9,3,0,0,9,0,5,7,1,3,5,0,3,5,5,5,4,3,4,5,5,9,3,1,6,7,4,8,4,9,7,2,9,4,7,9,5,5,7,2,3,2,4,3,5,3,3,1,4,0,5,3,0,3,7,3,8,0,3,9,4,0,8,5,0,0,0]
+	}
+};
+
+// ─── State ──────────────────────────────────────────────────────────────────────
+var activeConst = 'pi';
+var freq = [0,0,0,0,0,0,0,0,0,0];
+
+function getDigits() { return CONSTANTS[activeConst].digits; }
+
+// ─── Frequency bar chart ─────────────────────────────────────────────────────
+var freqBarsEl = document.getElementById('freq-bars');
+
+function initFreqBars() {
+	freqBarsEl.innerHTML = '';
+	for (var d = 0; d <= 9; d++) {
+		var col = document.createElement('div');
+		col.className = 'bar-col';
+		col.innerHTML =
+			'<div class="bar-wrap"><div class="bar" id="bar-' + d + '" style="height:2px"></div></div>' +
+			'<div class="bar-label">' + d + '</div>';
+		freqBarsEl.appendChild(col);
 	}
 }
+
+function updateFreqBars(lastDigit) {
+	var maxVal = 1;
+	for (var i = 0; i < 10; i++) { if (freq[i] > maxVal) maxVal = freq[i]; }
+	for (var d = 0; d <= 9; d++) {
+		var bar = document.getElementById('bar-' + d);
+		if (!bar) continue;
+		var h = Math.max(2, Math.round((freq[d] / maxVal) * 42));
+		bar.style.height = h + 'px';
+		bar.className = 'bar' + (d === lastDigit ? ' active-digit' : '');
+	}
+}
+
+// ─── Digit display ───────────────────────────────────────────────────────────
+function updateDigitDisplay(digit, index) {
+	var el = document.getElementById('current-digit');
+	var idxEl = document.getElementById('digit-index');
+	el.textContent = digit;
+	el.style.transform = 'scale(1.3)';
+	setTimeout(function() { el.style.transform = 'scale(1)'; }, 120);
+	idxEl.textContent = 'digit #' + (index + 1);
+}
+
+// ─── Constant selector ───────────────────────────────────────────────────────
+document.querySelectorAll('.const-btn').forEach(function(btn) {
+	btn.addEventListener('click', function() {
+		var key = btn.dataset['const'];
+		if (key === activeConst) return;
+		activeConst = key;
+		document.querySelectorAll('.const-btn').forEach(function(b) { b.classList.remove('active'); });
+		btn.classList.add('active');
+		restartVisualization();
+	});
+});
+
+// ─── Phaser game ─────────────────────────────────────────────────────────────
+var game;
+var nuages = [], nuages2 = [];
+var densityDivider = 4, velocityDivider = 0.6;
+var fond, fond2;
+var jj = 0;
+var decimal = -1;
+var timer = 0;
+var order0,order1,order2,order3,order4,order5,order6,order7,order8,order9;
+
 function preload() {
 	game.load.image('nuage','nuage.png');
 	game.load.image('nuage2','nuage2.png');
-	game.load.image('field','field.png');
 	game.load.image('fond','fond.png');
 	game.load.image('fond2','fond2.png');
 }
+
 function create() {
 	game.time.desiredFps = 30;
 	game.stage.backgroundColor = "#4488AA";
-	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
+	fond  = game.add.tileSprite(0, 0,   1300, 400, 'fond');
 	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
-	order0 = game.add.group();
-	order1 = game.add.group();
-	order2 = game.add.group();
-	order3 = game.add.group();
-	order4 = game.add.group();
-	order5 = game.add.group();
-	order6 = game.add.group();
-	order7 = game.add.group();
-	order8 = game.add.group();
-	order9 = game.add.group();
-	//fond2.angle = 180;
+	order0 = game.add.group(); order1 = game.add.group();
+	order2 = game.add.group(); order3 = game.add.group();
+	order4 = game.add.group(); order5 = game.add.group();
+	order6 = game.add.group(); order7 = game.add.group();
+	order8 = game.add.group(); order9 = game.add.group();
 	fond2.alpha = 0.9;
-	//field = game.add.tileSprite(0, 465, 1300, 300, 'field');
-	//field.alpha = 0.2;
-
 }
-function update() {
 
+function update() {
+	var digits = getDigits();
 	timer++;
 
-	if (timer > (pi[decimal+1])*densityDivider) {
-
+	if (timer > (digits[decimal+1] !== undefined ? digits[decimal+1] : 5) * densityDivider) {
 		decimal++;
+		if (decimal >= digits.length - 2) decimal = 0;
 		timer = 0;
-		nuages.push(game.add.tileSprite(-200, 400-(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage'));
-		nuages[decimal].anchor.x = 0.7;
-		nuages[decimal].anchor.y = 0.5;
-		nuages[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
-		nuages[decimal].alpha = 0.9;
-		//sum += pi[decimal];
-		nuages2.push(game.add.tileSprite(-200, 400+(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage2'));
-		nuages2[decimal].anchor.x = 0.7;
-		nuages2[decimal].anchor.y = 0.5;
-		nuages2[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
-		nuages[decimal].alpha = 0.99;
 
-		switch(pi[decimal]) {
-		case 0:
-			order0.add(nuages[decimal]);
-			order0.add(nuages2[decimal]);
-			break;
-		case 1:
-			order1.add(nuages[decimal]);
-			order1.add(nuages2[decimal]);
-			break;
-		case 2:
-			order2.add(nuages[decimal]);
-			order2.add(nuages2[decimal]);
-			break;
-		case 3:
-			order3.add(nuages[decimal]);
-			order3.add(nuages2[decimal]);
-			break;
-		case 4:
-			order4.add(nuages[decimal]);
-			order4.add(nuages2[decimal]);
-			break;
-		case 5:
-			order5.add(nuages[decimal]);
-			order5.add(nuages2[decimal]);
-			break;
-		case 6:
-			order6.add(nuages[decimal]);
-			order6.add(nuages2[decimal]);
-			break;
-		case 7:
-			order7.add(nuages[decimal]);
-			order7.add(nuages2[decimal]);
-			break;
-		case 8:
-			order8.add(nuages[decimal]);
-			order8.add(nuages2[decimal]);
-			break;
-		case 9:
-			order9.add(nuages[decimal]);
-			order9.add(nuages2[decimal]);
-			break;
-		}
+		var d = digits[decimal];
+		freq[d]++;
+		updateDigitDisplay(d, decimal);
+		updateFreqBars(d);
+
+		var yTop = 400 - (d * 34 - 15);
+		var yBot = 400 + (d * 34 - 15);
+		var sc   = d / 10;
+
+		var c = game.add.tileSprite(-200, yTop, 768, 312, 'nuage');
+		c.anchor.setTo(0.7, 0.5);
+		c.scale.setTo(sc, sc);
+		c.alpha = 0.9;
+		nuages.push(c);
+
+		var c2 = game.add.tileSprite(-200, yBot, 768, 312, 'nuage2');
+		c2.anchor.setTo(0.7, 0.5);
+		c2.scale.setTo(sc, sc);
+		c2.alpha = 0.9;
+		nuages2.push(c2);
+
+		var orders = [order0,order1,order2,order3,order4,order5,order6,order7,order8,order9];
+		orders[d].add(c);
+		orders[d].add(c2);
 	}
 
-	while (jj <= decimal ) {
-		if (nuages[jj].x > 1800) {
-			nuages[jj].destroy();
+	while (jj <= decimal) {
+		if (nuages[jj]) {
+			nuages[jj].x  += digits[jj] / Math.abs(velocityDivider);
+			nuages2[jj].x += digits[jj] / Math.abs(velocityDivider);
+			if (nuages[jj].x > 1800) {
+				nuages[jj].destroy();
+				nuages2[jj].destroy();
+			}
 		}
-		nuages[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		nuages2[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		//nuages[jj].angle += (1/(pi[jj]))*3;
 		jj++;
-		//if (nuages[jj].x > 1300) {
-		//}
 	}
 	jj = 0;
 
-	game.world.bringToTop(order0);
-	game.world.bringToTop(order1);
-	game.world.bringToTop(order2);
-	game.world.bringToTop(order3);
-	game.world.bringToTop(order4);
-	game.world.bringToTop(order5);
-	game.world.bringToTop(order6);
-	game.world.bringToTop(order7);
-	game.world.bringToTop(order8);
-	game.world.bringToTop(order9);
+	game.world.bringToTop(order0); game.world.bringToTop(order1);
+	game.world.bringToTop(order2); game.world.bringToTop(order3);
+	game.world.bringToTop(order4); game.world.bringToTop(order5);
+	game.world.bringToTop(order6); game.world.bringToTop(order7);
+	game.world.bringToTop(order8); game.world.bringToTop(order9);
 	fond2.bringToTop();
 }
 
+function restartVisualization() {
+	for (var i = 0; i < nuages.length; i++) {
+		if (nuages[i]  && nuages[i].destroy)  nuages[i].destroy();
+		if (nuages2[i] && nuages2[i].destroy) nuages2[i].destroy();
+	}
+	nuages  = [];
+	nuages2 = [];
+	decimal = -1;
+	timer   = 0;
+	jj      = 0;
+	freq    = [0,0,0,0,0,0,0,0,0,0];
+	updateFreqBars(-1);
+	var d0 = getDigits()[0];
+	updateDigitDisplay(d0, 0);
+}
 
+// ─── Init ────────────────────────────────────────────────────────────────────
+initFreqBars();
 
-  </script>
+game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds',
+	{ preload: preload, create: create, update: update }, false, false);
+</script>
 
-
-
-
-</head>
-<body style="background-color: rgb(67,169,223);">
-	<div id="game" style="
+<style>
+	#PIclouds {
 		cursor: none;
 		position: absolute;
-		TOP: 0px;
-		LEFT: 0px;
-
-
+		top: 0; left: 0;
 		image-rendering: optimizeSpeed;
 		image-rendering: -moz-crisp-edges;
-		image-rendering: -o-crisp-edges;
 		image-rendering: -webkit-optimize-contrast;
-		image-rendering: optimize-contrast;
-		-ms-interpolation-mode: nearest-neighbor;
-		image-rendering : pixelated;">
-	</div>
+		image-rendering: pixelated;
+	}
+</style>
 </body>
 </html>
