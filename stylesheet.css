@@ -1,0 +1,57 @@
+/* ===== Theme Switcher ===== */
+#theme-switcher {
+  position: fixed;
+  bottom: 18px;
+  right: 18px;
+  display: flex;
+  gap: 8px;
+  z-index: 100;
+  align-items: center;
+}
+
+.theme-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.45);
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+  outline: none;
+}
+
+.theme-btn:hover {
+  transform: scale(1.18);
+  border-color: rgba(255,255,255,0.9);
+}
+
+.theme-btn.active {
+  border-color: #ffffff;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.5);
+  transform: scale(1.15);
+}
+
+/* Colour swatches */
+.theme-btn[data-theme="default"] { background: linear-gradient(135deg, #4488aa 0%, #43a9df 100%); }
+.theme-btn[data-theme="neon"]    { background: linear-gradient(135deg, #050008 0%, #00ffff 50%, #ff00ff 100%); }
+
+/* ===== Theme Label ===== */
+#theme-label {
+  position: fixed;
+  bottom: 18px;
+  left: 18px;
+  font-family: monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+#theme-label.visible {
+  opacity: 1;
+}
