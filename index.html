@@ -22,6 +22,61 @@ for (var i = 0; i<10000; i++) {
 	console.log(pi[886+i]);
 }
 
+var THEMES = {
+  sky: {
+    name:       'Sky',
+    stageColor: '#4488AA',
+    bodyBg:     'rgb(67,169,223)',
+    cloudTint:  0xFFFFFF,
+    cloud2Tint: 0xFFFFFF,
+    fondTint:   0xFFFFFF,
+    fond2Tint:  0xFFFFFF,
+    fond2Alpha: 0.9,
+    labelBg:    'rgba(0,0,0,0.45)',
+    labelColor: '#ffffff'
+  },
+  sunset: {
+    name:       'Sunset',
+    stageColor: '#7B2D00',
+    bodyBg:     'rgb(180,80,20)',
+    cloudTint:  0xFFCC88,
+    cloud2Tint: 0xFF7733,
+    fondTint:   0xFF8C42,
+    fond2Tint:  0xAA2266,
+    fond2Alpha: 0.85,
+    labelBg:    'rgba(80,10,0,0.65)',
+    labelColor: '#FFDDAA'
+  }
+};
+
+function applyTheme(name) {
+  var t = THEMES[name];
+  if (!t) return;
+  localStorage.setItem('piclouds-theme', name);
+  document.body.style.backgroundColor = t.bodyBg;
+  if (game && game.stage) {
+    game.stage.backgroundColor = t.stageColor;
+  }
+  if (fond)  fond.tint  = t.fondTint  || 0xFFFFFF;
+  if (fond2) {
+    fond2.tint  = t.fond2Tint || 0xFFFFFF;
+    fond2.alpha = t.fond2Alpha !== undefined ? t.fond2Alpha : 0.9;
+  }
+  for (var i = 0; i < nuages.length; i++) {
+    if (nuages[i])  nuages[i].tint  = t.cloudTint;
+    if (nuages2[i]) nuages2[i].tint = t.cloud2Tint;
+  }
+  var btns = document.querySelectorAll('.theme-btn');
+  for (var b = 0; b < btns.length; b++) {
+    btns[b].classList.toggle('active', btns[b].dataset.theme === name);
+    var tb = THEMES[btns[b].dataset.theme];
+    if (tb) {
+      btns[b].style.backgroundColor = tb.labelBg || 'rgba(0,0,0,0.45)';
+      btns[b].style.color = tb.labelColor || '#ffffff';
+    }
+  }
+}
+
 var timer = 0;
 
 function sleep(milliseconds) {
@@ -59,6 +114,8 @@ function create() {
 	//field = game.add.tileSprite(0, 465, 1300, 300, 'field');
 	//field.alpha = 0.2;
 
+	var savedTheme = localStorage.getItem('piclouds-theme') || 'sky';
+	applyTheme(savedTheme);
 }
 function update() {
 
@@ -79,6 +136,9 @@ function update() {
 		nuages2[decimal].anchor.y = 0.5;
 		nuages2[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
 		nuages[decimal].alpha = 0.99;
+		var activeTheme = THEMES[localStorage.getItem('piclouds-theme') || 'sky'] || THEMES.sky;
+		nuages[decimal].tint  = activeTheme.cloudTint;
+		nuages2[decimal].tint = activeTheme.cloud2Tint;
 
 		switch(pi[decimal]) {
 		case 0:
@@ -158,6 +218,28 @@ function update() {
 
 
 </head>
+<style>
+  #theme-switcher {
+    position: fixed;
+    bottom: 12px;
+    right: 12px;
+    display: flex;
+    gap: 6px;
+    z-index: 100;
+  }
+  .theme-btn {
+    padding: 5px 11px;
+    border: 2px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: sans-serif;
+    opacity: 0.85;
+    transition: opacity 0.2s, border-color 0.2s;
+  }
+  .theme-btn:hover { opacity: 1; }
+  .theme-btn.active { border-color: #fff; opacity: 1; }
+</style>
 <body style="background-color: rgb(67,169,223);">
 	<div id="game" style="
 		cursor: none;
@@ -173,6 +255,10 @@ function update() {
 		image-rendering: optimize-contrast;
 		-ms-interpolation-mode: nearest-neighbor;
 		image-rendering : pixelated;">
+	</div>
+	<div id="theme-switcher">
+		<button class="theme-btn" data-theme="sky" onclick="applyTheme('sky')">Sky</button>
+		<button class="theme-btn" data-theme="sunset" onclick="applyTheme('sunset')">Sunset</button>
 	</div>
 </body>
 </html>
