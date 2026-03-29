@@ -6,7 +6,114 @@
 	<meta charset="utf-8"/>
 	<script type="text/javascript" src="phaser.min.js"></script>
 	<script>
-var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds', { preload: preload, create: create, update: update }, false, false);
+
+/* ===== Theme definitions ===== */
+var THEMES = {
+	'day': {
+		stageColor:  '#4488AA',
+		bodyBg:      'rgb(67,169,223)',
+		cloudTint:   0xffffff,
+		cloud2Tint:  0xffffff,
+		fond2Alpha:  0.90
+	},
+	'dark-night': {
+		stageColor:  '#060b1a',
+		bodyBg:      '#02040c',
+		cloudTint:   0x99aadd,   /* silver-blue moonlit tint   */
+		cloud2Tint:  0x445577,   /* deep-blue reflection tint  */
+		fond2Alpha:  0.45
+	},
+	'sunset': {
+		stageColor:  '#8B2500',
+		bodyBg:      '#a02010',
+		cloudTint:   0xffbb88,
+		cloud2Tint:  0xff7744,
+		fond2Alpha:  0.80
+	},
+	'storm': {
+		stageColor:  '#1a2533',
+		bodyBg:      '#1e2d3e',
+		cloudTint:   0xaabbcc,
+		cloud2Tint:  0x778899,
+		fond2Alpha:  0.70
+	},
+	'dawn': {
+		stageColor:  '#3d1a5e',
+		bodyBg:      '#5a2880',
+		cloudTint:   0xffccdd,
+		cloud2Tint:  0xdd88aa,
+		fond2Alpha:  0.85
+	}
+};
+
+var currentTheme = localStorage.getItem('piclouds-theme') || 'dark-night';
+
+/* Apply a theme by name */
+function applyTheme(name) {
+	if (!THEMES[name]) return;
+	currentTheme = name;
+	localStorage.setItem('piclouds-theme', name);
+
+	var theme = THEMES[name];
+
+	/* Body class drives CSS (background colour, canvas filter, overlays) */
+	document.body.className = 'theme-' + name;
+
+	/* Phaser stage background */
+	if (game && game.stage) {
+		game.stage.backgroundColor = theme.stageColor;
+	}
+
+	/* fond2 reflection opacity */
+	if (fond2) {
+		fond2.alpha = theme.fond2Alpha;
+	}
+
+	/* Re-tint all cloud sprites that are still alive */
+	for (var i = 0; i <= decimal; i++) {
+		try {
+			if (nuages[i]  && nuages[i].alive)  nuages[i].tint  = theme.cloudTint;
+			if (nuages2[i] && nuages2[i].alive) nuages2[i].tint = theme.cloud2Tint;
+		} catch(e) {}
+	}
+
+	/* Highlight active button */
+	var btns = document.querySelectorAll('.theme-btn');
+	btns.forEach(function(btn) {
+		btn.classList.toggle('active', btn.getAttribute('data-theme') === name);
+	});
+}
+
+/* Generate twinkling stars for the Dark Night overlay */
+function initNightAccents() {
+	var starsEl = document.getElementById('stars-overlay');
+	if (!starsEl) return;
+
+	var layers = [
+		{ cls: 'star-layer star-layer-1', count: 170, maxX: 1280, maxY: 370, pad: 10 },
+		{ cls: 'star-layer star-layer-2', count: 75,  maxX: 1270, maxY: 340, pad: 15 },
+		{ cls: 'star-layer star-layer-3', count: 28,  maxX: 1260, maxY: 290, pad: 20 }
+	];
+
+	layers.forEach(function(layer) {
+		var div = document.createElement('div');
+		div.className = layer.cls;
+		var shadows = [];
+		for (var i = 0; i < layer.count; i++) {
+			var x = Math.floor(Math.random() * layer.maxX + layer.pad);
+			var y = Math.floor(Math.random() * layer.maxY + layer.pad);
+			var base   = Math.floor(Math.random() * 55 + 200);
+			var blue   = Math.min(255, base + Math.floor(Math.random() * 30));
+			var spread = (Math.random() > 0.80) ? '1px' : '0px';
+			shadows.push(x + 'px ' + y + 'px ' + spread + ' rgba(' + base + ',' + base + ',' + blue + ',0.92)');
+		}
+		div.style.boxShadow = shadows.join(',');
+		starsEl.appendChild(div);
+	});
+}
+
+/* ===== Phaser game setup ===== */
+var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'game', { preload: preload, create: create, update: update }, false, false);
 var nuages = []; var densityDivider = 4; var velocityDivider = 0.6;
 var nuages2 = []; var field; var fond; var fond2;
 var nn = 0; var jj = 0; var sum = 0; var lock = 0;
@@ -16,7 +123,7 @@ var pi = [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,
 function randInt(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-		
+
 for (var i = 0; i<10000; i++) {
 	pi.push(randInt(0,9));
 	console.log(pi[886+i]);
@@ -41,7 +148,7 @@ function preload() {
 }
 function create() {
 	game.time.desiredFps = 30;
-	game.stage.backgroundColor = "#4488AA";
+	game.stage.backgroundColor = THEMES[currentTheme].stageColor;
 	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
 	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
 	order0 = game.add.group();
@@ -55,10 +162,9 @@ function create() {
 	order8 = game.add.group();
 	order9 = game.add.group();
 	//fond2.angle = 180;
-	fond2.alpha = 0.9;
+	fond2.alpha = THEMES[currentTheme].fond2Alpha;
 	//field = game.add.tileSprite(0, 465, 1300, 300, 'field');
 	//field.alpha = 0.2;
-
 }
 function update() {
 
@@ -73,12 +179,14 @@ function update() {
 		nuages[decimal].anchor.y = 0.5;
 		nuages[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
 		nuages[decimal].alpha = 0.9;
+		nuages[decimal].tint  = THEMES[currentTheme].cloudTint;
 		//sum += pi[decimal];
 		nuages2.push(game.add.tileSprite(-200, 400+(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage2'));
 		nuages2[decimal].anchor.x = 0.7;
 		nuages2[decimal].anchor.y = 0.5;
 		nuages2[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
 		nuages[decimal].alpha = 0.99;
+		nuages2[decimal].tint = THEMES[currentTheme].cloud2Tint;
 
 		switch(pi[decimal]) {
 		case 0:
@@ -151,28 +259,41 @@ function update() {
 }
 
 
-
   </script>
 
 
-
-
 </head>
-<body style="background-color: rgb(67,169,223);">
-	<div id="game" style="
-		cursor: none;
-		position: absolute;
-		TOP: 0px;
-		LEFT: 0px;
+<body>
+	<div id="game"></div>
 
+	<!-- Stars overlay – populated by initNightAccents(), shown only in dark-night theme -->
+	<div id="stars-overlay"></div>
 
-		image-rendering: optimizeSpeed;
-		image-rendering: -moz-crisp-edges;
-		image-rendering: -o-crisp-edges;
-		image-rendering: -webkit-optimize-contrast;
-		image-rendering: optimize-contrast;
-		-ms-interpolation-mode: nearest-neighbor;
-		image-rendering : pixelated;">
+	<!-- Moon overlay – shown only in dark-night theme via CSS -->
+	<div id="moon-overlay"></div>
+
+	<!-- Theme switcher -->
+	<div id="theme-switcher">
+		<button class="theme-btn" data-theme="day"        title="Day"></button>
+		<button class="theme-btn" data-theme="dark-night" title="Dark Night"></button>
+		<button class="theme-btn" data-theme="sunset"     title="Sunset"></button>
+		<button class="theme-btn" data-theme="storm"      title="Storm"></button>
+		<button class="theme-btn" data-theme="dawn"       title="Dawn"></button>
 	</div>
+
+	<script>
+		/* Generate random star positions once on load */
+		initNightAccents();
+
+		/* Apply saved/default theme */
+		applyTheme(currentTheme);
+
+		/* Wire up theme buttons */
+		document.querySelectorAll('.theme-btn').forEach(function(btn) {
+			btn.addEventListener('click', function() {
+				applyTheme(this.getAttribute('data-theme'));
+			});
+		});
+	</script>
 </body>
 </html>

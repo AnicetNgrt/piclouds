@@ -1,0 +1,227 @@
+/* ===== Base Reset & Layout ===== */
+*, *::before, *::after {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	overflow: hidden;
+	transition: background-color 0.8s ease;
+}
+
+#game {
+	cursor: none;
+	position: absolute;
+	top: 0;
+	left: 0;
+	image-rendering: optimizeSpeed;
+	image-rendering: -moz-crisp-edges;
+	image-rendering: -o-crisp-edges;
+	image-rendering: -webkit-optimize-contrast;
+	image-rendering: optimize-contrast;
+	-ms-interpolation-mode: nearest-neighbor;
+	image-rendering: pixelated;
+}
+
+#game canvas {
+	transition: filter 0.8s ease;
+}
+
+/* ===== Theme Switcher UI ===== */
+#theme-switcher {
+	position: fixed;
+	top: 14px;
+	right: 14px;
+	z-index: 1000;
+	display: flex;
+	gap: 7px;
+	align-items: center;
+	background: rgba(0, 0, 0, 0.25);
+	padding: 7px 10px;
+	border-radius: 22px;
+	backdrop-filter: blur(6px);
+	-webkit-backdrop-filter: blur(6px);
+	border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.theme-btn {
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	border: 2px solid rgba(255, 255, 255, 0.65);
+	cursor: pointer;
+	transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+	outline: none;
+}
+
+.theme-btn:hover {
+	transform: scale(1.2);
+	border-color: #fff;
+	box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+}
+
+.theme-btn.active {
+	border-color: #fff;
+	box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.45), 0 3px 12px rgba(0, 0, 0, 0.5);
+	transform: scale(1.15);
+}
+
+/* ===== Theme Button Swatches ===== */
+.theme-btn[data-theme="day"] {
+	background: linear-gradient(135deg, #4488aa 0%, #43a9df 100%);
+}
+
+.theme-btn[data-theme="dark-night"] {
+	background: radial-gradient(circle at 30% 30%, #1a1a4a 0%, #06080f 60%, #000308 100%);
+	border-color: rgba(160, 180, 255, 0.8);
+}
+
+.theme-btn[data-theme="sunset"] {
+	background: linear-gradient(135deg, #8b2500 0%, #e8591a 55%, #f4a020 100%);
+}
+
+.theme-btn[data-theme="storm"] {
+	background: linear-gradient(135deg, #1a2533 0%, #3a4a5a 55%, #5a6878 100%);
+}
+
+.theme-btn[data-theme="dawn"] {
+	background: linear-gradient(135deg, #3d1a5e 0%, #9040cc 50%, #ff8060 100%);
+}
+
+/* ===== Theme: Day (default – daytime sky) ===== */
+body.theme-day {
+	background-color: rgb(67, 169, 223);
+}
+
+/* ===== Theme: Dark Night ===== */
+body.theme-dark-night {
+	background-color: #02040c;
+}
+
+body.theme-dark-night #game canvas {
+	filter: brightness(0.68) saturate(0.38) hue-rotate(210deg);
+}
+
+/* ===== Stars Overlay (Dark Night only) ===== */
+#stars-overlay {
+	display: none;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 700;
+	pointer-events: none;
+}
+
+body.theme-dark-night #stars-overlay {
+	display: block;
+}
+
+.star-layer {
+	position: absolute;
+	top: 0;
+	left: 0;
+	border-radius: 50%;
+}
+
+.star-layer-1 {
+	width: 1px;
+	height: 1px;
+	animation: twinkle-slow 3.6s ease-in-out infinite;
+}
+
+.star-layer-2 {
+	width: 2px;
+	height: 2px;
+	animation: twinkle-mid 2.4s ease-in-out infinite alternate;
+}
+
+.star-layer-3 {
+	width: 3px;
+	height: 3px;
+	animation: twinkle-fast 4.8s ease-in-out infinite;
+}
+
+@keyframes twinkle-slow {
+	0%, 100% { opacity: 0.85; }
+	50%       { opacity: 0.25; }
+}
+
+@keyframes twinkle-mid {
+	0%   { opacity: 1.0; }
+	100% { opacity: 0.15; }
+}
+
+@keyframes twinkle-fast {
+	0%, 100% { opacity: 1.0; }
+	30%      { opacity: 0.35; }
+	65%      { opacity: 0.75; }
+}
+
+/* ===== Moon Overlay (Dark Night only) ===== */
+#moon-overlay {
+	display: none;
+	position: absolute;
+	width: 54px;
+	height: 54px;
+	top: 36px;
+	right: 230px;
+	border-radius: 50%;
+	background: radial-gradient(circle at 38% 36%, #fffef4, #f8edb8, #d4c070);
+	box-shadow:
+		0 0 12px 4px  rgba(245, 225, 120, 0.55),
+		0 0 36px 12px rgba(210, 190, 90,  0.28),
+		0 0 80px 28px rgba(180, 160, 70,  0.12);
+	z-index: 650;
+	pointer-events: none;
+	animation: moon-glow 6s ease-in-out infinite;
+}
+
+body.theme-dark-night #moon-overlay {
+	display: block;
+}
+
+@keyframes moon-glow {
+	0%, 100% {
+		box-shadow:
+			0 0 12px 4px  rgba(245, 225, 120, 0.55),
+			0 0 36px 12px rgba(210, 190, 90,  0.28),
+			0 0 80px 28px rgba(180, 160, 70,  0.12);
+	}
+	50% {
+		box-shadow:
+			0 0 18px 7px  rgba(245, 225, 120, 0.72),
+			0 0 52px 18px rgba(210, 190, 90,  0.40),
+			0 0 110px 40px rgba(180, 160, 70,  0.20);
+	}
+}
+
+/* ===== Theme: Sunset ===== */
+body.theme-sunset {
+	background-color: #a02010;
+}
+
+body.theme-sunset #game canvas {
+	filter: brightness(0.88) saturate(1.5) hue-rotate(342deg);
+}
+
+/* ===== Theme: Storm ===== */
+body.theme-storm {
+	background-color: #1e2d3e;
+}
+
+body.theme-storm #game canvas {
+	filter: brightness(0.72) saturate(0.45) hue-rotate(188deg);
+}
+
+/* ===== Theme: Dawn ===== */
+body.theme-dawn {
+	background-color: #5a2880;
+}
+
+body.theme-dawn #game canvas {
+	filter: brightness(0.82) saturate(0.75) hue-rotate(268deg);
+}
