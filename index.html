@@ -15,7 +15,7 @@ var decimal = -1;
 // Game mode variables
 var gameMode = 'visualization'; // 'visualization' or 'catcher'
 var score = 0;
-var combo = 0;
+var combo = 1;
 var lives = 3;
 var catchableDigits = {};
 var scoreText;
@@ -41,7 +41,7 @@ function toggleGameMode() {
 	if (gameMode === 'visualization') {
 		gameMode = 'catcher';
 		score = 0;
-		combo = 0;
+		combo = 1;
 		lives = 3;
 		difficultyLevel = 1;
 		modeText.text = 'MODE: CATCHER - Catch the digits!';
@@ -76,14 +76,14 @@ function handleClick(pointer) {
 			// Visual feedback - scale up then destroy
 			var tween = game.add.tween(cloud);
 			tween.to({ alpha: 0, scaleX: cloud.scaleX * 1.5, scaleY: cloud.scaleY * 1.5 }, 200);
-			tween.onComplete.add(function() { cloud.destroy(); nuages2[i].destroy(); });
+			tween.onComplete.add(function() { if (cloud.alive) cloud.destroy(); if (nuages2[i] && nuages2[i].alive) nuages2[i].destroy(); });
 			tween.start();
 			return;
 		}
 	}
 
 	// Missed
-	combo = 0;
+	combo = 1;
 	lives--;
 	if (lives <= 0) {
 		gameMode = 'visualization';
@@ -172,8 +172,8 @@ function update() {
 		nuages2[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
 		nuages[decimal].alpha = 0.99;
 
-		// In catcher mode, mark clouds as catchable
-		if (gameMode === 'catcher') {
+		// In catcher mode, mark clouds as catchable (skip digit 0: invisible/zero-scale)
+		if (gameMode === 'catcher' && pi[decimal] !== 0) {
 			catchableDigits[decimal] = true;
 		}
 
@@ -232,8 +232,8 @@ function update() {
 					modeText.text = 'Game Over! Score: ' + score + ' | Press SPACE to try again';
 				}
 			}
-			nuages[jj].destroy();
-			if (nuages2[jj]) nuages2[jj].destroy();
+			if (nuages[jj].alive) nuages[jj].destroy();
+			if (nuages2[jj] && nuages2[jj].alive) nuages2[jj].destroy();
 			delete catchableDigits[jj];
 		}
 		nuages[jj].x += (pi[jj])/Math.abs(velocityDivider);
