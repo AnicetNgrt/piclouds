@@ -240,3 +240,57 @@ body.theme-golden  { background-color: #b8860b; }
 body.theme-dark #PIclouds canvas {
 	filter: brightness(0.82) saturate(0.6) hue-rotate(200deg);
 }
+
+/* ===== Retro HUD — live Pi digit display ===== */
+
+#retro-hud {
+	display: none;
+	position: fixed;
+	bottom: 16px;
+	left: 16px;
+	z-index: 600;
+	pointer-events: none;
+	font-family: 'Press Start 2P', 'Courier New', monospace;
+	color: #55FF55;
+	background: rgba(0, 0, 0, 0.82);
+	border: 2px solid #55FF55;
+	padding: 10px 14px;
+	line-height: 1.6;
+	/* Pixel glow */
+	box-shadow: 0 0 8px rgba(85, 255, 85, 0.5), inset 0 0 6px rgba(0, 0, 0, 0.6);
+	text-shadow: 0 0 6px rgba(85, 255, 85, 0.7);
+	image-rendering: pixelated;
+}
+
+body.theme-retro #retro-hud {
+	display: block;
+}
+
+.hud-row {
+	font-size: 7px;
+	letter-spacing: 0.05em;
+	color: #33aa33;
+	margin-bottom: 4px;
+}
+
+.hud-key  { color: #33aa33; }
+.hud-value { color: #55FF55; }
+
+.hud-digit-big {
+	font-size: 36px;
+	line-height: 1;
+	text-align: center;
+	text-shadow: 0 0 10px rgba(85, 255, 85, 0.9), 0 0 20px rgba(85, 255, 85, 0.4);
+}
+
+.hud-cursor {
+	font-size: 10px;
+	text-align: right;
+	margin-top: 4px;
+	animation: hud-blink 1s step-end infinite;
+}
+
+@keyframes hud-blink {
+	0%, 100% { opacity: 1; }
+	50%       { opacity: 0; }
+}

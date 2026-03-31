@@ -210,6 +210,12 @@ function update() {
 			case 8: order8.add(nuages[decimal]); order8.add(nuages2[decimal]); break;
 			case 9: order9.add(nuages[decimal]); order9.add(nuages2[decimal]); break;
 		}
+
+		/* Update retro HUD */
+		var hudDigit = document.getElementById('hud-digit');
+		var hudIndex = document.getElementById('hud-index');
+		if (hudDigit) hudDigit.textContent = pi[decimal];
+		if (hudIndex) hudIndex.textContent = decimal + 1;
 	}
 
 	while (jj <= decimal) {
@@ -246,6 +252,13 @@ function update() {
 
 	<!-- Theme label badge -->
 	<div id="theme-label"></div>
+
+	<!-- Retro HUD: live Pi digit display (visible only in retro theme) -->
+	<div id="retro-hud">
+		<div class="hud-row"><span class="hud-key">PI[</span><span class="hud-value" id="hud-index">0</span><span class="hud-key">]</span></div>
+		<div class="hud-digit-big" id="hud-digit">3</div>
+		<div class="hud-cursor">&#9608;</div>
+	</div>
 
 	<!-- Theme switcher -->
 	<div id="theme-switcher">
