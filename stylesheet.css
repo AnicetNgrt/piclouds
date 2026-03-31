@@ -1,0 +1,87 @@
+* {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	overflow: hidden;
+	transition: background-color 0.6s ease;
+}
+
+/* ── Theme Switcher ─────────────────────────────── */
+#theme-switcher {
+	position: fixed;
+	top: 12px;
+	right: 12px;
+	z-index: 1000;
+	display: flex;
+	gap: 6px;
+	align-items: center;
+}
+
+.theme-btn {
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	border: 3px solid rgba(255,255,255,0.8);
+	cursor: pointer;
+	transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+	box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+	outline: none;
+}
+
+.theme-btn:hover {
+	transform: scale(1.15);
+	border-color: #fff;
+	box-shadow: 0 3px 10px rgba(0,0,0,0.45);
+}
+
+.theme-btn.active {
+	border-color: #fff;
+	box-shadow: 0 0 0 2px rgba(255,255,255,0.5), 0 3px 10px rgba(0,0,0,0.4);
+	transform: scale(1.1);
+}
+
+/* ── Colour swatches ─────────────────────────────── */
+.theme-btn[data-theme="default"] { background: linear-gradient(135deg, #4488aa 0%, #43a9df 100%); }
+.theme-btn[data-theme="dark"]    { background: linear-gradient(135deg, #0a0e1a 0%, #1a2a4a 100%); }
+.theme-btn[data-theme="sunset"]  { background: linear-gradient(135deg, #c0392b 0%, #f39c12 100%); }
+.theme-btn[data-theme="storm"]   { background: linear-gradient(135deg, #2c3e50 0%, #4a5568 100%); }
+.theme-btn[data-theme="dawn"]    { background: linear-gradient(135deg, #6a3093 0%, #a044ff 50%, #ff7b54 100%); }
+.theme-btn[data-theme="golden"]  { background: linear-gradient(135deg, #b8860b 0%, #ffd700 100%); }
+.theme-btn[data-theme="arctic"]  { background: linear-gradient(135deg, #b8d4e8 0%, #eef6ff 100%); }
+.theme-btn[data-theme="forest"]  { background: linear-gradient(135deg, #1b4332 0%, #52b788 50%, #5c4033 100%); }
+
+/* ── Theme Label ───────────────────────────────── */
+#theme-label {
+	position: fixed;
+	bottom: 12px;
+	right: 12px;
+	padding: 3px 10px;
+	border-radius: 4px;
+	font-family: sans-serif;
+	font-size: 12px;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	border: 1px solid;
+	opacity: 0.85;
+	z-index: 1000;
+	pointer-events: none;
+	transition: background 0.3s, color 0.3s;
+}
+
+/* ── Dark theme canvas filter ──────────────────── */
+body.theme-dark #PIclouds canvas {
+	filter: brightness(0.82) saturate(0.6) hue-rotate(200deg);
+}
+
+/* ── Arctic theme canvas filter ─────────────────── */
+body.theme-arctic #PIclouds canvas {
+	filter: brightness(1.05) saturate(0.55) hue-rotate(185deg);
+}
+
+/* ── Forest theme canvas filter ─────────────────── */
+body.theme-forest #PIclouds canvas {
+	filter: brightness(0.78) saturate(1.4) hue-rotate(90deg);
+}
