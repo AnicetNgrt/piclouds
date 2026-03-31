@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Nuages de Pi</title>
+	<title>Nuages de Pi — Space Edition</title>
 	<link href="stylesheet.css" rel="stylesheet">
 	<meta charset="utf-8"/>
 	<script type="text/javascript" src="phaser.min.js"></script>
@@ -11,39 +11,181 @@ var nuages = []; var densityDivider = 4; var velocityDivider = 0.6;
 var nuages2 = []; var field; var fond; var fond2;
 var nn = 0; var jj = 0; var sum = 0; var lock = 0;
 var decimal = -1;
+
+// Star field layers
+var starsBmd, nebulaeBmd, starsSprite, nebulaSprite;
+var shootingStars = [];
+var shootingStarTimer = 0;
+
 var pi = [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,8,4,1,9,7,1,6,9,3,9,9,3,7,5,1,0,5,8,2,0,9,7,4,9,4,4,5,9,2,3,0,7,8,1,6,4,0,6,2,8,6,2,0,8,9,9,8,6,2,8,0,3,4,8,2,5,3,4,2,1,1,7,0,6,7,9,8,2,1,4,8,0,8,6,5,1,3,2,8,2,3,0,6,6,4,7,0,9,3,8,4,4,6,0,9,5,5,0,5,8,2,2,3,1,7,2,5,3,5,9,4,0,8,1,2,8,4,8,1,1,1,7,4,5,0,2,8,4,1,0,2,7,0,1,9,3,8,5,2,1,1,0,5,5,5,9,6,4,4,6,2,2,9,4,8,9,5,4,9,3,0,3,8,1,9,6,4,4,2,8,8,1,0,9,7,5,6,6,5,9,3,3,4,4,6,1,2,8,4,7,5,6,4,8,2,3,3,7,8,6,7,8,3,1,6,5,2,7,1,2,0,1,9,0,9,1,4,5,6,4,8,5,6,6,9,2,3,4,6,0,3,4,8,6,1,0,4,5,4,3,2,6,6,4,8,2,1,3,3,9,3,6,0,7,2,6,0,2,4,9,1,4,1,2,7,3,7,2,4,5,8,7,0,0,6,6,0,6,3,1,5,5,8,8,1,7,4,8,8,1,5,2,0,9,2,0,9,6,2,8,2,9,2,5,4,0,9,1,7,1,5,3,6,4,3,6,7,8,9,2,5,9,0,3,6,0,0,1,1,3,3,0,5,3,0,5,4,8,8,2,0,4,6,6,5,2,1,3,8,4,1,4,6,9,5,1,9,4,1,5,1,1,6,0,9,4,3,3,0,5,7,2,7,0,3,6,5,7,5,9,5,9,1,9,5,3,0,9,2,1,8,6,1,1,7,3,8,1,9,3,2,6,1,1,7,9,3,1,0,5,1,1,8,5,4,8,0,7,4,4,6,2,3,7,9,9,6,2,7,4,9,5,6,7,3,5,1,8,8,5,7,5,2,7,2,4,8,9,1,2,2,7,9,3,8,1,8,3,0,1,1,9,4,9,1,2,9,8,3,3,6,7,3,3,6,2,4,4,0,6,5,6,6,4,3,0,8,6,0,2,1,3,9,4,9,4,6,3,9,5,2,2,4,7,3,7,1,9,0,7,0,2,1,7,9,8,6,0,9,4,3,7,0,2,7,7,0,5,3,9,2,1,7,1,7,6,2,9,3,1,7,6,7,5,2,3,8,4,6,7,4,8,1,8,4,6,7,6,6,9,4,0,5,1,3,2,0,0,0,5,6,8,1,2,7,1,4,5,2,6,3,5,6,0,8,2,7,7,8,5,7,7,1,3,4,2,7,5,7,7,8,9,6,0,9,1,7,3,6,3,7,1,7,8,7,2,1,4,6,8,4,4,0,9,0,1,2,2,4,9,5,3,4,3,0,1,4,6,5,4,9,5,8,5,3,7,1,0,5,0,7,9,2,2,7,9,6,8,9,2,5,8,9,2,3,5,4,2,0,1,9,9,5,6,1,1,2,1,2,9,0,2,1,9,6,0,8,6,4,0,3,4,4,1,8,1,5,9,8,1,3,6,2,9,7,7,4,7,7,1,3,0,9,9,6,0,5,1,8,7,0,7,2,1,1,3,4,9,9,9,9,9,9,8,3,7,2,9,7,8,0,4,9,9,5,1,0,5,9,7,3,1,7,3,2,8,1,6,0,9,6,3,1,8,5,9,5,0,2,4,4,5,9,4,5,5,3,4,6,9,0,8,3,0,2,6,4,2,5,2,2,3,0,8,2,5,3,3,4,4,6,8,5,0,3,5,2,6,1,9,3,1,1,8,8,1,7,1,0,1,0,0,0,3,1,3,7,8,3,8,7,5,2,8,8,6,5,8,7,5,3,3,2,0,8,3,8,1,4,2,0];
 
 function randInt(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-		
-for (var i = 0; i<10000; i++) {
-	pi.push(randInt(0,9));
-	console.log(pi[886+i]);
+
+for (var i = 0; i < 10000; i++) {
+	pi.push(randInt(0, 9));
 }
 
 var timer = 0;
 
-function sleep(milliseconds) {
-	var start = new Date().getTime();
-	for (var i = 0; i < 1e7; i++) {
-		if ((new Date().getTime() - start) > milliseconds){
-		 break;
+// Nebula cloud tints per digit (0-9): cosmic purples, blues, magentas, teals
+var NEBULA_TINTS = [
+	0x5533AA, // 0 — deep indigo
+	0x8844DD, // 1 — violet
+	0x3355CC, // 2 — cobalt blue
+	0xAA33BB, // 3 — nebula pink-purple
+	0x2277CC, // 4 — sky blue
+	0xCC3399, // 5 — hot magenta
+	0x4466FF, // 6 — electric blue
+	0x9922CC, // 7 — deep purple
+	0x33BBAA, // 8 — teal/cyan
+	0xFF44AA  // 9 — cosmic pink
+];
+
+var NEBULA_TINTS2 = [
+	0x220055, // 0
+	0x4411AA, // 1
+	0x112266, // 2
+	0x661188, // 3
+	0x0D3A66, // 4
+	0x881166, // 5
+	0x1133BB, // 6
+	0x550099, // 7
+	0x115544, // 8
+	0xAA1166  // 9
+];
+
+function drawStarField(bmd, count) {
+	var ctx = bmd.context;
+	// Deep space gradient background
+	var grad = ctx.createLinearGradient(0, 0, 0, 700);
+	grad.addColorStop(0,    '#010008');
+	grad.addColorStop(0.35, '#040018');
+	grad.addColorStop(0.5,  '#080025');
+	grad.addColorStop(0.65, '#04000e');
+	grad.addColorStop(1,    '#000005');
+	ctx.fillStyle = grad;
+	ctx.fillRect(0, 0, 1300, 700);
+
+	// Stars — three layers: tiny faint, small, rare bright
+	for (var i = 0; i < count; i++) {
+		var x   = Math.random() * 1300;
+		var y   = Math.random() * 700;
+		var r   = Math.random();
+		var size, alpha, color;
+
+		if (r < 0.72) {
+			// Tiny dim stars
+			size  = 0.5 + Math.random() * 0.5;
+			alpha = 0.2 + Math.random() * 0.45;
+			color = 'rgba(200,210,255,' + alpha + ')';
+		} else if (r < 0.93) {
+			// Medium stars — slightly blue/white
+			size  = 1.0 + Math.random() * 0.8;
+			alpha = 0.5 + Math.random() * 0.4;
+			var hue = Math.random();
+			if (hue < 0.3)      color = 'rgba(180,200,255,' + alpha + ')'; // blue-white
+			else if (hue < 0.6) color = 'rgba(255,245,200,' + alpha + ')'; // yellow-white
+			else                color = 'rgba(255,255,255,' + alpha + ')'; // pure white
+		} else {
+			// Bright stars with glow
+			size  = 1.5 + Math.random() * 1.5;
+			alpha = 0.85 + Math.random() * 0.15;
+			color = 'rgba(255,255,255,' + alpha + ')';
+			// Soft glow
+			var glowGrad = ctx.createRadialGradient(x, y, 0, x, y, size * 3.5);
+			glowGrad.addColorStop(0, 'rgba(200,210,255,0.6)');
+			glowGrad.addColorStop(1, 'rgba(100,120,255,0)');
+			ctx.fillStyle = glowGrad;
+			ctx.beginPath();
+			ctx.arc(x, y, size * 3.5, 0, Math.PI * 2);
+			ctx.fill();
 		}
+		ctx.fillStyle = color;
+		ctx.beginPath();
+		ctx.arc(x, y, size, 0, Math.PI * 2);
+		ctx.fill();
 	}
+	bmd.dirty = true;
 }
+
+function drawNebulae(bmd) {
+	var ctx = bmd.context;
+	ctx.clearRect(0, 0, 1300, 700);
+
+	// Large diffuse nebula clouds
+	var nebulae = [
+		{ x: 180,  y: 180, rx: 320, ry: 160, r: 0, g: 40,  b: 120, a: 0.07 },
+		{ x: 700,  y: 350, rx: 400, ry: 200, r: 80, g: 0,  b: 150, a: 0.09 },
+		{ x: 1100, y: 120, rx: 280, ry: 140, r: 150,g: 0,  b: 80,  a: 0.07 },
+		{ x: 950,  y: 560, rx: 350, ry: 120, r: 0,  g: 80, b: 140, a: 0.06 },
+		{ x: 300,  y: 500, rx: 250, ry: 130, r: 100,g: 0,  b: 180, a: 0.08 },
+		{ x: 650,  y: 140, rx: 200, ry: 90,  r: 0,  g: 60, b: 180, a: 0.05 }
+	];
+
+	nebulae.forEach(function(n) {
+		// Multiple radial gradient passes for volumetric feel
+		for (var pass = 0; pass < 3; pass++) {
+			var ox = (Math.random() - 0.5) * 60;
+			var oy = (Math.random() - 0.5) * 40;
+			ctx.save();
+			ctx.translate(n.x + ox, n.y + oy);
+			ctx.scale(1, n.ry / n.rx);
+			var grad = ctx.createRadialGradient(0, 0, 0, 0, 0, n.rx);
+			grad.addColorStop(0,   'rgba(' + n.r + ',' + n.g + ',' + n.b + ',' + (n.a * 1.4) + ')');
+			grad.addColorStop(0.4, 'rgba(' + n.r + ',' + n.g + ',' + n.b + ',' + (n.a * 0.8) + ')');
+			grad.addColorStop(1,   'rgba(' + n.r + ',' + n.g + ',' + n.b + ',0)');
+			ctx.fillStyle = grad;
+			ctx.beginPath();
+			ctx.arc(0, 0, n.rx, 0, Math.PI * 2);
+			ctx.fill();
+			ctx.restore();
+		}
+	});
+
+	// Horizon rift — faint galactic plane band
+	var riftGrad = ctx.createLinearGradient(0, 280, 0, 420);
+	riftGrad.addColorStop(0,   'rgba(60,0,100,0)');
+	riftGrad.addColorStop(0.3, 'rgba(80,0,140,0.04)');
+	riftGrad.addColorStop(0.5, 'rgba(100,20,160,0.07)');
+	riftGrad.addColorStop(0.7, 'rgba(80,0,140,0.04)');
+	riftGrad.addColorStop(1,   'rgba(60,0,100,0)');
+	ctx.fillStyle = riftGrad;
+	ctx.fillRect(0, 280, 1300, 140);
+
+	bmd.dirty = true;
+}
+
 function preload() {
-	game.load.image('nuage','nuage.png');
-	game.load.image('nuage2','nuage2.png');
-	game.load.image('field','field.png');
-	game.load.image('fond','fond.png');
-	game.load.image('fond2','fond2.png');
+	game.load.image('nuage',  'nuage.png');
+	game.load.image('nuage2', 'nuage2.png');
+	game.load.image('field',  'field.png');
+	game.load.image('fond',   'fond.png');
+	game.load.image('fond2',  'fond2.png');
 }
+
 function create() {
 	game.time.desiredFps = 30;
-	game.stage.backgroundColor = "#4488AA";
-	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
+	game.stage.backgroundColor = '#010008';
+
+	// --- Star field layer (static, behind everything) ---
+	starsBmd = game.add.bitmapData(1300, 700);
+	drawStarField(starsBmd, 520);
+	starsSprite = game.add.image(0, 0, starsBmd);
+
+	// --- Nebula layer (static, above stars) ---
+	nebulaeBmd = game.add.bitmapData(1300, 700);
+	drawNebulae(nebulaeBmd);
+	nebulaSprite = game.add.image(0, 0, nebulaeBmd);
+
+	// --- Cloud tile sprites (tinted as nebulae) ---
+	fond  = game.add.tileSprite(0,   0, 1300, 400, 'fond');
 	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
+
+	fond.tint  = 0x110033;
+	fond2.tint = 0x080018;
+
 	order0 = game.add.group();
 	order1 = game.add.group();
 	order2 = game.add.group();
@@ -54,86 +196,99 @@ function create() {
 	order7 = game.add.group();
 	order8 = game.add.group();
 	order9 = game.add.group();
-	//fond2.angle = 180;
-	fond2.alpha = 0.9;
-	//field = game.add.tileSprite(0, 465, 1300, 300, 'field');
-	//field.alpha = 0.2;
 
+	fond2.alpha = 0.55;
 }
-function update() {
 
+function spawnShootingStar() {
+	var bmd = game.add.bitmapData(200, 4);
+	var ctx = bmd.context;
+	var grad = ctx.createLinearGradient(0, 2, 200, 2);
+	grad.addColorStop(0,   'rgba(255,255,255,0)');
+	grad.addColorStop(0.6, 'rgba(200,220,255,0.7)');
+	grad.addColorStop(1,   'rgba(255,255,255,1)');
+	ctx.fillStyle = grad;
+	ctx.fillRect(0, 0, 200, 4);
+	bmd.dirty = true;
+
+	var startX = randInt(-100, 1200);
+	var startY = randInt(20, 300);
+	var sprite = game.add.image(startX, startY, bmd);
+	sprite.angle = -15 - Math.random() * 20;
+	sprite.alpha = 0.9;
+
+	shootingStars.push({ sprite: sprite, vx: 12 + Math.random() * 8, vy: 3 + Math.random() * 3, life: 0, maxLife: 35 + randInt(0, 20) });
+}
+
+function update() {
 	timer++;
 
-	if (timer > (pi[decimal+1])*densityDivider) {
-
-		decimal++;
-		timer = 0;
-		nuages.push(game.add.tileSprite(-200, 400-(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage'));
-		nuages[decimal].anchor.x = 0.7;
-		nuages[decimal].anchor.y = 0.5;
-		nuages[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
-		nuages[decimal].alpha = 0.9;
-		//sum += pi[decimal];
-		nuages2.push(game.add.tileSprite(-200, 400+(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage2'));
-		nuages2[decimal].anchor.x = 0.7;
-		nuages2[decimal].anchor.y = 0.5;
-		nuages2[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
-		nuages[decimal].alpha = 0.99;
-
-		switch(pi[decimal]) {
-		case 0:
-			order0.add(nuages[decimal]);
-			order0.add(nuages2[decimal]);
-			break;
-		case 1:
-			order1.add(nuages[decimal]);
-			order1.add(nuages2[decimal]);
-			break;
-		case 2:
-			order2.add(nuages[decimal]);
-			order2.add(nuages2[decimal]);
-			break;
-		case 3:
-			order3.add(nuages[decimal]);
-			order3.add(nuages2[decimal]);
-			break;
-		case 4:
-			order4.add(nuages[decimal]);
-			order4.add(nuages2[decimal]);
-			break;
-		case 5:
-			order5.add(nuages[decimal]);
-			order5.add(nuages2[decimal]);
-			break;
-		case 6:
-			order6.add(nuages[decimal]);
-			order6.add(nuages2[decimal]);
-			break;
-		case 7:
-			order7.add(nuages[decimal]);
-			order7.add(nuages2[decimal]);
-			break;
-		case 8:
-			order8.add(nuages[decimal]);
-			order8.add(nuages2[decimal]);
-			break;
-		case 9:
-			order9.add(nuages[decimal]);
-			order9.add(nuages2[decimal]);
-			break;
+	// Shooting star system
+	shootingStarTimer++;
+	if (shootingStarTimer > 80 + randInt(0, 120)) {
+		shootingStarTimer = 0;
+		spawnShootingStar();
+	}
+	for (var s = shootingStars.length - 1; s >= 0; s--) {
+		var ss = shootingStars[s];
+		ss.sprite.x += ss.vx;
+		ss.sprite.y += ss.vy;
+		ss.life++;
+		ss.sprite.alpha = 0.9 * (1 - ss.life / ss.maxLife);
+		if (ss.life >= ss.maxLife || ss.sprite.x > 1500) {
+			ss.sprite.destroy();
+			shootingStars.splice(s, 1);
 		}
 	}
 
-	while (jj <= decimal ) {
+	// Main Pi digit cloud spawning
+	if (timer > (pi[decimal + 1]) * densityDivider) {
+		decimal++;
+		timer = 0;
+
+		var digit = pi[decimal];
+		var tint  = NEBULA_TINTS[digit]  || 0x6633BB;
+		var tint2 = NEBULA_TINTS2[digit] || 0x330066;
+
+		// Update HUD digit readout
+		var hudDigit = document.getElementById('hud-digit');
+		if (hudDigit) hudDigit.textContent = digit;
+
+		nuages.push(game.add.tileSprite(-200, 400 - (digit * 34 - 15), 768, 312, 'nuage'));
+		nuages[decimal].anchor.x = 0.7;
+		nuages[decimal].anchor.y = 0.5;
+		nuages[decimal].scale.setTo(digit / 10, digit / 10);
+		nuages[decimal].alpha = 0.82;
+		nuages[decimal].tint  = tint;
+
+		nuages2.push(game.add.tileSprite(-200, 400 + (digit * 34 - 15), 768, 312, 'nuage2'));
+		nuages2[decimal].anchor.x = 0.7;
+		nuages2[decimal].anchor.y = 0.5;
+		nuages2[decimal].scale.setTo(digit / 10, digit / 10);
+		nuages2[decimal].alpha = 0.65;
+		nuages2[decimal].tint  = tint2;
+
+		switch (digit) {
+			case 0: order0.add(nuages[decimal]); order0.add(nuages2[decimal]); break;
+			case 1: order1.add(nuages[decimal]); order1.add(nuages2[decimal]); break;
+			case 2: order2.add(nuages[decimal]); order2.add(nuages2[decimal]); break;
+			case 3: order3.add(nuages[decimal]); order3.add(nuages2[decimal]); break;
+			case 4: order4.add(nuages[decimal]); order4.add(nuages2[decimal]); break;
+			case 5: order5.add(nuages[decimal]); order5.add(nuages2[decimal]); break;
+			case 6: order6.add(nuages[decimal]); order6.add(nuages2[decimal]); break;
+			case 7: order7.add(nuages[decimal]); order7.add(nuages2[decimal]); break;
+			case 8: order8.add(nuages[decimal]); order8.add(nuages2[decimal]); break;
+			case 9: order9.add(nuages[decimal]); order9.add(nuages2[decimal]); break;
+		}
+	}
+
+	while (jj <= decimal) {
 		if (nuages[jj].x > 1800) {
 			nuages[jj].destroy();
 		}
-		nuages[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		nuages2[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		//nuages[jj].angle += (1/(pi[jj]))*3;
+		nuages[jj].x  += (pi[jj]) / Math.abs(velocityDivider);
+		nuages2[jj].x += (pi[jj]) / Math.abs(velocityDivider);
 		jj++;
-		//if (nuages[jj].x > 1300) {
-		//}
 	}
 	jj = 0;
 
@@ -149,30 +304,25 @@ function update() {
 	game.world.bringToTop(order9);
 	fond2.bringToTop();
 }
-
-
-
-  </script>
-
-
-
-
+	</script>
 </head>
-<body style="background-color: rgb(67,169,223);">
-	<div id="game" style="
+<body id="space-body">
+	<div id="PIclouds" style="
 		cursor: none;
 		position: absolute;
-		TOP: 0px;
-		LEFT: 0px;
-
-
+		top: 0px;
+		left: 0px;
 		image-rendering: optimizeSpeed;
 		image-rendering: -moz-crisp-edges;
 		image-rendering: -o-crisp-edges;
 		image-rendering: -webkit-optimize-contrast;
 		image-rendering: optimize-contrast;
 		-ms-interpolation-mode: nearest-neighbor;
-		image-rendering : pixelated;">
+		image-rendering: pixelated;">
+	</div>
+	<div id="space-hud">
+		<span id="hud-title">π COSMIC STREAM</span>
+		<span id="hud-digit" title="Current digit of π"></span>
 	</div>
 </body>
 </html>
