@@ -1,0 +1,137 @@
+:root {
+	--page-bg: linear-gradient(180deg, #86d6ff 0%, #53b4e8 55%, #2d9bd4 100%);
+	--panel-bg: rgba(255, 255, 255, 0.28);
+	--panel-border: rgba(255, 255, 255, 0.45);
+	--text: #11324d;
+	--muted: rgba(17, 50, 77, 0.72);
+	--button-bg: rgba(255, 255, 255, 0.86);
+	--button-border: rgba(17, 50, 77, 0.12);
+	--button-text: #11324d;
+	--shadow: 0 24px 80px rgba(14, 64, 96, 0.25);
+}
+
+body.night {
+	--page-bg: radial-gradient(circle at top, #203660 0%, #0f1b34 38%, #040814 100%);
+	--panel-bg: rgba(5, 12, 24, 0.5);
+	--panel-border: rgba(159, 196, 255, 0.18);
+	--text: #e8f2ff;
+	--muted: rgba(232, 242, 255, 0.72);
+	--button-bg: rgba(12, 24, 46, 0.82);
+	--button-border: rgba(159, 196, 255, 0.26);
+	--button-text: #e8f2ff;
+	--shadow: 0 28px 90px rgba(0, 0, 0, 0.42);
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	min-height: 100vh;
+	font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+	background: var(--page-bg);
+	color: var(--text);
+	transition: background 220ms ease, color 220ms ease;
+}
+
+.app-shell {
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 24px;
+	gap: 18px;
+}
+
+.toolbar {
+	width: min(1300px, 100%);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 16px 20px;
+	background: var(--panel-bg);
+	border: 1px solid var(--panel-border);
+	border-radius: 20px;
+	backdrop-filter: blur(14px);
+	box-shadow: var(--shadow);
+}
+
+.eyebrow {
+	margin: 0 0 4px;
+	font-size: 0.72rem;
+	letter-spacing: 0.24em;
+	text-transform: uppercase;
+	color: var(--muted);
+}
+
+h1 {
+	margin: 0;
+	font-size: clamp(1.4rem, 2vw, 2rem);
+}
+
+#theme-toggle {
+	border: 1px solid var(--button-border);
+	background: var(--button-bg);
+	color: var(--button-text);
+	padding: 10px 16px;
+	border-radius: 999px;
+	font: inherit;
+	font-weight: 700;
+	cursor: pointer;
+	transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+}
+
+#theme-toggle:hover,
+#theme-toggle:focus-visible {
+	transform: translateY(-1px);
+	outline: none;
+}
+
+.scene-frame {
+	width: min(1300px, 100%);
+	padding: 12px;
+	background: var(--panel-bg);
+	border: 1px solid var(--panel-border);
+	border-radius: 28px;
+	box-shadow: var(--shadow);
+	backdrop-filter: blur(14px);
+}
+
+#game {
+	cursor: none;
+	position: relative;
+	width: 1300px;
+	max-width: 100%;
+	overflow: hidden;
+	border-radius: 20px;
+	image-rendering: optimizeSpeed;
+	image-rendering: -moz-crisp-edges;
+	image-rendering: -o-crisp-edges;
+	image-rendering: -webkit-optimize-contrast;
+	image-rendering: optimize-contrast;
+	-ms-interpolation-mode: nearest-neighbor;
+	image-rendering: pixelated;
+}
+
+#game canvas {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+
+@media (max-width: 900px) {
+	.app-shell {
+		padding: 16px;
+	}
+
+	.toolbar {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 14px;
+	}
+
+	#theme-toggle {
+		width: 100%;
+	}
+}
