@@ -56,13 +56,13 @@ function applyTheme(mode) {
 		fond2.tint = 0x1e304f;
 		fond2.alpha = 0.92;
 		if (nightOverlay) {
-			nightOverlay.alpha = 0.42;
+			nightOverlay.alpha = 0.3;
 		}
 		if (moon) {
 			moon.alpha = 0.95;
 		}
 		for (var s = 0; s < stars.length; s++) {
-			stars[s].alpha = 0.55 + (s % 3) * 0.12;
+			stars[s].alpha = 0.72 + (s % 3) * 0.08;
 		}
 	} else {
 		game.stage.backgroundColor = "#4488AA";
@@ -240,6 +240,12 @@ function update() {
 	game.world.bringToTop(order8);
 	game.world.bringToTop(order9);
 	fond2.bringToTop();
+	if (nightOverlay) {
+		game.world.bringToTop(nightOverlay);
+	}
+	for (var s = 0; s < stars.length; s++) {
+		game.world.bringToTop(stars[s]);
+	}
 	if (moon) {
 		game.world.bringToTop(moon);
 	}
@@ -268,8 +274,16 @@ function update() {
 	</div>
 	<script>
 	(function () {
+		var themeParam = null;
 		try {
-			var savedTheme = window.localStorage.getItem("piclouds-theme");
+			var params = new URLSearchParams(window.location.search);
+			var requestedTheme = params.get("theme");
+			if (requestedTheme === "night" || requestedTheme === "day") {
+				themeParam = requestedTheme;
+			}
+		} catch (e) {}
+		try {
+			var savedTheme = themeParam || window.localStorage.getItem("piclouds-theme");
 			if (savedTheme === "night" || savedTheme === "day") {
 				theme = savedTheme;
 			}
@@ -277,6 +291,11 @@ function update() {
 		document.body.classList.toggle("night", theme === "night");
 		var toggle = document.getElementById("theme-toggle");
 		toggle.textContent = theme === "night" ? "Day theme" : "Night theme";
+		if (themeParam) {
+			try {
+				window.localStorage.setItem("piclouds-theme", themeParam);
+			} catch (e) {}
+		}
 		toggle.addEventListener("click", function () {
 			setTheme(theme === "night" ? "day" : "night");
 		});
