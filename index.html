@@ -5,6 +5,68 @@
 	<link href="stylesheet.css" rel="stylesheet">
 	<meta charset="utf-8"/>
 	<script type="text/javascript" src="phaser.min.js"></script>
+	<style>
+		html, body {
+			margin: 0;
+			min-height: 100%;
+			background-color: rgb(67,169,223);
+			overflow: hidden;
+			font-family: "Arial Black", Arial, sans-serif;
+		}
+
+		.page-shell {
+			min-height: 100vh;
+			transform: rotate(180deg);
+			transform-origin: center center;
+		}
+
+		.cto-banner {
+			position: fixed;
+			top: 0;
+			left: 0;
+			right: 0;
+			z-index: 1000;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 16px;
+			padding: 14px 18px;
+			background: linear-gradient(90deg, #ff7a18 0%, #ff3d54 52%, #6f2cff 100%);
+			color: #fff7e8;
+			font-size: 22px;
+			font-weight: 900;
+			letter-spacing: 0.03em;
+			text-transform: uppercase;
+			box-shadow: 0 12px 32px rgba(31, 12, 7, 0.35);
+		}
+
+		.cto-banner button {
+			border: 0;
+			border-radius: 999px;
+			padding: 8px 14px;
+			background: rgba(255, 255, 255, 0.92);
+			color: #1f1630;
+			font-size: 12px;
+			font-weight: 900;
+			letter-spacing: 0.08em;
+			text-transform: uppercase;
+			cursor: pointer;
+		}
+
+		#game {
+			cursor: none;
+			position: absolute;
+			top: 0;
+			left: 0;
+			image-rendering: optimizeSpeed;
+			image-rendering: -moz-crisp-edges;
+			image-rendering: -o-crisp-edges;
+			image-rendering: -webkit-optimize-contrast;
+			image-rendering: optimize-contrast;
+			-ms-interpolation-mode: nearest-neighbor;
+			image-rendering: pixelated;
+		}
+	</style>
 	<script>
 var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds', { preload: preload, create: create, update: update }, false, false);
 var nuages = []; var densityDivider = 4; var velocityDivider = 0.6;
@@ -158,21 +220,13 @@ function update() {
 
 
 </head>
-<body style="background-color: rgb(67,169,223);">
-	<div id="game" style="
-		cursor: none;
-		position: absolute;
-		TOP: 0px;
-		LEFT: 0px;
-
-
-		image-rendering: optimizeSpeed;
-		image-rendering: -moz-crisp-edges;
-		image-rendering: -o-crisp-edges;
-		image-rendering: -webkit-optimize-contrast;
-		image-rendering: optimize-contrast;
-		-ms-interpolation-mode: nearest-neighbor;
-		image-rendering : pixelated;">
+<body>
+	<div class="page-shell" id="page-shell">
+		<div class="cto-banner">
+			<span>Your CTO has arrived. The old ways are over.</span>
+			<button type="button" onclick="document.getElementById('page-shell').classList.remove('page-shell');">restore order</button>
+		</div>
+		<div id="game"></div>
 	</div>
 </body>
 </html>
