@@ -5,6 +5,273 @@
 	<link href="stylesheet.css" rel="stylesheet">
 	<meta charset="utf-8"/>
 	<script type="text/javascript" src="phaser.min.js"></script>
+	<style>
+html, body {
+	margin: 0;
+	overflow: hidden;
+}
+
+#pixel-cat-overlay {
+	position: fixed;
+	right: 16px;
+	bottom: 16px;
+	width: 176px;
+	height: 112px;
+	pointer-events: none;
+	z-index: 9999;
+	font-family: "Courier New", monospace;
+}
+
+.pixel-cat-track {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	width: 176px;
+	height: 72px;
+	overflow: hidden;
+}
+
+.pixel-cat {
+	position: absolute;
+	left: 16px;
+	bottom: 0;
+	width: 88px;
+	height: 72px;
+	animation: cat-walk-route 8s linear infinite alternate;
+}
+
+.pixel-cat__body {
+	--pixel: 4px;
+	position: absolute;
+	left: 0;
+	bottom: 0;
+	width: calc(var(--pixel) * 16);
+	height: calc(var(--pixel) * 16);
+	animation:
+		cat-bob 0.55s steps(2) infinite,
+		cat-flip 8s steps(1) infinite;
+	transform-origin: center bottom;
+}
+
+.pixel-cat__sprite {
+	position: absolute;
+	left: calc(var(--pixel) * 1);
+	top: 0;
+	width: var(--pixel);
+	height: var(--pixel);
+	background: transparent;
+	box-shadow:
+		calc(var(--pixel) * 4) 0 0 #2f2433,
+		calc(var(--pixel) * 5) 0 0 #2f2433,
+		calc(var(--pixel) * 9) 0 0 #2f2433,
+		calc(var(--pixel) * 10) 0 0 #2f2433,
+		calc(var(--pixel) * 3) calc(var(--pixel) * 1) 0 #2f2433,
+		calc(var(--pixel) * 4) calc(var(--pixel) * 1) 0 #f1c27d,
+		calc(var(--pixel) * 5) calc(var(--pixel) * 1) 0 #f1c27d,
+		calc(var(--pixel) * 6) calc(var(--pixel) * 1) 0 #2f2433,
+		calc(var(--pixel) * 8) calc(var(--pixel) * 1) 0 #2f2433,
+		calc(var(--pixel) * 9) calc(var(--pixel) * 1) 0 #f1c27d,
+		calc(var(--pixel) * 10) calc(var(--pixel) * 1) 0 #f1c27d,
+		calc(var(--pixel) * 11) calc(var(--pixel) * 1) 0 #2f2433,
+		calc(var(--pixel) * 2) calc(var(--pixel) * 2) 0 #2f2433,
+		calc(var(--pixel) * 3) calc(var(--pixel) * 2) 0 #f1c27d,
+		calc(var(--pixel) * 4) calc(var(--pixel) * 2) 0 #f1c27d,
+		calc(var(--pixel) * 5) calc(var(--pixel) * 2) 0 #f1c27d,
+		calc(var(--pixel) * 6) calc(var(--pixel) * 2) 0 #f1c27d,
+		calc(var(--pixel) * 7) calc(var(--pixel) * 2) 0 #f1c27d,
+		calc(var(--pixel) * 8) calc(var(--pixel) * 2) 0 #f1c27d,
+		calc(var(--pixel) * 9) calc(var(--pixel) * 2) 0 #f1c27d,
+		calc(var(--pixel) * 10) calc(var(--pixel) * 2) 0 #f1c27d,
+		calc(var(--pixel) * 11) calc(var(--pixel) * 2) 0 #f1c27d,
+		calc(var(--pixel) * 12) calc(var(--pixel) * 2) 0 #2f2433,
+		calc(var(--pixel) * 1) calc(var(--pixel) * 3) 0 #2f2433,
+		calc(var(--pixel) * 2) calc(var(--pixel) * 3) 0 #f1c27d,
+		calc(var(--pixel) * 3) calc(var(--pixel) * 3) 0 #f1c27d,
+		calc(var(--pixel) * 4) calc(var(--pixel) * 3) 0 #f1c27d,
+		calc(var(--pixel) * 5) calc(var(--pixel) * 3) 0 #2f2433,
+		calc(var(--pixel) * 6) calc(var(--pixel) * 3) 0 #f1c27d,
+		calc(var(--pixel) * 7) calc(var(--pixel) * 3) 0 #f1c27d,
+		calc(var(--pixel) * 8) calc(var(--pixel) * 3) 0 #2f2433,
+		calc(var(--pixel) * 9) calc(var(--pixel) * 3) 0 #f1c27d,
+		calc(var(--pixel) * 10) calc(var(--pixel) * 3) 0 #f1c27d,
+		calc(var(--pixel) * 11) calc(var(--pixel) * 3) 0 #f1c27d,
+		calc(var(--pixel) * 12) calc(var(--pixel) * 3) 0 #2f2433,
+		calc(var(--pixel) * 1) calc(var(--pixel) * 4) 0 #2f2433,
+		calc(var(--pixel) * 2) calc(var(--pixel) * 4) 0 #f1c27d,
+		calc(var(--pixel) * 3) calc(var(--pixel) * 4) 0 #f1c27d,
+		calc(var(--pixel) * 4) calc(var(--pixel) * 4) 0 #f1c27d,
+		calc(var(--pixel) * 5) calc(var(--pixel) * 4) 0 #f1c27d,
+		calc(var(--pixel) * 6) calc(var(--pixel) * 4) 0 #f1c27d,
+		calc(var(--pixel) * 7) calc(var(--pixel) * 4) 0 #f1c27d,
+		calc(var(--pixel) * 8) calc(var(--pixel) * 4) 0 #f1c27d,
+		calc(var(--pixel) * 9) calc(var(--pixel) * 4) 0 #f1c27d,
+		calc(var(--pixel) * 10) calc(var(--pixel) * 4) 0 #f1c27d,
+		calc(var(--pixel) * 11) calc(var(--pixel) * 4) 0 #f1c27d,
+		calc(var(--pixel) * 12) calc(var(--pixel) * 4) 0 #2f2433,
+		calc(var(--pixel) * 1) calc(var(--pixel) * 5) 0 #2f2433,
+		calc(var(--pixel) * 2) calc(var(--pixel) * 5) 0 #f1c27d,
+		calc(var(--pixel) * 3) calc(var(--pixel) * 5) 0 #f1c27d,
+		calc(var(--pixel) * 4) calc(var(--pixel) * 5) 0 #f1c27d,
+		calc(var(--pixel) * 5) calc(var(--pixel) * 5) 0 #f1c27d,
+		calc(var(--pixel) * 6) calc(var(--pixel) * 5) 0 #f1c27d,
+		calc(var(--pixel) * 7) calc(var(--pixel) * 5) 0 #f1c27d,
+		calc(var(--pixel) * 8) calc(var(--pixel) * 5) 0 #f1c27d,
+		calc(var(--pixel) * 9) calc(var(--pixel) * 5) 0 #f1c27d,
+		calc(var(--pixel) * 10) calc(var(--pixel) * 5) 0 #f1c27d,
+		calc(var(--pixel) * 11) calc(var(--pixel) * 5) 0 #f1c27d,
+		calc(var(--pixel) * 12) calc(var(--pixel) * 5) 0 #2f2433,
+		calc(var(--pixel) * 2) calc(var(--pixel) * 6) 0 #2f2433,
+		calc(var(--pixel) * 3) calc(var(--pixel) * 6) 0 #f1c27d,
+		calc(var(--pixel) * 4) calc(var(--pixel) * 6) 0 #f1c27d,
+		calc(var(--pixel) * 5) calc(var(--pixel) * 6) 0 #f1c27d,
+		calc(var(--pixel) * 6) calc(var(--pixel) * 6) 0 #f1c27d,
+		calc(var(--pixel) * 7) calc(var(--pixel) * 6) 0 #f1c27d,
+		calc(var(--pixel) * 8) calc(var(--pixel) * 6) 0 #f1c27d,
+		calc(var(--pixel) * 9) calc(var(--pixel) * 6) 0 #f1c27d,
+		calc(var(--pixel) * 10) calc(var(--pixel) * 6) 0 #f1c27d,
+		calc(var(--pixel) * 11) calc(var(--pixel) * 6) 0 #2f2433,
+		calc(var(--pixel) * 4) calc(var(--pixel) * 7) 0 #2f2433,
+		calc(var(--pixel) * 5) calc(var(--pixel) * 7) 0 #2f2433,
+		calc(var(--pixel) * 8) calc(var(--pixel) * 7) 0 #2f2433,
+		calc(var(--pixel) * 9) calc(var(--pixel) * 7) 0 #2f2433,
+		calc(var(--pixel) * 2) calc(var(--pixel) * 8) 0 #2f2433,
+		calc(var(--pixel) * 3) calc(var(--pixel) * 8) 0 #2f2433,
+		calc(var(--pixel) * 10) calc(var(--pixel) * 8) 0 #2f2433,
+		calc(var(--pixel) * 11) calc(var(--pixel) * 8) 0 #2f2433,
+		calc(var(--pixel) * 1) calc(var(--pixel) * 9) 0 #2f2433,
+		calc(var(--pixel) * 2) calc(var(--pixel) * 9) 0 #f1c27d,
+		calc(var(--pixel) * 3) calc(var(--pixel) * 9) 0 #f1c27d,
+		calc(var(--pixel) * 4) calc(var(--pixel) * 9) 0 #2f2433,
+		calc(var(--pixel) * 5) calc(var(--pixel) * 9) 0 #f1c27d,
+		calc(var(--pixel) * 6) calc(var(--pixel) * 9) 0 #f1c27d,
+		calc(var(--pixel) * 7) calc(var(--pixel) * 9) 0 #f1c27d,
+		calc(var(--pixel) * 8) calc(var(--pixel) * 9) 0 #2f2433,
+		calc(var(--pixel) * 9) calc(var(--pixel) * 9) 0 #f1c27d,
+		calc(var(--pixel) * 10) calc(var(--pixel) * 9) 0 #f1c27d,
+		calc(var(--pixel) * 11) calc(var(--pixel) * 9) 0 #2f2433,
+		calc(var(--pixel) * 3) calc(var(--pixel) * 10) 0 #2f2433,
+		calc(var(--pixel) * 4) calc(var(--pixel) * 10) 0 #f1c27d,
+		calc(var(--pixel) * 5) calc(var(--pixel) * 10) 0 #f1c27d,
+		calc(var(--pixel) * 8) calc(var(--pixel) * 10) 0 #f1c27d,
+		calc(var(--pixel) * 9) calc(var(--pixel) * 10) 0 #f1c27d,
+		calc(var(--pixel) * 10) calc(var(--pixel) * 10) 0 #2f2433;
+}
+
+.pixel-cat__sprite::before,
+.pixel-cat__sprite::after {
+	content: "";
+	position: absolute;
+	width: var(--pixel);
+	height: var(--pixel);
+}
+
+.pixel-cat__sprite::before {
+	left: calc(var(--pixel) * 11);
+	top: calc(var(--pixel) * 5);
+	background: #8b5e3c;
+	box-shadow:
+		0 calc(var(--pixel) * 1) 0 #8b5e3c,
+		calc(var(--pixel) * 1) calc(var(--pixel) * 1) 0 #8b5e3c,
+		calc(var(--pixel) * 1) calc(var(--pixel) * 2) 0 #8b5e3c,
+		calc(var(--pixel) * 2) calc(var(--pixel) * 2) 0 #8b5e3c,
+		calc(var(--pixel) * 2) calc(var(--pixel) * 3) 0 #8b5e3c,
+		calc(var(--pixel) * 2) calc(var(--pixel) * 4) 0 #2f2433;
+	animation: cat-tail 0.55s steps(2) infinite;
+}
+
+.pixel-cat__sprite::after {
+	left: calc(var(--pixel) * 5);
+	top: calc(var(--pixel) * 3);
+	background: #2f2433;
+	box-shadow:
+		calc(var(--pixel) * 3) 0 0 #2f2433,
+		calc(var(--pixel) * 1) calc(var(--pixel) * 2) 0 #d94f70,
+		calc(var(--pixel) * 2) calc(var(--pixel) * 2) 0 #d94f70;
+}
+
+.pixel-cat__shadow {
+	position: absolute;
+	left: 26px;
+	bottom: -2px;
+	width: 72px;
+	height: 12px;
+	background: rgba(25, 37, 56, 0.2);
+	border-radius: 999px;
+	filter: blur(1px);
+	animation: cat-shadow 0.55s steps(2) infinite;
+}
+
+.pixel-cat-bubble {
+	position: absolute;
+	right: 22px;
+	bottom: 64px;
+	max-width: 150px;
+	padding: 8px 10px;
+	background: rgba(255, 252, 245, 0.95);
+	border: 3px solid #2f2433;
+	border-radius: 12px;
+	color: #2f2433;
+	font-size: 11px;
+	line-height: 1.3;
+	box-shadow: 0 8px 18px rgba(18, 28, 43, 0.18);
+	opacity: 0;
+	transform: translateY(8px);
+	animation: bubble-pop 7s ease-in-out infinite;
+}
+
+.pixel-cat-bubble::after {
+	content: "";
+	position: absolute;
+	right: 26px;
+	bottom: -11px;
+	width: 14px;
+	height: 14px;
+	background: rgba(255, 252, 245, 0.95);
+	border-right: 3px solid #2f2433;
+	border-bottom: 3px solid #2f2433;
+	transform: rotate(45deg);
+}
+
+@keyframes cat-walk-route {
+	from { transform: translateX(0) scaleX(1); }
+	to { transform: translateX(76px) scaleX(1); }
+}
+
+@keyframes cat-flip {
+	0%, 49.999% { transform: scaleX(1); }
+	50%, 100% { transform: scaleX(-1); }
+}
+
+@keyframes cat-bob {
+	0%, 100% { margin-bottom: 0; }
+	50% { margin-bottom: 3px; }
+}
+
+@keyframes cat-tail {
+	0%, 100% { transform: translateY(0); }
+	50% { transform: translateY(4px); }
+}
+
+@keyframes cat-shadow {
+	0%, 100% { transform: scaleX(1); opacity: 0.18; }
+	50% { transform: scaleX(0.92); opacity: 0.12; }
+}
+
+@keyframes bubble-pop {
+	0%, 10%, 100% {
+		opacity: 0;
+		transform: translateY(8px) scale(0.96);
+	}
+	16%, 42% {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+	50% {
+		opacity: 0;
+		transform: translateY(2px) scale(0.98);
+	}
+}
+	</style>
 	<script>
 var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds', { preload: preload, create: create, update: update }, false, false);
 var nuages = []; var densityDivider = 4; var velocityDivider = 0.6;
@@ -150,6 +417,31 @@ function update() {
 	fond2.bringToTop();
 }
 
+document.addEventListener("DOMContentLoaded", function () {
+	var jokes = [
+		"Why do programmers hate nature? It has too many bugs.",
+		"There are 10 kinds of people: those who know binary and those who don't.",
+		"Debugging: removing the needles from the haystack.",
+		"I'd tell you a UDP joke, but you might not get it.",
+		"Why was the JavaScript file sad? It didn't Node how to express itself.",
+		"Programmer diet: bits for breakfast, bytes for lunch.",
+		"My code doesn't have bugs. It develops random features.",
+		"Why do Java devs wear glasses? Because they don't C#."
+	];
+	var bubble = document.getElementById("pixel-cat-joke");
+
+	if (!bubble) {
+		return;
+	}
+
+	function pickJoke() {
+		bubble.textContent = jokes[Math.floor(Math.random() * jokes.length)];
+	}
+
+	pickJoke();
+	window.setInterval(pickJoke, 7000);
+});
+
 
 
   </script>
@@ -173,6 +465,17 @@ function update() {
 		image-rendering: optimize-contrast;
 		-ms-interpolation-mode: nearest-neighbor;
 		image-rendering : pixelated;">
+	</div>
+	<div id="pixel-cat-overlay" aria-hidden="true">
+		<div class="pixel-cat-bubble" id="pixel-cat-joke"></div>
+		<div class="pixel-cat-track">
+			<div class="pixel-cat">
+				<div class="pixel-cat__body">
+					<div class="pixel-cat__shadow"></div>
+					<div class="pixel-cat__sprite"></div>
+				</div>
+			</div>
+		</div>
 	</div>
 </body>
 </html>
