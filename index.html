@@ -5,6 +5,74 @@
 	<link href="stylesheet.css" rel="stylesheet">
 	<meta charset="utf-8"/>
 	<script type="text/javascript" src="phaser.min.js"></script>
+	<style>
+		body { margin: 0; overflow: hidden; }
+		#theme-switcher {
+			position: fixed;
+			top: 14px;
+			right: 14px;
+			z-index: 999;
+			display: flex;
+			gap: 8px;
+		}
+		.theme-btn {
+			width: 28px;
+			height: 28px;
+			border-radius: 50%;
+			border: 2px solid rgba(255,255,255,0.6);
+			cursor: pointer;
+			transition: transform 0.15s, border-color 0.15s;
+		}
+		.theme-btn:hover { transform: scale(1.15); }
+		.theme-btn.active { border-color: #fff; border-width: 3px; }
+		.theme-btn[data-theme="default"] {
+			background: linear-gradient(135deg, #4488AA 0%, #89d4f5 100%);
+		}
+		.theme-btn[data-theme="volcano"] {
+			background: linear-gradient(135deg, #1a0500 0%, #cc3300 50%, #ff6600 100%);
+		}
+		#theme-label {
+			position: fixed;
+			bottom: 12px;
+			right: 14px;
+			z-index: 999;
+			font-family: monospace;
+			font-size: 12px;
+			padding: 3px 8px;
+			border-radius: 4px;
+			pointer-events: none;
+			transition: background 0.4s, color 0.4s;
+		}
+		/* Volcano canvas filter */
+		body.theme-volcano #PIclouds canvas {
+			filter: brightness(0.85) saturate(1.8) hue-rotate(8deg);
+			animation: volcano-pulse 4s ease-in-out infinite;
+		}
+		@keyframes volcano-pulse {
+			0%   { filter: brightness(0.85) saturate(1.8) hue-rotate(8deg); }
+			50%  { filter: brightness(0.95) saturate(2.2) hue-rotate(12deg); }
+			100% { filter: brightness(0.85) saturate(1.8) hue-rotate(8deg); }
+		}
+		/* Ember particles */
+		#ember-layer {
+			position: fixed;
+			top: 0; left: 0;
+			width: 100%; height: 100%;
+			pointer-events: none;
+			z-index: 100;
+		}
+		.ember {
+			position: absolute;
+			border-radius: 50%;
+			animation: ember-rise linear infinite;
+			background: radial-gradient(circle, #ffcc00 0%, #ff4400 60%, transparent 100%);
+		}
+		@keyframes ember-rise {
+			0%   { transform: translateY(0) translateX(0) scale(1); opacity: 0.9; }
+			50%  { transform: translateY(-40vh) translateX(var(--drift)) scale(0.7); opacity: 0.6; }
+			100% { transform: translateY(-90vh) translateX(calc(var(--drift) * 1.5)) scale(0.2); opacity: 0; }
+		}
+	</style>
 	<script>
 var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds', { preload: preload, create: create, update: update }, false, false);
 var nuages = []; var densityDivider = 4; var velocityDivider = 0.6;
@@ -16,22 +84,109 @@ var pi = [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,
 function randInt(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-		
+
 for (var i = 0; i<10000; i++) {
 	pi.push(randInt(0,9));
-	console.log(pi[886+i]);
 }
 
 var timer = 0;
 
-function sleep(milliseconds) {
-	var start = new Date().getTime();
-	for (var i = 0; i < 1e7; i++) {
-		if ((new Date().getTime() - start) > milliseconds){
-		 break;
-		}
+// ── Theme system ──────────────────────────────────────────────
+var THEMES = {
+	'default': {
+		name:       'Sky',
+		stageColor: '#4488AA',
+		bodyBg:     'rgb(67,169,223)',
+		cloudTint:  0xFFFFFF,
+		cloud2Tint: 0xDDEEFF,
+		fond2Alpha: 0.9,
+		labelBg:    'rgba(0,80,140,0.55)',
+		labelColor: '#ddf'
+	},
+	'volcano': {
+		name:       'Volcano',
+		stageColor: '#1a0800',
+		bodyBg:     '#0d0400',
+		cloudTint:  0x888070,   // ash / smoke
+		cloud2Tint: 0xDD3300,   // lava glow / embers
+		fond2Alpha: 0.75,
+		labelBg:    'rgba(120,20,0,0.6)',
+		labelColor: '#ffbb88'
+	}
+};
+
+var currentTheme = 'default';
+
+function applyTheme(name) {
+	if (!THEMES[name]) return;
+	currentTheme = name;
+	var t = THEMES[name];
+	localStorage.setItem('piclouds-theme', name);
+
+	// body class
+	document.body.className = 'theme-' + name;
+	document.body.style.backgroundColor = t.bodyBg;
+
+	// phaser stage
+	if (game && game.stage) game.stage.backgroundColor = t.stageColor;
+
+	// re-tint all existing clouds
+	for (var i = 0; i <= decimal; i++) {
+		if (nuages[i]  && nuages[i].alive)  nuages[i].tint  = t.cloudTint;
+		if (nuages2[i] && nuages2[i].alive) nuages2[i].tint = t.cloud2Tint;
+	}
+
+	// fond2 alpha
+	if (fond2) fond2.alpha = t.fond2Alpha;
+
+	// label
+	var lbl = document.getElementById('theme-label');
+	if (lbl) {
+		lbl.textContent = t.name;
+		lbl.style.background = t.labelBg;
+		lbl.style.color = t.labelColor;
+	}
+
+	// update active button
+	document.querySelectorAll('.theme-btn').forEach(function(btn) {
+		btn.classList.toggle('active', btn.dataset.theme === name);
+	});
+
+	// ember layer
+	if (name === 'volcano') {
+		spawnEmbers();
+	} else {
+		removeEmbers();
 	}
 }
+
+function spawnEmbers() {
+	removeEmbers();
+	var layer = document.createElement('div');
+	layer.id = 'ember-layer';
+	document.body.appendChild(layer);
+	for (var i = 0; i < 30; i++) {
+		(function() {
+			var e = document.createElement('div');
+			e.className = 'ember';
+			var size = randInt(3, 9);
+			var left = randInt(0, 100);
+			var delay = (Math.random() * 8).toFixed(2);
+			var dur   = (randInt(6, 14)).toFixed(1);
+			var drift = (randInt(-60, 60)) + 'px';
+			e.style.cssText = 'width:'+size+'px;height:'+size+'px;left:'+left+'%;bottom:'+randInt(0,15)+'%;'
+				+ '--drift:'+drift+';animation-duration:'+dur+'s;animation-delay:-'+delay+'s;opacity:'+((Math.random()*0.5+0.4).toFixed(2))+';';
+			layer.appendChild(e);
+		})();
+	}
+}
+
+function removeEmbers() {
+	var el = document.getElementById('ember-layer');
+	if (el) el.parentNode.removeChild(el);
+}
+// ─────────────────────────────────────────────────────────────
+
 function preload() {
 	game.load.image('nuage','nuage.png');
 	game.load.image('nuage2','nuage2.png');
@@ -54,11 +209,11 @@ function create() {
 	order7 = game.add.group();
 	order8 = game.add.group();
 	order9 = game.add.group();
-	//fond2.angle = 180;
 	fond2.alpha = 0.9;
-	//field = game.add.tileSprite(0, 465, 1300, 300, 'field');
-	//field.alpha = 0.2;
 
+	// restore saved theme
+	var saved = localStorage.getItem('piclouds-theme') || 'default';
+	applyTheme(saved);
 }
 function update() {
 
@@ -68,59 +223,33 @@ function update() {
 
 		decimal++;
 		timer = 0;
-		nuages.push(game.add.tileSprite(-200, 400-(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage'));
+		var t = THEMES[currentTheme];
+
+		nuages.push(game.add.tileSprite(-200, 400-(pi[decimal]*34-15), 768, 312, 'nuage'));
 		nuages[decimal].anchor.x = 0.7;
 		nuages[decimal].anchor.y = 0.5;
-		nuages[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
+		nuages[decimal].scale.setTo((pi[decimal])/10, (pi[decimal])/10);
 		nuages[decimal].alpha = 0.9;
-		//sum += pi[decimal];
-		nuages2.push(game.add.tileSprite(-200, 400+(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage2'));
+		nuages[decimal].tint = t.cloudTint;
+
+		nuages2.push(game.add.tileSprite(-200, 400+(pi[decimal]*34-15), 768, 312, 'nuage2'));
 		nuages2[decimal].anchor.x = 0.7;
 		nuages2[decimal].anchor.y = 0.5;
-		nuages2[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
-		nuages[decimal].alpha = 0.99;
+		nuages2[decimal].scale.setTo((pi[decimal])/10, (pi[decimal])/10);
+		nuages2[decimal].alpha = 0.99;
+		nuages2[decimal].tint = t.cloud2Tint;
 
 		switch(pi[decimal]) {
-		case 0:
-			order0.add(nuages[decimal]);
-			order0.add(nuages2[decimal]);
-			break;
-		case 1:
-			order1.add(nuages[decimal]);
-			order1.add(nuages2[decimal]);
-			break;
-		case 2:
-			order2.add(nuages[decimal]);
-			order2.add(nuages2[decimal]);
-			break;
-		case 3:
-			order3.add(nuages[decimal]);
-			order3.add(nuages2[decimal]);
-			break;
-		case 4:
-			order4.add(nuages[decimal]);
-			order4.add(nuages2[decimal]);
-			break;
-		case 5:
-			order5.add(nuages[decimal]);
-			order5.add(nuages2[decimal]);
-			break;
-		case 6:
-			order6.add(nuages[decimal]);
-			order6.add(nuages2[decimal]);
-			break;
-		case 7:
-			order7.add(nuages[decimal]);
-			order7.add(nuages2[decimal]);
-			break;
-		case 8:
-			order8.add(nuages[decimal]);
-			order8.add(nuages2[decimal]);
-			break;
-		case 9:
-			order9.add(nuages[decimal]);
-			order9.add(nuages2[decimal]);
-			break;
+		case 0: order0.add(nuages[decimal]); order0.add(nuages2[decimal]); break;
+		case 1: order1.add(nuages[decimal]); order1.add(nuages2[decimal]); break;
+		case 2: order2.add(nuages[decimal]); order2.add(nuages2[decimal]); break;
+		case 3: order3.add(nuages[decimal]); order3.add(nuages2[decimal]); break;
+		case 4: order4.add(nuages[decimal]); order4.add(nuages2[decimal]); break;
+		case 5: order5.add(nuages[decimal]); order5.add(nuages2[decimal]); break;
+		case 6: order6.add(nuages[decimal]); order6.add(nuages2[decimal]); break;
+		case 7: order7.add(nuages[decimal]); order7.add(nuages2[decimal]); break;
+		case 8: order8.add(nuages[decimal]); order8.add(nuages2[decimal]); break;
+		case 9: order9.add(nuages[decimal]); order9.add(nuages2[decimal]); break;
 		}
 	}
 
@@ -130,10 +259,7 @@ function update() {
 		}
 		nuages[jj].x += (pi[jj])/Math.abs(velocityDivider);
 		nuages2[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		//nuages[jj].angle += (1/(pi[jj]))*3;
 		jj++;
-		//if (nuages[jj].x > 1300) {
-		//}
 	}
 	jj = 0;
 
@@ -150,29 +276,28 @@ function update() {
 	fond2.bringToTop();
 }
 
-
-
   </script>
-
-
-
-
 </head>
 <body style="background-color: rgb(67,169,223);">
-	<div id="game" style="
+	<div id="PIclouds" style="
 		cursor: none;
 		position: absolute;
-		TOP: 0px;
-		LEFT: 0px;
-
-
+		top: 0px;
+		left: 0px;
 		image-rendering: optimizeSpeed;
 		image-rendering: -moz-crisp-edges;
 		image-rendering: -o-crisp-edges;
 		image-rendering: -webkit-optimize-contrast;
 		image-rendering: optimize-contrast;
 		-ms-interpolation-mode: nearest-neighbor;
-		image-rendering : pixelated;">
+		image-rendering: pixelated;">
 	</div>
+
+	<div id="theme-switcher">
+		<button class="theme-btn active" data-theme="default"  title="Sky"     onclick="applyTheme('default')"></button>
+		<button class="theme-btn"        data-theme="volcano"  title="Volcano"  onclick="applyTheme('volcano')"></button>
+	</div>
+
+	<div id="theme-label" style="background:rgba(0,80,140,0.55);color:#ddf;">Sky</div>
 </body>
 </html>
