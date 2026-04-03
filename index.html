@@ -5,6 +5,225 @@
 	<link href="stylesheet.css" rel="stylesheet">
 	<meta charset="utf-8"/>
 	<script type="text/javascript" src="phaser.min.js"></script>
+	<style>
+		:root {
+			--cat-pixel: 4px;
+			--cat-body: #4f4f56;
+			--cat-shadow: #2d2d31;
+			--cat-light: #c9c7cf;
+			--cat-accent: #f1b3bf;
+			--cat-eye: #121212;
+			--bubble-bg: rgba(255, 255, 255, 0.96);
+			--bubble-text: #17314a;
+			--bubble-border: #17314a;
+		}
+
+		body {
+			margin: 0;
+			overflow: hidden;
+		}
+
+		.pixel-cat-overlay {
+			position: fixed;
+			right: 18px;
+			bottom: 14px;
+			width: 220px;
+			height: 140px;
+			pointer-events: none;
+			z-index: 9999;
+			overflow: hidden;
+		}
+
+		.pixel-cat-bubble {
+			position: absolute;
+			right: 10px;
+			bottom: 72px;
+			max-width: 170px;
+			padding: 10px 12px;
+			border: 3px solid var(--bubble-border);
+			border-radius: 10px;
+			background: var(--bubble-bg);
+			color: var(--bubble-text);
+			font: 700 12px/1.35 "Courier New", monospace;
+			box-shadow: 0 6px 0 rgba(0, 0, 0, 0.2);
+			opacity: 0;
+			transform-origin: 100% 100%;
+		}
+
+		.pixel-cat-bubble::after {
+			content: "";
+			position: absolute;
+			right: 26px;
+			bottom: -11px;
+			width: 16px;
+			height: 16px;
+			background: var(--bubble-bg);
+			border-right: 3px solid var(--bubble-border);
+			border-bottom: 3px solid var(--bubble-border);
+			transform: rotate(45deg);
+		}
+
+		.pixel-cat-bubble.is-speaking {
+			animation: bubble-pop 5.6s ease-in-out;
+		}
+
+		.pixel-cat-stage {
+			position: absolute;
+			right: 0;
+			bottom: 0;
+			width: 180px;
+			height: 78px;
+		}
+
+		.pixel-cat-patrol {
+			position: absolute;
+			right: 0;
+			bottom: 0;
+			width: 84px;
+			height: 60px;
+			animation: cat-patrol 12s linear infinite;
+		}
+
+		.pixel-cat {
+			position: absolute;
+			left: 0;
+			bottom: 8px;
+			width: var(--cat-pixel);
+			height: var(--cat-pixel);
+			color: var(--cat-body);
+			transform-origin: center bottom;
+			animation: cat-flip 12s steps(1, end) infinite;
+		}
+
+		.pixel-cat::before,
+		.pixel-cat::after {
+			content: "";
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: var(--cat-pixel);
+			height: var(--cat-pixel);
+		}
+
+		.pixel-cat::before {
+			box-shadow:
+				calc(var(--cat-pixel) * 2) 0 0 var(--cat-shadow),
+				calc(var(--cat-pixel) * 3) 0 0 var(--cat-shadow),
+				calc(var(--cat-pixel) * 1) calc(var(--cat-pixel) * 1) 0 var(--cat-shadow),
+				calc(var(--cat-pixel) * 2) calc(var(--cat-pixel) * 1) 0 var(--cat-body),
+				calc(var(--cat-pixel) * 3) calc(var(--cat-pixel) * 1) 0 var(--cat-body),
+				calc(var(--cat-pixel) * 4) calc(var(--cat-pixel) * 1) 0 var(--cat-shadow),
+				0 calc(var(--cat-pixel) * 2) 0 var(--cat-shadow),
+				calc(var(--cat-pixel) * 1) calc(var(--cat-pixel) * 2) 0 var(--cat-body),
+				calc(var(--cat-pixel) * 2) calc(var(--cat-pixel) * 2) 0 var(--cat-light),
+				calc(var(--cat-pixel) * 3) calc(var(--cat-pixel) * 2) 0 var(--cat-light),
+				calc(var(--cat-pixel) * 4) calc(var(--cat-pixel) * 2) 0 var(--cat-body),
+				calc(var(--cat-pixel) * 5) calc(var(--cat-pixel) * 2) 0 var(--cat-shadow),
+				0 calc(var(--cat-pixel) * 3) 0 var(--cat-shadow),
+				calc(var(--cat-pixel) * 1) calc(var(--cat-pixel) * 3) 0 var(--cat-body),
+				calc(var(--cat-pixel) * 2) calc(var(--cat-pixel) * 3) 0 var(--cat-eye),
+				calc(var(--cat-pixel) * 3) calc(var(--cat-pixel) * 3) 0 var(--cat-light),
+				calc(var(--cat-pixel) * 4) calc(var(--cat-pixel) * 3) 0 var(--cat-eye),
+				calc(var(--cat-pixel) * 5) calc(var(--cat-pixel) * 3) 0 var(--cat-body),
+				calc(var(--cat-pixel) * 6) calc(var(--cat-pixel) * 3) 0 var(--cat-shadow),
+				0 calc(var(--cat-pixel) * 4) 0 var(--cat-shadow),
+				calc(var(--cat-pixel) * 1) calc(var(--cat-pixel) * 4) 0 var(--cat-body),
+				calc(var(--cat-pixel) * 2) calc(var(--cat-pixel) * 4) 0 var(--cat-light),
+				calc(var(--cat-pixel) * 3) calc(var(--cat-pixel) * 4) 0 var(--cat-light),
+				calc(var(--cat-pixel) * 4) calc(var(--cat-pixel) * 4) 0 var(--cat-light),
+				calc(var(--cat-pixel) * 5) calc(var(--cat-pixel) * 4) 0 var(--cat-body),
+				calc(var(--cat-pixel) * 6) calc(var(--cat-pixel) * 4) 0 var(--cat-shadow),
+				calc(var(--cat-pixel) * 1) calc(var(--cat-pixel) * 5) 0 var(--cat-shadow),
+				calc(var(--cat-pixel) * 2) calc(var(--cat-pixel) * 5) 0 var(--cat-body),
+				calc(var(--cat-pixel) * 3) calc(var(--cat-pixel) * 5) 0 var(--cat-body),
+				calc(var(--cat-pixel) * 4) calc(var(--cat-pixel) * 5) 0 var(--cat-body),
+				calc(var(--cat-pixel) * 5) calc(var(--cat-pixel) * 5) 0 var(--cat-body),
+				calc(var(--cat-pixel) * 6) calc(var(--cat-pixel) * 5) 0 var(--cat-body),
+				calc(var(--cat-pixel) * 7) calc(var(--cat-pixel) * 5) 0 var(--cat-shadow),
+				calc(var(--cat-pixel) * 2) calc(var(--cat-pixel) * 6) 0 var(--cat-shadow),
+				calc(var(--cat-pixel) * 3) calc(var(--cat-pixel) * 6) 0 var(--cat-body),
+				calc(var(--cat-pixel) * 4) calc(var(--cat-pixel) * 6) 0 var(--cat-body),
+				calc(var(--cat-pixel) * 5) calc(var(--cat-pixel) * 6) 0 var(--cat-body),
+				calc(var(--cat-pixel) * 6) calc(var(--cat-pixel) * 6) 0 var(--cat-shadow),
+				calc(var(--cat-pixel) * 7) calc(var(--cat-pixel) * 6) 0 var(--cat-shadow),
+				calc(var(--cat-pixel) * 8) calc(var(--cat-pixel) * 2) 0 var(--cat-shadow),
+				calc(var(--cat-pixel) * 9) calc(var(--cat-pixel) * 1) 0 var(--cat-shadow),
+				calc(var(--cat-pixel) * 9) calc(var(--cat-pixel) * 2) 0 var(--cat-body),
+				calc(var(--cat-pixel) * 9) calc(var(--cat-pixel) * 3) 0 var(--cat-body),
+				calc(var(--cat-pixel) * 9) calc(var(--cat-pixel) * 4) 0 var(--cat-shadow),
+				calc(var(--cat-pixel) * 3) calc(var(--cat-pixel) * 7) 0 var(--cat-shadow),
+				calc(var(--cat-pixel) * 5) calc(var(--cat-pixel) * 7) 0 var(--cat-shadow);
+		}
+
+		.pixel-cat::after {
+			animation: cat-steps 0.7s steps(1, end) infinite;
+			box-shadow:
+				calc(var(--cat-pixel) * 1) calc(var(--cat-pixel) * 7) 0 var(--cat-shadow),
+				calc(var(--cat-pixel) * 1) calc(var(--cat-pixel) * 8) 0 var(--cat-body),
+				calc(var(--cat-pixel) * 2) calc(var(--cat-pixel) * 7) 0 var(--cat-shadow),
+				calc(var(--cat-pixel) * 2) calc(var(--cat-pixel) * 8) 0 var(--cat-body),
+				calc(var(--cat-pixel) * 6) calc(var(--cat-pixel) * 7) 0 var(--cat-shadow),
+				calc(var(--cat-pixel) * 6) calc(var(--cat-pixel) * 8) 0 var(--cat-body),
+				calc(var(--cat-pixel) * 7) calc(var(--cat-pixel) * 7) 0 var(--cat-shadow),
+				calc(var(--cat-pixel) * 7) calc(var(--cat-pixel) * 8) 0 var(--cat-body),
+				calc(var(--cat-pixel) * 3) calc(var(--cat-pixel) * 4) 0 var(--cat-accent);
+		}
+
+		@keyframes cat-patrol {
+			0% { transform: translateX(96px); }
+			50% { transform: translateX(0); }
+			100% { transform: translateX(96px); }
+		}
+
+		@keyframes cat-flip {
+			0%, 49.999% { transform: scaleX(-1); }
+			50%, 100% { transform: scaleX(1); }
+		}
+
+		@keyframes cat-steps {
+			0%, 100% {
+				transform: translateY(0);
+				box-shadow:
+					calc(var(--cat-pixel) * 1) calc(var(--cat-pixel) * 7) 0 var(--cat-shadow),
+					calc(var(--cat-pixel) * 1) calc(var(--cat-pixel) * 8) 0 var(--cat-body),
+					calc(var(--cat-pixel) * 2) calc(var(--cat-pixel) * 7) 0 var(--cat-shadow),
+					calc(var(--cat-pixel) * 2) calc(var(--cat-pixel) * 8) 0 var(--cat-body),
+					calc(var(--cat-pixel) * 6) calc(var(--cat-pixel) * 7) 0 var(--cat-shadow),
+					calc(var(--cat-pixel) * 6) calc(var(--cat-pixel) * 8) 0 var(--cat-body),
+					calc(var(--cat-pixel) * 7) calc(var(--cat-pixel) * 7) 0 var(--cat-shadow),
+					calc(var(--cat-pixel) * 7) calc(var(--cat-pixel) * 8) 0 var(--cat-body),
+					calc(var(--cat-pixel) * 3) calc(var(--cat-pixel) * 4) 0 var(--cat-accent);
+			}
+			50% {
+				transform: translateY(1px);
+				box-shadow:
+					calc(var(--cat-pixel) * 1) calc(var(--cat-pixel) * 8) 0 var(--cat-shadow),
+					calc(var(--cat-pixel) * 1) calc(var(--cat-pixel) * 9) 0 var(--cat-body),
+					calc(var(--cat-pixel) * 2) calc(var(--cat-pixel) * 7) 0 var(--cat-shadow),
+					calc(var(--cat-pixel) * 2) calc(var(--cat-pixel) * 8) 0 var(--cat-body),
+					calc(var(--cat-pixel) * 6) calc(var(--cat-pixel) * 7) 0 var(--cat-shadow),
+					calc(var(--cat-pixel) * 6) calc(var(--cat-pixel) * 8) 0 var(--cat-body),
+					calc(var(--cat-pixel) * 7) calc(var(--cat-pixel) * 8) 0 var(--cat-shadow),
+					calc(var(--cat-pixel) * 7) calc(var(--cat-pixel) * 9) 0 var(--cat-body),
+					calc(var(--cat-pixel) * 3) calc(var(--cat-pixel) * 4) 0 var(--cat-accent);
+			}
+		}
+
+		@keyframes bubble-pop {
+			0%, 12%, 100% {
+				opacity: 0;
+				transform: translateY(10px) scale(0.92);
+			}
+			18%, 72% {
+				opacity: 1;
+				transform: translateY(0) scale(1);
+			}
+			82% {
+				opacity: 0;
+				transform: translateY(-2px) scale(0.98);
+			}
+		}
+	</style>
 	<script>
 var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds', { preload: preload, create: create, update: update }, false, false);
 var nuages = []; var densityDivider = 4; var velocityDivider = 0.6;
@@ -146,9 +365,40 @@ function update() {
 	game.world.bringToTop(order6);
 	game.world.bringToTop(order7);
 	game.world.bringToTop(order8);
-	game.world.bringToTop(order9);
+game.world.bringToTop(order9);
 	fond2.bringToTop();
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+	var bubble = document.getElementById('pixel-cat-bubble');
+
+	if (!bubble) {
+		return;
+	}
+
+	var jokes = [
+		'Why do programmers mix up Halloween and Christmas? Because OCT 31 equals DEC 25.',
+		'A SQL query walks into a bar, walks up to two tables, and asks: "Can I join you?"',
+		'There are 10 kinds of people: those who understand binary and those who do not.',
+		'Debugging: removing the needles from the haystack you built yourself.',
+		'I changed my password to "incorrect" so the computer tells me what it is.',
+		'Why did the developer go broke? Because they used up all their cache.',
+		'The programmer got stuck in the shower because the instructions said: lather, rinse, repeat.',
+		'Why do Java developers wear glasses? Because they do not C#.'
+	];
+	var jokeIndex = Math.floor(Math.random() * jokes.length);
+
+	function tellJoke() {
+		jokeIndex = (jokeIndex + 1 + Math.floor(Math.random() * (jokes.length - 1))) % jokes.length;
+		bubble.textContent = jokes[jokeIndex];
+		bubble.classList.remove('is-speaking');
+		void bubble.offsetWidth;
+		bubble.classList.add('is-speaking');
+	}
+
+	tellJoke();
+	window.setInterval(tellJoke, 5600);
+});
 
 
 
@@ -173,6 +423,14 @@ function update() {
 		image-rendering: optimize-contrast;
 		-ms-interpolation-mode: nearest-neighbor;
 		image-rendering : pixelated;">
+	</div>
+	<div class="pixel-cat-overlay" aria-hidden="true">
+		<div class="pixel-cat-bubble" id="pixel-cat-bubble"></div>
+		<div class="pixel-cat-stage">
+			<div class="pixel-cat-patrol">
+				<div class="pixel-cat"></div>
+			</div>
+		</div>
 	</div>
 </body>
 </html>
