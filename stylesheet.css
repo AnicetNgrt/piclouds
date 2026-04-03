@@ -1,0 +1,103 @@
+:root {
+	--page-background: #43a9df;
+	--panel-background: rgba(255, 255, 255, 0.2);
+	--panel-border: rgba(255, 255, 255, 0.45);
+	--panel-text: #f4fbff;
+	--panel-shadow: 0 14px 30px rgba(8, 63, 96, 0.18);
+	--canvas-shadow: 0 26px 50px rgba(8, 63, 96, 0.22);
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	min-height: 100%;
+	margin: 0;
+}
+
+body {
+	background:
+		radial-gradient(circle at top, rgba(255, 255, 255, 0.28), transparent 48%),
+		linear-gradient(180deg, #67c5f3 0%, var(--page-background) 60%, #2b759f 100%);
+	background-color: var(--page-background);
+	color: var(--panel-text);
+	font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+	overflow: hidden;
+}
+
+body.theme-dark {
+	--panel-background: rgba(7, 15, 24, 0.6);
+	--panel-border: rgba(158, 195, 230, 0.24);
+	--panel-text: #e8f3ff;
+	--panel-shadow: 0 18px 35px rgba(0, 0, 0, 0.34);
+
+	background:
+		radial-gradient(circle at top, rgba(115, 149, 196, 0.18), transparent 42%),
+		linear-gradient(180deg, #0d1d2d 0%, var(--page-background) 58%, #02060a 100%);
+}
+
+.app-shell {
+	position: fixed;
+	top: 18px;
+	right: 18px;
+	z-index: 10;
+}
+
+.theme-toggle {
+	border: 1px solid var(--panel-border);
+	background: var(--panel-background);
+	backdrop-filter: blur(10px);
+	border-radius: 999px;
+	box-shadow: var(--panel-shadow);
+	color: var(--panel-text);
+	cursor: pointer;
+	font: inherit;
+	font-size: 14px;
+	font-weight: 700;
+	letter-spacing: 0.02em;
+	padding: 10px 16px;
+	transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease;
+}
+
+.theme-toggle:hover {
+	transform: translateY(-1px);
+}
+
+.theme-toggle:focus-visible {
+	outline: 2px solid rgba(255, 255, 255, 0.75);
+	outline-offset: 3px;
+}
+
+.game-shell {
+	cursor: none;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 1300px;
+	height: 700px;
+	image-rendering: optimizeSpeed;
+	image-rendering: -moz-crisp-edges;
+	image-rendering: -o-crisp-edges;
+	image-rendering: -webkit-optimize-contrast;
+	image-rendering: optimize-contrast;
+	-ms-interpolation-mode: nearest-neighbor;
+	image-rendering: pixelated;
+}
+
+.game-shell canvas {
+	box-shadow: var(--canvas-shadow);
+}
+
+@media (max-width: 1360px), (max-height: 760px) {
+	.app-shell {
+		top: 12px;
+		right: 12px;
+	}
+
+	.theme-toggle {
+		font-size: 13px;
+		padding: 9px 14px;
+	}
+}
