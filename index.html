@@ -2,11 +2,70 @@
 <html>
 <head>
 	<title>Nuages de Pi</title>
-	<link href="stylesheet.css" rel="stylesheet">
 	<meta charset="utf-8"/>
+	<style>
+		html, body {
+			margin: 0;
+			min-height: 100%;
+			font-family: "Trebuchet MS", Arial, sans-serif;
+			background:
+				radial-gradient(circle at top, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0) 35%),
+				linear-gradient(180deg, #ffc7e2 0%, #ff95c8 52%, #ff6fb7 100%);
+			overflow: hidden;
+		}
+
+		body {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		#game-shell {
+			position: relative;
+			padding: 22px;
+			border-radius: 36px;
+			background: linear-gradient(180deg, rgba(255, 244, 250, 0.9), rgba(255, 212, 234, 0.68));
+			box-shadow:
+				0 30px 70px rgba(152, 17, 89, 0.28),
+				inset 0 1px 0 rgba(255, 255, 255, 0.7);
+		}
+
+		#game-shell::before {
+			content: "Pink Cloud Mode";
+			position: absolute;
+			top: -14px;
+			left: 26px;
+			padding: 8px 16px;
+			border-radius: 999px;
+			background: rgba(255, 247, 251, 0.92);
+			color: #b43b79;
+			font-size: 14px;
+			letter-spacing: 0.16em;
+			text-transform: uppercase;
+			box-shadow: 0 12px 30px rgba(180, 59, 121, 0.16);
+		}
+
+		#game {
+			cursor: none;
+			position: relative;
+			width: 1300px;
+			height: 700px;
+			border-radius: 24px;
+			overflow: hidden;
+			border: 6px solid rgba(255, 255, 255, 0.48);
+			box-shadow: inset 0 0 0 1px rgba(180, 59, 121, 0.16);
+			image-rendering: optimizeSpeed;
+			image-rendering: -moz-crisp-edges;
+			image-rendering: -o-crisp-edges;
+			image-rendering: -webkit-optimize-contrast;
+			image-rendering: optimize-contrast;
+			-ms-interpolation-mode: nearest-neighbor;
+			image-rendering: pixelated;
+		}
+	</style>
 	<script type="text/javascript" src="phaser.min.js"></script>
 	<script>
-var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds', { preload: preload, create: create, update: update }, false, false);
+var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'game', { preload: preload, create: create, update: update }, false, false);
 var nuages = []; var densityDivider = 4; var velocityDivider = 0.6;
 var nuages2 = []; var field; var fond; var fond2;
 var nn = 0; var jj = 0; var sum = 0; var lock = 0;
@@ -33,15 +92,15 @@ function sleep(milliseconds) {
 	}
 }
 function preload() {
-	game.load.image('nuage','nuage.png');
-	game.load.image('nuage2','nuage2.png');
+	game.load.image('nuage','nuage-pink.png');
+	game.load.image('nuage2','nuage2-pink.png');
 	game.load.image('field','field.png');
-	game.load.image('fond','fond.png');
-	game.load.image('fond2','fond2.png');
+	game.load.image('fond','fond-pink.png');
+	game.load.image('fond2','fond2-pink.png');
 }
 function create() {
 	game.time.desiredFps = 30;
-	game.stage.backgroundColor = "#4488AA";
+	game.stage.backgroundColor = "#ffb6da";
 	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
 	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
 	order0 = game.add.group();
@@ -158,21 +217,9 @@ function update() {
 
 
 </head>
-<body style="background-color: rgb(67,169,223);">
-	<div id="game" style="
-		cursor: none;
-		position: absolute;
-		TOP: 0px;
-		LEFT: 0px;
-
-
-		image-rendering: optimizeSpeed;
-		image-rendering: -moz-crisp-edges;
-		image-rendering: -o-crisp-edges;
-		image-rendering: -webkit-optimize-contrast;
-		image-rendering: optimize-contrast;
-		-ms-interpolation-mode: nearest-neighbor;
-		image-rendering : pixelated;">
+<body>
+	<div id="game-shell">
+		<div id="game"></div>
 	</div>
 </body>
 </html>
