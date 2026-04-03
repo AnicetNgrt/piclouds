@@ -14,6 +14,13 @@
 			background-color: rgb(67,169,223);
 		}
 
+		body.theme-dark {
+			background:
+				radial-gradient(circle at top, rgba(87, 118, 255, 0.22), transparent 45%),
+				linear-gradient(180deg, #09111f 0%, #05070d 100%);
+			color-scheme: dark;
+		}
+
 		body.cto-takeover {
 			transform: rotate(180deg);
 			transform-origin: center center;
@@ -30,27 +37,32 @@
 			justify-content: center;
 			gap: 12px;
 			padding: 14px 18px;
-			background: linear-gradient(90deg, #ff7a18, #ff3d81 55%, #5b2cff);
-			color: #fff7e8;
+			background: linear-gradient(90deg, #161b33, #762257 55%, #d14b28);
+			color: #fff4db;
 			font-family: Arial, sans-serif;
 			font-size: 18px;
 			font-weight: 800;
 			letter-spacing: 0.03em;
 			text-transform: uppercase;
 			box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+			backdrop-filter: blur(6px);
 		}
 
-		#restore-order {
+		#cto-banner button {
 			border: 0;
 			border-radius: 999px;
 			padding: 8px 12px;
-			background: rgba(255, 255, 255, 0.92);
-			color: #24124d;
+			background: rgba(255, 244, 219, 0.96);
+			color: #120f24;
 			font-size: 12px;
 			font-weight: 800;
 			text-transform: uppercase;
 			letter-spacing: 0.06em;
 			cursor: pointer;
+		}
+
+		body.theme-dark #game {
+			filter: brightness(0.58) saturate(0.8) contrast(1.1);
 		}
 	</style>
 	<script type="text/javascript" src="phaser.min.js"></script>
@@ -90,7 +102,7 @@ function preload() {
 }
 function create() {
 	game.time.desiredFps = 30;
-	game.stage.backgroundColor = "#4488AA";
+	game.stage.backgroundColor = "#060b16";
 	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
 	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
 	order0 = game.add.group();
@@ -207,6 +219,10 @@ function restoreOrder() {
 	}
 }
 
+function toggleDarkTheme() {
+	document.body.classList.toggle('theme-dark');
+}
+
 
   </script>
 
@@ -217,6 +233,7 @@ function restoreOrder() {
 <body class="cto-takeover">
 	<div id="cto-banner">
 		<span>Your CTO has arrived. The old ways are over.</span>
+		<button id="toggle-dark-theme" type="button" onclick="toggleDarkTheme()">toggle dark theme</button>
 		<button id="restore-order" type="button" onclick="restoreOrder()">restore order</button>
 	</div>
 	<div id="game" style="
