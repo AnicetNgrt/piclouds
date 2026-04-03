@@ -4,6 +4,55 @@
 	<title>Nuages de Pi</title>
 	<link href="stylesheet.css" rel="stylesheet">
 	<meta charset="utf-8"/>
+	<style>
+		html, body {
+			margin: 0;
+			min-height: 100%;
+		}
+
+		body {
+			background-color: rgb(67,169,223);
+		}
+
+		body.cto-takeover {
+			transform: rotate(180deg);
+			transform-origin: center center;
+		}
+
+		#cto-banner {
+			position: fixed;
+			top: 0;
+			left: 0;
+			right: 0;
+			z-index: 9999;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 12px;
+			padding: 14px 18px;
+			background: linear-gradient(90deg, #ff7a18, #ff3d81 55%, #5b2cff);
+			color: #fff7e8;
+			font-family: Arial, sans-serif;
+			font-size: 18px;
+			font-weight: 800;
+			letter-spacing: 0.03em;
+			text-transform: uppercase;
+			box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+		}
+
+		#restore-order {
+			border: 0;
+			border-radius: 999px;
+			padding: 8px 12px;
+			background: rgba(255, 255, 255, 0.92);
+			color: #24124d;
+			font-size: 12px;
+			font-weight: 800;
+			text-transform: uppercase;
+			letter-spacing: 0.06em;
+			cursor: pointer;
+		}
+	</style>
 	<script type="text/javascript" src="phaser.min.js"></script>
 	<script>
 var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds', { preload: preload, create: create, update: update }, false, false);
@@ -147,9 +196,16 @@ function update() {
 	game.world.bringToTop(order7);
 	game.world.bringToTop(order8);
 	game.world.bringToTop(order9);
-	fond2.bringToTop();
+fond2.bringToTop();
 }
 
+function restoreOrder() {
+	document.body.classList.remove('cto-takeover');
+	var banner = document.getElementById('cto-banner');
+	if (banner) {
+		banner.parentNode.removeChild(banner);
+	}
+}
 
 
   </script>
@@ -158,7 +214,11 @@ function update() {
 
 
 </head>
-<body style="background-color: rgb(67,169,223);">
+<body class="cto-takeover">
+	<div id="cto-banner">
+		<span>Your CTO has arrived. The old ways are over.</span>
+		<button id="restore-order" type="button" onclick="restoreOrder()">restore order</button>
+	</div>
 	<div id="game" style="
 		cursor: none;
 		position: absolute;
