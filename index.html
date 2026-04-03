@@ -1,178 +1,369 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Nuages de Pi</title>
-	<link href="stylesheet.css" rel="stylesheet">
-	<meta charset="utf-8"/>
-	<script type="text/javascript" src="phaser.min.js"></script>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Volcano de Pi</title>
+	<script src="phaser.min.js"></script>
+	<style>
+		html, body {
+			margin: 0;
+			width: 100%;
+			height: 100%;
+			overflow: hidden;
+			background: #160507;
+		}
+
+		body {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		canvas {
+			image-rendering: pixelated;
+			image-rendering: crisp-edges;
+		}
+	</style>
 	<script>
-var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds', { preload: preload, create: create, update: update }, false, false);
-var nuages = []; var densityDivider = 4; var velocityDivider = 0.6;
-var nuages2 = []; var field; var fond; var fond2;
-var nn = 0; var jj = 0; var sum = 0; var lock = 0;
-var decimal = -1;
+var WIDTH = 1300;
+var HEIGHT = 700;
+var game = new Phaser.Game(WIDTH, HEIGHT, Phaser.CANVAS, 'PIclouds', { preload: preload, create: create, update: update }, false, false);
+
 var pi = [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,8,4,1,9,7,1,6,9,3,9,9,3,7,5,1,0,5,8,2,0,9,7,4,9,4,4,5,9,2,3,0,7,8,1,6,4,0,6,2,8,6,2,0,8,9,9,8,6,2,8,0,3,4,8,2,5,3,4,2,1,1,7,0,6,7,9,8,2,1,4,8,0,8,6,5,1,3,2,8,2,3,0,6,6,4,7,0,9,3,8,4,4,6,0,9,5,5,0,5,8,2,2,3,1,7,2,5,3,5,9,4,0,8,1,2,8,4,8,1,1,1,7,4,5,0,2,8,4,1,0,2,7,0,1,9,3,8,5,2,1,1,0,5,5,5,9,6,4,4,6,2,2,9,4,8,9,5,4,9,3,0,3,8,1,9,6,4,4,2,8,8,1,0,9,7,5,6,6,5,9,3,3,4,4,6,1,2,8,4,7,5,6,4,8,2,3,3,7,8,6,7,8,3,1,6,5,2,7,1,2,0,1,9,0,9,1,4,5,6,4,8,5,6,6,9,2,3,4,6,0,3,4,8,6,1,0,4,5,4,3,2,6,6,4,8,2,1,3,3,9,3,6,0,7,2,6,0,2,4,9,1,4,1,2,7,3,7,2,4,5,8,7,0,0,6,6,0,6,3,1,5,5,8,8,1,7,4,8,8,1,5,2,0,9,2,0,9,6,2,8,2,9,2,5,4,0,9,1,7,1,5,3,6,4,3,6,7,8,9,2,5,9,0,3,6,0,0,1,1,3,3,0,5,3,0,5,4,8,8,2,0,4,6,6,5,2,1,3,8,4,1,4,6,9,5,1,9,4,1,5,1,1,6,0,9,4,3,3,0,5,7,2,7,0,3,6,5,7,5,9,5,9,1,9,5,3,0,9,2,1,8,6,1,1,7,3,8,1,9,3,2,6,1,1,7,9,3,1,0,5,1,1,8,5,4,8,0,7,4,4,6,2,3,7,9,9,6,2,7,4,9,5,6,7,3,5,1,8,8,5,7,5,2,7,2,4,8,9,1,2,2,7,9,3,8,1,8,3,0,1,1,9,4,9,1,2,9,8,3,3,6,7,3,3,6,2,4,4,0,6,5,6,6,4,3,0,8,6,0,2,1,3,9,4,9,4,6,3,9,5,2,2,4,7,3,7,1,9,0,7,0,2,1,7,9,8,6,0,9,4,3,7,0,2,7,7,0,5,3,9,2,1,7,1,7,6,2,9,3,1,7,6,7,5,2,3,8,4,6,7,4,8,1,8,4,6,7,6,6,9,4,0,5,1,3,2,0,0,0,5,6,8,1,2,7,1,4,5,2,6,3,5,6,0,8,2,7,7,8,5,7,7,1,3,4,2,7,5,7,7,8,9,6,0,9,1,7,3,6,3,7,1,7,8,7,2,1,4,6,8,4,4,0,9,0,1,2,2,4,9,5,3,4,3,0,1,4,6,5,4,9,5,8,5,3,7,1,0,5,0,7,9,2,2,7,9,6,8,9,2,5,8,9,2,3,5,4,2,0,1,9,9,5,6,1,1,2,1,2,9,0,2,1,9,6,0,8,6,4,0,3,4,4,1,8,1,5,9,8,1,3,6,2,9,7,7,4,7,7,1,3,0,9,9,6,0,5,1,8,7,0,7,2,1,1,3,4,9,9,9,9,9,9,8,3,7,2,9,7,8,0,4,9,9,5,1,0,5,9,7,3,1,7,3,2,8,1,6,0,9,6,3,1,8,5,9,5,0,2,4,4,5,9,4,5,5,3,4,6,9,0,8,3,0,2,6,4,2,5,2,2,3,0,8,2,5,3,3,4,4,6,8,5,0,3,5,2,6,1,9,3,1,1,8,8,1,7,1,0,1,0,0,0,3,1,3,7,8,3,8,7,5,2,8,8,6,5,8,7,5,3,3,2,0,8,3,8,1,4,2,0];
+var densityDivider = 4;
+var decimal = -1;
+var timer = 0;
+var particleBuckets = [];
+var particles = [];
+var backgroundLayer;
+var lavaSea;
+var craterGlow;
+var plumeGlow;
+var skyTexture;
+var lavaTexture;
+var smokeTexture;
+var emberTexture;
+var ashTexture;
+var ashVeil;
 
 function randInt(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-		
-for (var i = 0; i<10000; i++) {
-	pi.push(randInt(0,9));
-	console.log(pi[886+i]);
+
+for (var i = 0; i < 10000; i++) {
+	pi.push(randInt(0, 9));
 }
 
-var timer = 0;
+function makeTexture(width, height, draw) {
+	var bmd = game.add.bitmapData(width, height);
+	draw(bmd.ctx, width, height);
+	bmd.dirty = true;
+	return bmd;
+}
 
-function sleep(milliseconds) {
-	var start = new Date().getTime();
-	for (var i = 0; i < 1e7; i++) {
-		if ((new Date().getTime() - start) > milliseconds){
-		 break;
-		}
+function preload() {}
+
+function drawVolcanoBackground(ctx, width, height) {
+	var sky = ctx.createLinearGradient(0, 0, 0, height);
+	sky.addColorStop(0, '#09030b');
+	sky.addColorStop(0.26, '#26080d');
+	sky.addColorStop(0.5, '#5b1a13');
+	sky.addColorStop(0.72, '#c04a17');
+	sky.addColorStop(1, '#170405');
+	ctx.fillStyle = sky;
+	ctx.fillRect(0, 0, width, height);
+
+	var eruptionGlow = ctx.createRadialGradient(650, 185, 10, 650, 185, 300);
+	eruptionGlow.addColorStop(0, 'rgba(255, 235, 170, 0.95)');
+	eruptionGlow.addColorStop(0.18, 'rgba(255, 150, 55, 0.72)');
+	eruptionGlow.addColorStop(0.42, 'rgba(255, 72, 24, 0.32)');
+	eruptionGlow.addColorStop(1, 'rgba(255, 72, 24, 0)');
+	ctx.fillStyle = eruptionGlow;
+	ctx.beginPath();
+	ctx.arc(650, 185, 300, 0, Math.PI * 2);
+	ctx.fill();
+
+	ctx.fillStyle = 'rgba(255, 190, 100, 0.07)';
+	for (var i = 0; i < 120; i++) {
+		var x = randInt(0, width);
+		var y = randInt(0, 380);
+		var radius = randInt(1, 4);
+		ctx.beginPath();
+		ctx.arc(x, y, radius, 0, Math.PI * 2);
+		ctx.fill();
+	}
+
+	ctx.fillStyle = '#0f0506';
+	ctx.beginPath();
+	ctx.moveTo(0, 700);
+	ctx.lineTo(120, 620);
+	ctx.lineTo(240, 520);
+	ctx.lineTo(350, 430);
+	ctx.lineTo(480, 340);
+	ctx.lineTo(590, 250);
+	ctx.lineTo(650, 230);
+	ctx.lineTo(710, 250);
+	ctx.lineTo(830, 340);
+	ctx.lineTo(960, 430);
+	ctx.lineTo(1080, 540);
+	ctx.lineTo(1190, 635);
+	ctx.lineTo(1300, 700);
+	ctx.closePath();
+	ctx.fill();
+
+	ctx.fillStyle = '#1a090a';
+	ctx.beginPath();
+	ctx.moveTo(310, 700);
+	ctx.lineTo(490, 470);
+	ctx.lineTo(610, 365);
+	ctx.lineTo(650, 285);
+	ctx.lineTo(700, 365);
+	ctx.lineTo(810, 470);
+	ctx.lineTo(970, 700);
+	ctx.closePath();
+	ctx.fill();
+
+	ctx.fillStyle = 'rgba(255, 112, 26, 0.2)';
+	ctx.beginPath();
+	ctx.moveTo(620, 365);
+	ctx.lineTo(650, 285);
+	ctx.lineTo(690, 365);
+	ctx.lineTo(650, 380);
+	ctx.closePath();
+	ctx.fill();
+
+	ctx.fillStyle = 'rgba(255, 88, 24, 0.15)';
+	ctx.beginPath();
+	ctx.moveTo(610, 375);
+	ctx.lineTo(640, 320);
+	ctx.lineTo(655, 380);
+	ctx.closePath();
+	ctx.fill();
+
+	ctx.fillStyle = '#120406';
+	ctx.fillRect(0, 515, width, 185);
+
+	var lava = ctx.createLinearGradient(0, 515, 0, 700);
+	lava.addColorStop(0, 'rgba(255, 124, 36, 0.96)');
+	lava.addColorStop(0.25, 'rgba(200, 56, 18, 0.86)');
+	lava.addColorStop(0.55, 'rgba(96, 18, 10, 0.96)');
+	lava.addColorStop(1, 'rgba(26, 4, 4, 1)');
+	ctx.fillStyle = lava;
+	ctx.fillRect(0, 530, width, 170);
+
+	ctx.fillStyle = 'rgba(255, 214, 122, 0.55)';
+	for (var j = 0; j < 24; j++) {
+		var crackX = randInt(0, width);
+		var crackY = randInt(540, 675);
+		ctx.fillRect(crackX, crackY, randInt(20, 90), randInt(1, 3));
+	}
+
+	ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
+	ctx.fillRect(0, 610, width, 90);
+}
+
+function drawLavaTexture(ctx, width, height) {
+	var base = ctx.createLinearGradient(0, 0, 0, height);
+	base.addColorStop(0, '#ff8e20');
+	base.addColorStop(0.28, '#d64d16');
+	base.addColorStop(0.6, '#6f150d');
+	base.addColorStop(1, '#280506');
+	ctx.fillStyle = base;
+	ctx.fillRect(0, 0, width, height);
+
+	ctx.fillStyle = 'rgba(255, 220, 130, 0.25)';
+	for (var i = 0; i < 44; i++) {
+		var x = randInt(0, width);
+		var y = randInt(0, height);
+		var w = randInt(18, 72);
+		var h = randInt(2, 8);
+		ctx.fillRect(x, y, w, h);
+	}
+
+	ctx.fillStyle = 'rgba(40, 8, 8, 0.28)';
+	for (var j = 0; j < 32; j++) {
+		var veinX = randInt(0, width);
+		var veinY = randInt(0, height);
+		var veinW = randInt(40, 180);
+		var veinH = randInt(1, 5);
+		ctx.fillRect(veinX, veinY, veinW, veinH);
+	}
+
+	ctx.fillStyle = 'rgba(255, 242, 176, 0.2)';
+	for (var k = 0; k < 18; k++) {
+		ctx.beginPath();
+		ctx.arc(randInt(0, width), randInt(0, height), randInt(4, 10), 0, Math.PI * 2);
+		ctx.fill();
+	}
+
+	var gloss = ctx.createRadialGradient(width * 0.3, height * 0.25, 10, width * 0.3, height * 0.25, height);
+	gloss.addColorStop(0, 'rgba(255, 255, 205, 0.2)');
+	gloss.addColorStop(1, 'rgba(255, 255, 205, 0)');
+	ctx.fillStyle = gloss;
+	ctx.fillRect(0, 0, width, height);
+}
+
+function drawSmokeTexture(ctx, width, height) {
+	var grad = ctx.createRadialGradient(width / 2, height / 2, 6, width / 2, height / 2, width / 2);
+	grad.addColorStop(0, 'rgba(235, 230, 220, 0.95)');
+	grad.addColorStop(0.3, 'rgba(140, 125, 120, 0.7)');
+	grad.addColorStop(0.7, 'rgba(50, 35, 35, 0.22)');
+	grad.addColorStop(1, 'rgba(20, 12, 12, 0)');
+	ctx.fillStyle = grad;
+	ctx.beginPath();
+	ctx.arc(width / 2, height / 2, width / 2, 0, Math.PI * 2);
+	ctx.fill();
+
+	ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+	for (var i = 0; i < 5; i++) {
+		ctx.beginPath();
+		ctx.arc(randInt(16, width - 16), randInt(16, height - 16), randInt(6, 16), 0, Math.PI * 2);
+		ctx.fill();
 	}
 }
-function preload() {
-	game.load.image('nuage','nuage.png');
-	game.load.image('nuage2','nuage2.png');
-	game.load.image('field','field.png');
-	game.load.image('fond','fond.png');
-	game.load.image('fond2','fond2.png');
+
+function drawEmberTexture(ctx, width, height) {
+	var glow = ctx.createRadialGradient(width / 2, height / 2, 1, width / 2, height / 2, width / 2);
+	glow.addColorStop(0, 'rgba(255, 255, 220, 1)');
+	glow.addColorStop(0.24, 'rgba(255, 210, 110, 0.96)');
+	glow.addColorStop(0.56, 'rgba(255, 96, 24, 0.88)');
+	glow.addColorStop(1, 'rgba(255, 56, 8, 0)');
+	ctx.fillStyle = glow;
+	ctx.beginPath();
+	ctx.arc(width / 2, height / 2, width / 2, 0, Math.PI * 2);
+	ctx.fill();
 }
+
+function drawAshTexture(ctx, width, height) {
+	var glow = ctx.createRadialGradient(width / 2, height / 2, 1, width / 2, height / 2, width / 2);
+	glow.addColorStop(0, 'rgba(220, 210, 205, 0.88)');
+	glow.addColorStop(0.45, 'rgba(92, 74, 72, 0.5)');
+	glow.addColorStop(1, 'rgba(34, 22, 22, 0)');
+	ctx.fillStyle = glow;
+	ctx.beginPath();
+	ctx.arc(width / 2, height / 2, width / 2, 0, Math.PI * 2);
+	ctx.fill();
+}
+
 function create() {
-	game.time.desiredFps = 30;
-	game.stage.backgroundColor = "#4488AA";
-	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
-	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
-	order0 = game.add.group();
-	order1 = game.add.group();
-	order2 = game.add.group();
-	order3 = game.add.group();
-	order4 = game.add.group();
-	order5 = game.add.group();
-	order6 = game.add.group();
-	order7 = game.add.group();
-	order8 = game.add.group();
-	order9 = game.add.group();
-	//fond2.angle = 180;
-	fond2.alpha = 0.9;
-	//field = game.add.tileSprite(0, 465, 1300, 300, 'field');
-	//field.alpha = 0.2;
+	game.stage.backgroundColor = '#120406';
+	game.world.setBounds(0, 0, WIDTH, HEIGHT);
 
+	skyTexture = makeTexture(WIDTH, HEIGHT, drawVolcanoBackground);
+	lavaTexture = makeTexture(512, 128, drawLavaTexture);
+	smokeTexture = makeTexture(160, 160, drawSmokeTexture);
+	emberTexture = makeTexture(96, 96, drawEmberTexture);
+	ashTexture = makeTexture(72, 72, drawAshTexture);
+
+	backgroundLayer = game.add.sprite(0, 0, skyTexture);
+	lavaSea = game.add.tileSprite(0, 520, WIDTH, 180, lavaTexture);
+	lavaSea.alpha = 0.92;
+
+	plumeGlow = game.add.sprite(650, 170, smokeTexture);
+	plumeGlow.anchor.set(0.5);
+	plumeGlow.scale.setTo(2.6, 2.3);
+	plumeGlow.alpha = 0.28;
+	plumeGlow.blendMode = Phaser.blendModes.SCREEN;
+
+	craterGlow = game.add.sprite(650, 330, emberTexture);
+	craterGlow.anchor.set(0.5);
+	craterGlow.scale.setTo(4.0, 2.8);
+	craterGlow.alpha = 0.85;
+	craterGlow.blendMode = Phaser.blendModes.SCREEN;
+
+	ashVeil = game.add.sprite(650, 190, ashTexture);
+	ashVeil.anchor.set(0.5);
+	ashVeil.scale.setTo(5.2, 3.4);
+	ashVeil.alpha = 0.12;
+	ashVeil.blendMode = Phaser.blendModes.NORMAL;
+
+	for (var i = 0; i < 10; i++) {
+		particleBuckets[i] = game.add.group();
+	}
+
+	for (var seed = 0; seed < 12; seed++) {
+		spawnParticle(pi[seed], seed % 3 === 0 ? 'ember' : 'smoke');
+	}
+	decimal = 11;
 }
-function update() {
 
+function spawnParticle(digit, kind) {
+	var xBase = 650 + randInt(-35, 35);
+	var yBase = 342 + randInt(-12, 20) - digit * 3;
+	var texture = kind === 'ember' ? emberTexture : smokeTexture;
+	var sprite = game.add.sprite(xBase, yBase, texture);
+	sprite.anchor.set(0.5);
+	sprite.digit = digit;
+	sprite.kind = kind;
+	sprite.vx = (kind === 'ember' ? 1.1 : 0.55) + digit * (kind === 'ember' ? 0.22 : 0.12);
+	sprite.vy = (kind === 'ember' ? -2.4 : -1.0) - digit * (kind === 'ember' ? 0.16 : 0.09);
+	sprite.gravity = kind === 'ember' ? 0.045 + digit * 0.006 : 0.008;
+	sprite.fade = kind === 'ember' ? 0.006 + digit * 0.0005 : 0.003 + digit * 0.00025;
+	sprite.spin = (randInt(-10, 10) / 1000) * (kind === 'ember' ? 3 : 1);
+	sprite.scale.setTo(kind === 'ember' ? 0.18 + digit * 0.03 : 0.32 + digit * 0.05, kind === 'ember' ? 0.18 + digit * 0.03 : 0.30 + digit * 0.045);
+	sprite.alpha = kind === 'ember' ? 0.95 : 0.34 + digit * 0.04;
+	sprite.blendMode = kind === 'ember' ? Phaser.blendModes.SCREEN : Phaser.blendModes.NORMAL;
+	sprite.tint = kind === 'ember' ? 0xff8f1f : 0xc8bbb1;
+	particleBuckets[digit].add(sprite);
+	particles.push(sprite);
+}
+
+function updateParticle(sprite) {
+	sprite.x += sprite.vx;
+	sprite.y += sprite.vy;
+	sprite.vy += sprite.gravity;
+	sprite.rotation += sprite.spin;
+	sprite.alpha -= sprite.fade;
+
+	if (sprite.kind === 'smoke') {
+		sprite.scale.x += 0.0025;
+		sprite.scale.y += 0.0035;
+	} else {
+		sprite.scale.x *= 1.003;
+		sprite.scale.y *= 1.003;
+	}
+
+	if (sprite.y < -120 || sprite.x > WIDTH + 180 || sprite.alpha <= 0.02) {
+		sprite.destroy();
+	}
+}
+
+function update() {
 	timer++;
 
-	if (timer > (pi[decimal+1])*densityDivider) {
-
+	if (decimal + 1 < pi.length && timer > pi[decimal + 1] * densityDivider) {
 		decimal++;
 		timer = 0;
-		nuages.push(game.add.tileSprite(-200, 400-(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage'));
-		nuages[decimal].anchor.x = 0.7;
-		nuages[decimal].anchor.y = 0.5;
-		nuages[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
-		nuages[decimal].alpha = 0.9;
-		//sum += pi[decimal];
-		nuages2.push(game.add.tileSprite(-200, 400+(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage2'));
-		nuages2[decimal].anchor.x = 0.7;
-		nuages2[decimal].anchor.y = 0.5;
-		nuages2[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
-		nuages[decimal].alpha = 0.99;
 
-		switch(pi[decimal]) {
-		case 0:
-			order0.add(nuages[decimal]);
-			order0.add(nuages2[decimal]);
-			break;
-		case 1:
-			order1.add(nuages[decimal]);
-			order1.add(nuages2[decimal]);
-			break;
-		case 2:
-			order2.add(nuages[decimal]);
-			order2.add(nuages2[decimal]);
-			break;
-		case 3:
-			order3.add(nuages[decimal]);
-			order3.add(nuages2[decimal]);
-			break;
-		case 4:
-			order4.add(nuages[decimal]);
-			order4.add(nuages2[decimal]);
-			break;
-		case 5:
-			order5.add(nuages[decimal]);
-			order5.add(nuages2[decimal]);
-			break;
-		case 6:
-			order6.add(nuages[decimal]);
-			order6.add(nuages2[decimal]);
-			break;
-		case 7:
-			order7.add(nuages[decimal]);
-			order7.add(nuages2[decimal]);
-			break;
-		case 8:
-			order8.add(nuages[decimal]);
-			order8.add(nuages2[decimal]);
-			break;
-		case 9:
-			order9.add(nuages[decimal]);
-			order9.add(nuages2[decimal]);
-			break;
-		}
+		var digit = pi[decimal];
+		spawnParticle(digit, 'smoke');
+		spawnParticle(digit, 'ember');
 	}
 
-	while (jj <= decimal ) {
-		if (nuages[jj].x > 1800) {
-			nuages[jj].destroy();
+	for (var i = particles.length - 1; i >= 0; i--) {
+		if (!particles[i].alive) {
+			particles.splice(i, 1);
+			continue;
 		}
-		nuages[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		nuages2[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		//nuages[jj].angle += (1/(pi[jj]))*3;
-		jj++;
-		//if (nuages[jj].x > 1300) {
-		//}
+		updateParticle(particles[i]);
 	}
-	jj = 0;
 
-	game.world.bringToTop(order0);
-	game.world.bringToTop(order1);
-	game.world.bringToTop(order2);
-	game.world.bringToTop(order3);
-	game.world.bringToTop(order4);
-	game.world.bringToTop(order5);
-	game.world.bringToTop(order6);
-	game.world.bringToTop(order7);
-	game.world.bringToTop(order8);
-	game.world.bringToTop(order9);
-	fond2.bringToTop();
+	var pulse = 0.5 + Math.sin(game.time.now / 180) * 0.08;
+	craterGlow.alpha = 0.75 + pulse * 0.25;
+	craterGlow.scale.setTo(3.7 + pulse * 0.25, 2.5 + pulse * 0.18);
+	plumeGlow.alpha = 0.2 + pulse * 0.12;
+	plumeGlow.scale.setTo(2.0 + pulse * 0.18, 1.7 + pulse * 0.12);
+	ashVeil.alpha = 0.08 + pulse * 0.05;
+	ashVeil.x = 650 + Math.sin(game.time.now / 240) * 18;
+	ashVeil.y = 192 + Math.cos(game.time.now / 260) * 10;
+
+	lavaSea.tilePosition.x += 0.35;
+	lavaSea.tilePosition.y -= 0.08;
 }
-
-
-
-  </script>
-
-
-
-
+	</script>
 </head>
-<body style="background-color: rgb(67,169,223);">
-	<div id="game" style="
-		cursor: none;
-		position: absolute;
-		TOP: 0px;
-		LEFT: 0px;
-
-
-		image-rendering: optimizeSpeed;
-		image-rendering: -moz-crisp-edges;
-		image-rendering: -o-crisp-edges;
-		image-rendering: -webkit-optimize-contrast;
-		image-rendering: optimize-contrast;
-		-ms-interpolation-mode: nearest-neighbor;
-		image-rendering : pixelated;">
-	</div>
+<body>
+	<div id="PIclouds"></div>
 </body>
 </html>
