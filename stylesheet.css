@@ -1,0 +1,100 @@
+html,
+body {
+	margin: 0;
+	min-height: 100%;
+	font-family: Georgia, "Times New Roman", serif;
+	background:
+		radial-gradient(circle at top, rgba(255, 124, 35, 0.22), transparent 28%),
+		linear-gradient(180deg, #120607 0%, #2c0b08 35%, #120607 100%);
+	color: #ffe7ca;
+}
+
+body {
+	display: flex;
+	justify-content: center;
+	padding: 28px;
+	box-sizing: border-box;
+}
+
+.frame {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 18px;
+	width: min(100%, 1360px);
+}
+
+.titleCard {
+	width: min(100%, 1260px);
+	padding: 18px 22px;
+	box-sizing: border-box;
+	border: 1px solid rgba(255, 179, 71, 0.35);
+	border-radius: 18px;
+	background:
+		linear-gradient(180deg, rgba(40, 12, 10, 0.92), rgba(20, 7, 8, 0.9)),
+		radial-gradient(circle at right, rgba(255, 124, 35, 0.18), transparent 35%);
+	box-shadow:
+		0 22px 60px rgba(0, 0, 0, 0.45),
+		inset 0 0 32px rgba(255, 128, 0, 0.08);
+}
+
+.eyebrow {
+	margin: 0 0 4px;
+	letter-spacing: 0.32em;
+	font-size: 12px;
+	color: #ffb86b;
+}
+
+.titleCard h1 {
+	margin: 0;
+	font-size: clamp(34px, 5vw, 54px);
+	line-height: 0.95;
+	font-weight: 600;
+	text-transform: uppercase;
+	color: #fff0d6;
+	text-shadow: 0 0 18px rgba(255, 122, 26, 0.24);
+}
+
+.subtitle {
+	margin: 10px 0 0;
+	max-width: 720px;
+	font-size: 16px;
+	line-height: 1.45;
+	color: rgba(255, 231, 202, 0.84);
+}
+
+#game {
+	width: min(100%, 1300px);
+	overflow: hidden;
+	border: 1px solid rgba(255, 179, 71, 0.28);
+	border-radius: 22px;
+	box-shadow:
+		0 28px 90px rgba(0, 0, 0, 0.58),
+		0 0 70px rgba(255, 102, 0, 0.12);
+	background: #140708;
+}
+
+#game canvas {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+
+@media (max-width: 900px) {
+	body {
+		padding: 14px;
+	}
+
+	.titleCard {
+		padding: 16px 16px 18px;
+		border-radius: 14px;
+	}
+
+	.subtitle {
+		font-size: 15px;
+	}
+
+	#game {
+		border-radius: 16px;
+	}
+}
