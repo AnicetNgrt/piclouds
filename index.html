@@ -2,15 +2,85 @@
 <html>
 <head>
 	<title>Nuages de Pi</title>
-	<link href="stylesheet.css" rel="stylesheet">
 	<meta charset="utf-8"/>
+	<style>
+		html, body {
+			margin: 0;
+			width: 100%;
+			height: 100%;
+			overflow: hidden;
+			font-family: Arial, Helvetica, sans-serif;
+		}
+
+		body {
+			background: rgb(67,169,223);
+		}
+
+		#theme-ui {
+			position: fixed;
+			top: 16px;
+			right: 16px;
+			z-index: 10;
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			padding: 10px 14px;
+			border-radius: 999px;
+			color: #eff8f1;
+			background: rgba(13, 24, 18, 0.45);
+			border: 1px solid rgba(255, 255, 255, 0.16);
+			backdrop-filter: blur(8px);
+			-webkit-backdrop-filter: blur(8px);
+		}
+
+		#theme-ui label {
+			font-size: 11px;
+			font-weight: 700;
+			letter-spacing: 0.12em;
+			text-transform: uppercase;
+		}
+
+		#theme-select {
+			border: 0;
+			border-radius: 999px;
+			padding: 7px 12px;
+			background: rgba(248, 251, 247, 0.96);
+			color: #193128;
+			font-size: 13px;
+			font-weight: 700;
+			outline: none;
+		}
+
+		#game {
+			cursor: none;
+			position: absolute;
+			top: 0;
+			left: 0;
+			image-rendering: optimizeSpeed;
+			image-rendering: -moz-crisp-edges;
+			image-rendering: -o-crisp-edges;
+			image-rendering: -webkit-optimize-contrast;
+			image-rendering: optimize-contrast;
+			-ms-interpolation-mode: nearest-neighbor;
+			image-rendering: pixelated;
+		}
+	</style>
 	<script type="text/javascript" src="phaser.min.js"></script>
 	<script>
 var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds', { preload: preload, create: create, update: update }, false, false);
-var nuages = []; var densityDivider = 4; var velocityDivider = 0.6;
-var nuages2 = []; var field; var fond; var fond2;
-var nn = 0; var jj = 0; var sum = 0; var lock = 0;
+var nuages = [];
+var nuages2 = [];
+var densityDivider = 4;
+var velocityDivider = 0.6;
+var field;
+var fond;
+var fond2;
+var orderGroups = [];
+var jj = 0;
 var decimal = -1;
+var themeKey = getThemeKeyFromLocation();
+var themeConfig = null;
+var themeAssets = null;
 var pi = [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,8,4,1,9,7,1,6,9,3,9,9,3,7,5,1,0,5,8,2,0,9,7,4,9,4,4,5,9,2,3,0,7,8,1,6,4,0,6,2,8,6,2,0,8,9,9,8,6,2,8,0,3,4,8,2,5,3,4,2,1,1,7,0,6,7,9,8,2,1,4,8,0,8,6,5,1,3,2,8,2,3,0,6,6,4,7,0,9,3,8,4,4,6,0,9,5,5,0,5,8,2,2,3,1,7,2,5,3,5,9,4,0,8,1,2,8,4,8,1,1,1,7,4,5,0,2,8,4,1,0,2,7,0,1,9,3,8,5,2,1,1,0,5,5,5,9,6,4,4,6,2,2,9,4,8,9,5,4,9,3,0,3,8,1,9,6,4,4,2,8,8,1,0,9,7,5,6,6,5,9,3,3,4,4,6,1,2,8,4,7,5,6,4,8,2,3,3,7,8,6,7,8,3,1,6,5,2,7,1,2,0,1,9,0,9,1,4,5,6,4,8,5,6,6,9,2,3,4,6,0,3,4,8,6,1,0,4,5,4,3,2,6,6,4,8,2,1,3,3,9,3,6,0,7,2,6,0,2,4,9,1,4,1,2,7,3,7,2,4,5,8,7,0,0,6,6,0,6,3,1,5,5,8,8,1,7,4,8,8,1,5,2,0,9,2,0,9,6,2,8,2,9,2,5,4,0,9,1,7,1,5,3,6,4,3,6,7,8,9,2,5,9,0,3,6,0,0,1,1,3,3,0,5,3,0,5,4,8,8,2,0,4,6,6,5,2,1,3,8,4,1,4,6,9,5,1,9,4,1,5,1,1,6,0,9,4,3,3,0,5,7,2,7,0,3,6,5,7,5,9,5,9,1,9,5,3,0,9,2,1,8,6,1,1,7,3,8,1,9,3,2,6,1,1,7,9,3,1,0,5,1,1,8,5,4,8,0,7,4,4,6,2,3,7,9,9,6,2,7,4,9,5,6,7,3,5,1,8,8,5,7,5,2,7,2,4,8,9,1,2,2,7,9,3,8,1,8,3,0,1,1,9,4,9,1,2,9,8,3,3,6,7,3,3,6,2,4,4,0,6,5,6,6,4,3,0,8,6,0,2,1,3,9,4,9,4,6,3,9,5,2,2,4,7,3,7,1,9,0,7,0,2,1,7,9,8,6,0,9,4,3,7,0,2,7,7,0,5,3,9,2,1,7,1,7,6,2,9,3,1,7,6,7,5,2,3,8,4,6,7,4,8,1,8,4,6,7,6,6,9,4,0,5,1,3,2,0,0,0,5,6,8,1,2,7,1,4,5,2,6,3,5,6,0,8,2,7,7,8,5,7,7,1,3,4,2,7,5,7,7,8,9,6,0,9,1,7,3,6,3,7,1,7,8,7,2,1,4,6,8,4,4,0,9,0,1,2,2,4,9,5,3,4,3,0,1,4,6,5,4,9,5,8,5,3,7,1,0,5,0,7,9,2,2,7,9,6,8,9,2,5,8,9,2,3,5,4,2,0,1,9,9,5,6,1,1,2,1,2,9,0,2,1,9,6,0,8,6,4,0,3,4,4,1,8,1,5,9,8,1,3,6,2,9,7,7,4,7,7,1,3,0,9,9,6,0,5,1,8,7,0,7,2,1,1,3,4,9,9,9,9,9,9,8,3,7,2,9,7,8,0,4,9,9,5,1,0,5,9,7,3,1,7,3,2,8,1,6,0,9,6,3,1,8,5,9,5,0,2,4,4,5,9,4,5,5,3,4,6,9,0,8,3,0,2,6,4,2,5,2,2,3,0,8,2,5,3,3,4,4,6,8,5,0,3,5,2,6,1,9,3,1,1,8,8,1,7,1,0,1,0,0,0,3,1,3,7,8,3,8,7,5,2,8,8,6,5,8,7,5,3,3,2,0,8,3,8,1,4,2,0];
 
 function randInt(min, max) {
@@ -19,19 +89,286 @@ function randInt(min, max) {
 		
 for (var i = 0; i<10000; i++) {
 	pi.push(randInt(0,9));
-	console.log(pi[886+i]);
 }
 
 var timer = 0;
 
-function sleep(milliseconds) {
-	var start = new Date().getTime();
-	for (var i = 0; i < 1e7; i++) {
-		if ((new Date().getTime() - start) > milliseconds){
-		 break;
+function normalizeThemeKey(raw) {
+	raw = (raw || '').toLowerCase();
+	if (raw === 'forest' || raw === 'forest-grove' || raw === 'forestgrove') {
+		return 'forest-grove';
+	}
+	return 'original';
+}
+
+function getThemeKeyFromLocation() {
+	if (!window.location.search) {
+		return 'original';
+	}
+	var params = new URLSearchParams(window.location.search);
+	return normalizeThemeKey(params.get('theme'));
+}
+
+function getThemeConfig(key) {
+	var themes = {
+		original: {
+			key: 'original',
+			label: 'Original',
+				bodyColor: 'rgb(67,169,223)',
+				stageColor: '#4488AA',
+				cloudBaseY: 400,
+				cloudSpread: 34,
+				cloudScale: 0.1,
+				cloudVelocityDivider: 0.6,
+				cloudTopAlpha: 0.9,
+				cloudBottomAlpha: 0.99,
+			createAssets: function () {
+				return {
+					topLayer: 'fond',
+					bottomLayer: 'fond2',
+					cloudTop: 'nuage',
+					cloudBottom: 'nuage2'
+				};
+			}
+		},
+		'forest-grove': {
+			key: 'forest-grove',
+			label: 'Forest Grove',
+				bodyColor: '#16251d',
+				stageColor: '#203728',
+				cloudBaseY: 372,
+				cloudSpread: 22,
+				cloudScale: 0.108,
+				cloudVelocityDivider: 0.82,
+				cloudTopAlpha: 0.88,
+				cloudBottomAlpha: 0.95,
+			createAssets: function () {
+				return buildForestGroveAssets();
+			}
 		}
+	};
+
+	return themes[key] || themes.original;
+}
+
+function makeBitmapData(width, height, painter) {
+	var bitmap = game.add.bitmapData(width, height);
+	var ctx = bitmap.ctx;
+	ctx.clearRect(0, 0, width, height);
+	painter(ctx, width, height);
+	bitmap.dirty = true;
+	return bitmap;
+}
+
+function fillVerticalGradient(ctx, width, height, stops) {
+	var gradient = ctx.createLinearGradient(0, 0, 0, height);
+	for (var i = 0; i < stops.length; i++) {
+		gradient.addColorStop(stops[i][0], stops[i][1]);
+	}
+	ctx.fillStyle = gradient;
+	ctx.fillRect(0, 0, width, height);
+}
+
+function fillEllipse(ctx, x, y, radiusX, radiusY, fillStyle, alpha) {
+	ctx.save();
+	ctx.globalAlpha = alpha == null ? 1 : alpha;
+	ctx.translate(x, y);
+	ctx.scale(radiusX, radiusY);
+	ctx.beginPath();
+	ctx.arc(0, 0, 1, 0, Math.PI * 2, false);
+	ctx.fillStyle = fillStyle;
+	ctx.fill();
+	ctx.restore();
+}
+
+function drawPineTree(ctx, x, groundY, height, trunkColor, leafColor) {
+	var trunkWidth = Math.max(6, Math.round(height * 0.09));
+	var trunkHeight = Math.max(14, Math.round(height * 0.18));
+	var canopyWidth = height * 0.42;
+	var layerHeight = height * 0.22;
+
+	ctx.save();
+	ctx.fillStyle = trunkColor;
+	ctx.fillRect(x - trunkWidth / 2, groundY - trunkHeight, trunkWidth, trunkHeight);
+	ctx.fillStyle = leafColor;
+	for (var i = 0; i < 4; i++) {
+		var topY = groundY - trunkHeight - (i * layerHeight * 0.78);
+		var halfWidth = canopyWidth - (i * height * 0.07);
+		ctx.beginPath();
+		ctx.moveTo(x, topY - layerHeight);
+		ctx.lineTo(x - halfWidth, topY + layerHeight * 0.45);
+		ctx.lineTo(x + halfWidth, topY + layerHeight * 0.45);
+		ctx.closePath();
+		ctx.fill();
+	}
+	ctx.restore();
+}
+
+function drawHillBand(ctx, width, height, topY, fillStyle, accentStyle) {
+	ctx.save();
+	ctx.beginPath();
+	ctx.moveTo(0, topY);
+	for (var x = 0; x <= width; x += 110) {
+		var crest = topY - 18 - Math.sin((x / width) * Math.PI * 2.4) * 26;
+		ctx.quadraticCurveTo(x + 55, crest, x + 110, topY + Math.sin((x / 80)) * 8);
+	}
+	ctx.lineTo(width, height);
+	ctx.lineTo(0, height);
+	ctx.closePath();
+	ctx.fillStyle = fillStyle;
+	ctx.fill();
+
+	ctx.globalAlpha = 0.35;
+	ctx.fillStyle = accentStyle;
+	ctx.beginPath();
+	ctx.moveTo(0, topY + 18);
+	for (var y = 0; y <= width; y += 130) {
+		var ridge = topY + 8 + Math.cos((y / width) * Math.PI * 2.2) * 10;
+		ctx.quadraticCurveTo(y + 65, ridge, y + 130, topY + 18 + Math.sin((y / 95)) * 6);
+	}
+	ctx.lineTo(width, height);
+	ctx.lineTo(0, height);
+	ctx.closePath();
+	ctx.fill();
+	ctx.restore();
+}
+
+function drawMistBands(ctx, width, height) {
+	ctx.save();
+	ctx.globalAlpha = 0.22;
+	fillEllipse(ctx, width * 0.2, height * 0.55, 220, 46, '#e1f0d6', 0.28);
+	fillEllipse(ctx, width * 0.58, height * 0.48, 260, 52, '#f1ffe6', 0.18);
+	fillEllipse(ctx, width * 0.84, height * 0.62, 180, 36, '#d7e4cc', 0.16);
+	ctx.restore();
+}
+
+function drawForestSky(ctx, width, height) {
+	fillVerticalGradient(ctx, width, height, [
+		[0, '#10231c'],
+		[0.32, '#29453a'],
+		[0.64, '#688f73'],
+		[1, '#c9e3bd']
+	]);
+
+	fillEllipse(ctx, width * 0.74, height * 0.18, 160, 72, '#dff7be', 0.42);
+	fillEllipse(ctx, width * 0.74, height * 0.18, 250, 120, '#e7fbcf', 0.16);
+	fillEllipse(ctx, width * 0.26, height * 0.22, 90, 30, '#f0ffe2', 0.12);
+	drawHillBand(ctx, width, height, height * 0.67, 'rgba(20, 48, 36, 0.85)', 'rgba(56, 92, 66, 0.55)');
+	drawMistBands(ctx, width, height);
+
+	for (var x = -60; x < width + 80; x += 100) {
+		var treeHeight = 76 + ((x * 13) % 3) * 18;
+		drawPineTree(ctx, x + 40, height * 0.72, treeHeight, '#0d1b15', '#183326');
 	}
 }
+
+function drawForestGround(ctx, width, height) {
+	fillVerticalGradient(ctx, width, height, [
+		[0, '#243c2a'],
+		[0.45, '#1b301f'],
+		[1, '#0b140f']
+	]);
+
+	drawHillBand(ctx, width, height, height * 0.18, '#294833', '#496b4b');
+	ctx.save();
+	ctx.globalAlpha = 0.35;
+	for (var x = 0; x < width; x += 34) {
+		var patchHeight = 12 + ((x * 17) % 8);
+		ctx.fillStyle = x % 68 === 0 ? '#4d6b44' : '#203523';
+		ctx.fillRect(x, height - patchHeight, 22, patchHeight);
+	}
+	ctx.restore();
+
+	for (var t = -40; t < width + 60; t += 92) {
+		var trunkHeight = 82 + ((t * 11) % 4) * 18;
+		drawPineTree(ctx, t + 34, height * 0.92, trunkHeight, '#3a281b', '#264130');
+	}
+
+	ctx.save();
+	ctx.globalAlpha = 0.2;
+	for (var b = 0; b < width; b += 44) {
+		ctx.beginPath();
+		ctx.strokeStyle = b % 88 === 0 ? '#d8f0c7' : '#547c57';
+		ctx.lineWidth = 2 + (b % 3);
+		ctx.moveTo(b, height - 18);
+		ctx.lineTo(b + 14, height - 30 - ((b * 7) % 11));
+		ctx.stroke();
+	}
+	ctx.restore();
+}
+
+function drawLeafCloud(ctx, width, height) {
+	ctx.save();
+	ctx.globalAlpha = 0.9;
+	var centers = [
+		[0.18, 0.45, 72, 40, '#345d35', 0.96],
+		[0.31, 0.38, 96, 52, '#406b3f', 0.95],
+		[0.46, 0.52, 130, 64, '#54834d', 0.92],
+		[0.58, 0.42, 104, 52, '#335533', 0.94],
+		[0.72, 0.5, 84, 44, '#5c8b54', 0.9]
+	];
+	for (var i = 0; i < centers.length; i++) {
+		fillEllipse(ctx, width * centers[i][0], height * centers[i][1], centers[i][2], centers[i][3], centers[i][4], centers[i][5]);
+		fillEllipse(ctx, width * centers[i][0] + 18, height * centers[i][1] - 10, centers[i][2] * 0.58, centers[i][3] * 0.52, '#d8efc7', 0.24);
+	}
+	ctx.globalAlpha = 0.7;
+	ctx.strokeStyle = '#1b2a1f';
+	ctx.lineWidth = 7;
+	ctx.beginPath();
+	ctx.moveTo(width * 0.16, height * 0.54);
+	ctx.quadraticCurveTo(width * 0.34, height * 0.23, width * 0.55, height * 0.45);
+	ctx.quadraticCurveTo(width * 0.68, height * 0.58, width * 0.86, height * 0.36);
+	ctx.stroke();
+	ctx.restore();
+}
+
+function drawFogCloud(ctx, width, height) {
+	ctx.save();
+	ctx.globalAlpha = 0.82;
+	fillEllipse(ctx, width * 0.2, height * 0.56, 120, 42, '#dcead7', 0.58);
+	fillEllipse(ctx, width * 0.36, height * 0.48, 160, 50, '#eff8ea', 0.42);
+	fillEllipse(ctx, width * 0.54, height * 0.57, 150, 44, '#d4e2cf', 0.48);
+	fillEllipse(ctx, width * 0.72, height * 0.46, 116, 38, '#f3fbef', 0.35);
+	fillEllipse(ctx, width * 0.86, height * 0.58, 86, 34, '#d7e6d0', 0.32);
+	ctx.globalAlpha = 0.28;
+	for (var i = 0; i < 9; i++) {
+		fillEllipse(ctx, width * (0.14 + i * 0.09), height * (0.38 + (i % 3) * 0.08), 24 + (i % 2) * 8, 18 + (i % 3) * 6, '#8fb293', 0.42);
+	}
+	ctx.restore();
+}
+
+function buildForestGroveAssets() {
+	return {
+		topLayer: makeBitmapData(1300, 400, function (ctx, width, height) {
+			drawForestSky(ctx, width, height);
+		}),
+		bottomLayer: makeBitmapData(1300, 300, function (ctx, width, height) {
+			drawForestGround(ctx, width, height);
+		}),
+		cloudTop: makeBitmapData(768, 312, function (ctx, width, height) {
+			drawLeafCloud(ctx, width, height);
+		}),
+		cloudBottom: makeBitmapData(768, 312, function (ctx, width, height) {
+			drawFogCloud(ctx, width, height);
+		})
+	};
+}
+
+function setupThemeSelector() {
+	var select = document.getElementById('theme-select');
+	if (!select) {
+		return;
+	}
+
+	select.value = themeConfig.key;
+	select.addEventListener('change', function () {
+		var params = new URLSearchParams(window.location.search);
+		params.set('theme', select.value);
+		var query = params.toString();
+		window.location.search = query ? '?' + query : '';
+	});
+}
+
 function preload() {
 	game.load.image('nuage','nuage.png');
 	game.load.image('nuage2','nuage2.png');
@@ -39,140 +376,80 @@ function preload() {
 	game.load.image('fond','fond.png');
 	game.load.image('fond2','fond2.png');
 }
+
 function create() {
+	themeConfig = getThemeConfig(themeKey);
+	themeAssets = themeConfig.createAssets();
+	document.body.style.backgroundColor = themeConfig.bodyColor;
+	game.stage.backgroundColor = themeConfig.stageColor;
+	setupThemeSelector();
 	game.time.desiredFps = 30;
-	game.stage.backgroundColor = "#4488AA";
-	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
-	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
-	order0 = game.add.group();
-	order1 = game.add.group();
-	order2 = game.add.group();
-	order3 = game.add.group();
-	order4 = game.add.group();
-	order5 = game.add.group();
-	order6 = game.add.group();
-	order7 = game.add.group();
-	order8 = game.add.group();
-	order9 = game.add.group();
-	//fond2.angle = 180;
-	fond2.alpha = 0.9;
-	//field = game.add.tileSprite(0, 465, 1300, 300, 'field');
-	//field.alpha = 0.2;
+	velocityDivider = themeConfig.cloudVelocityDivider;
+	fond = game.add.image(0, 0, themeAssets.topLayer);
+	fond2 = game.add.image(0, 400, themeAssets.bottomLayer);
+	if (themeConfig.key === 'forest-grove') {
+		fond.alpha = 0.98;
+		fond2.alpha = 0.95;
+	} else {
+		fond2.alpha = 0.9;
+	}
+	for (var i = 0; i < 10; i++) {
+		orderGroups[i] = game.add.group();
+	}
+	field = null;
 
 }
-function update() {
 
+function update() {
 	timer++;
 
 	if (timer > (pi[decimal+1])*densityDivider) {
-
 		decimal++;
 		timer = 0;
-		nuages.push(game.add.tileSprite(-200, 400-(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage'));
-		nuages[decimal].anchor.x = 0.7;
-		nuages[decimal].anchor.y = 0.5;
-		nuages[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
-		nuages[decimal].alpha = 0.9;
-		//sum += pi[decimal];
-		nuages2.push(game.add.tileSprite(-200, 400+(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage2'));
-		nuages2[decimal].anchor.x = 0.7;
-		nuages2[decimal].anchor.y = 0.5;
-		nuages2[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
-		nuages[decimal].alpha = 0.99;
-
-		switch(pi[decimal]) {
-		case 0:
-			order0.add(nuages[decimal]);
-			order0.add(nuages2[decimal]);
-			break;
-		case 1:
-			order1.add(nuages[decimal]);
-			order1.add(nuages2[decimal]);
-			break;
-		case 2:
-			order2.add(nuages[decimal]);
-			order2.add(nuages2[decimal]);
-			break;
-		case 3:
-			order3.add(nuages[decimal]);
-			order3.add(nuages2[decimal]);
-			break;
-		case 4:
-			order4.add(nuages[decimal]);
-			order4.add(nuages2[decimal]);
-			break;
-		case 5:
-			order5.add(nuages[decimal]);
-			order5.add(nuages2[decimal]);
-			break;
-		case 6:
-			order6.add(nuages[decimal]);
-			order6.add(nuages2[decimal]);
-			break;
-		case 7:
-			order7.add(nuages[decimal]);
-			order7.add(nuages2[decimal]);
-			break;
-		case 8:
-			order8.add(nuages[decimal]);
-			order8.add(nuages2[decimal]);
-			break;
-		case 9:
-			order9.add(nuages[decimal]);
-			order9.add(nuages2[decimal]);
-			break;
-		}
+		var digit = pi[decimal];
+		var spawnX = -200;
+		var baseY = themeConfig.cloudBaseY;
+		var spread = themeConfig.cloudSpread;
+		var cloudTop = game.add.image(spawnX, baseY - (digit * spread - 15), themeAssets.cloudTop);
+		cloudTop.anchor.setTo(0.7, 0.5);
+		cloudTop.scale.setTo(digit * themeConfig.cloudScale, digit * themeConfig.cloudScale);
+		cloudTop.alpha = themeConfig.cloudTopAlpha;
+		var cloudBottom = game.add.image(spawnX, baseY + (digit * spread - 15), themeAssets.cloudBottom);
+		cloudBottom.anchor.setTo(0.7, 0.5);
+		cloudBottom.scale.setTo(digit * themeConfig.cloudScale, digit * themeConfig.cloudScale);
+		cloudBottom.alpha = themeConfig.cloudBottomAlpha;
+		nuages.push(cloudTop);
+		nuages2.push(cloudBottom);
+		orderGroups[digit].add(cloudTop);
+		orderGroups[digit].add(cloudBottom);
 	}
 
 	while (jj <= decimal ) {
-		if (nuages[jj].x > 1800) {
+		if (nuages[jj] && nuages[jj].x > 1800) {
 			nuages[jj].destroy();
 		}
-		nuages[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		nuages2[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		//nuages[jj].angle += (1/(pi[jj]))*3;
+		nuages[jj].x += (pi[jj]) / Math.abs(velocityDivider);
+		nuages2[jj].x += (pi[jj]) / Math.abs(velocityDivider);
 		jj++;
-		//if (nuages[jj].x > 1300) {
-		//}
 	}
 	jj = 0;
 
-	game.world.bringToTop(order0);
-	game.world.bringToTop(order1);
-	game.world.bringToTop(order2);
-	game.world.bringToTop(order3);
-	game.world.bringToTop(order4);
-	game.world.bringToTop(order5);
-	game.world.bringToTop(order6);
-	game.world.bringToTop(order7);
-	game.world.bringToTop(order8);
-	game.world.bringToTop(order9);
+	for (var i = 0; i < orderGroups.length; i++) {
+		game.world.bringToTop(orderGroups[i]);
+	}
 	fond2.bringToTop();
 }
-
-
-
-  </script>
-
-
-
-
+	</script>
 </head>
-<body style="background-color: rgb(67,169,223);">
-	<div id="game" style="
-		cursor: none;
-		position: absolute;
-		TOP: 0px;
-		LEFT: 0px;
-
-
-		image-rendering: optimizeSpeed;
-		image-rendering: -moz-crisp-edges;
-		image-rendering: -o-crisp-edges;
-		image-rendering: -webkit-optimize-contrast;
-		image-rendering: optimize-contrast;
-		-ms-interpolation-mode: nearest-neighbor;
-		image-rendering : pixelated;">
+<body>
+	<div id="theme-ui">
+		<label for="theme-select">Theme</label>
+		<select id="theme-select">
+			<option value="original">Original</option>
+			<option value="forest-grove">Forest Grove</option>
+		</select>
+	</div>
+	<div id="game">
 	</div>
 </body>
 </html>
