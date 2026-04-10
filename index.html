@@ -2,6 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1"/>
 	<title>Nuages de Pi</title>
 	<style>
 		:root {
@@ -83,15 +84,7 @@ var HORIZON_Y = 400;
 var OFFSCREEN_X = -220;
 var STORAGE_KEY = "piclouds-theme";
 
-var game = new Phaser.Game(
-	GAME_WIDTH,
-	GAME_HEIGHT,
-	Phaser.CANVAS,
-	"game",
-	{ preload: preload, create: create, update: update },
-	false,
-	false
-);
+var game = null;
 
 var nuages = [];
 var nuages2 = [];
@@ -597,6 +590,24 @@ function saveThemeId(themeId) {
 	} catch (error) {
 	}
 }
+
+function boot() {
+	if (game) {
+		return;
+	}
+
+	game = new Phaser.Game(
+		GAME_WIDTH,
+		GAME_HEIGHT,
+		Phaser.CANVAS,
+		"game",
+		{ preload: preload, create: create, update: update },
+		false,
+		false
+	);
+}
+
+document.addEventListener("DOMContentLoaded", boot);
 
   </script>
 </head>
