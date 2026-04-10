@@ -1,279 +1,611 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Nuages de Pi</title>
-	<link href="stylesheet.css" rel="stylesheet">
 	<meta charset="utf-8"/>
+	<title>Nuages de Pi</title>
+	<style>
+		:root {
+			--panel-bg: rgba(255, 255, 255, 0.84);
+			--panel-border: rgba(18, 53, 72, 0.2);
+			--panel-text: #123548;
+			--panel-shadow: rgba(23, 57, 77, 0.14);
+		}
+
+		html,
+		body {
+			margin: 0;
+			width: 100%;
+			min-height: 100%;
+			overflow: hidden;
+			background: rgb(67, 169, 223);
+			font-family: "Trebuchet MS", Verdana, sans-serif;
+		}
+
+		#game {
+			cursor: none;
+			position: absolute;
+			top: 0;
+			left: 0;
+			image-rendering: optimizeSpeed;
+			image-rendering: -moz-crisp-edges;
+			image-rendering: -o-crisp-edges;
+			image-rendering: -webkit-optimize-contrast;
+			image-rendering: optimize-contrast;
+			-ms-interpolation-mode: nearest-neighbor;
+			image-rendering: pixelated;
+		}
+
+		.theme-panel {
+			position: fixed;
+			top: 18px;
+			right: 18px;
+			z-index: 20;
+			padding: 12px 14px;
+			border-radius: 14px;
+			border: 2px solid var(--panel-border);
+			background: var(--panel-bg);
+			box-shadow: 0 12px 32px var(--panel-shadow);
+			backdrop-filter: blur(8px);
+			color: var(--panel-text);
+		}
+
+		.theme-panel label {
+			display: block;
+			margin-bottom: 6px;
+			font-size: 12px;
+			font-weight: bold;
+			text-transform: uppercase;
+			letter-spacing: 0.1em;
+		}
+
+		.theme-panel select {
+			min-width: 220px;
+			padding: 10px 12px;
+			border-radius: 10px;
+			border: 1px solid var(--panel-border);
+			background: rgba(255, 255, 255, 0.8);
+			color: var(--panel-text);
+			font: inherit;
+		}
+
+		.theme-note {
+			display: block;
+			margin-top: 7px;
+			font-size: 12px;
+			opacity: 0.8;
+		}
+	</style>
 	<script type="text/javascript" src="phaser.min.js"></script>
 	<script>
-var STORAGE_KEY = 'piclouds-theme';
-var THEME_QUERY_PARAM = 'theme';
-var THEMES = {
-	'default': {
-		name: 'Sky',
-		bodyClass: 'theme-default',
-		stageColor: '#4488AA',
-		bodyBg: 'rgb(67,169,223)',
-		fondTint: 0xFFFFFF,
-		fond2Tint: 0xFFFFFF,
-		cloudTint: 0xFFFFFF,
-		cloud2Tint: 0xFFFFFF,
-		fond2Alpha: 0.9,
-		labelBg: 'rgba(36, 113, 163, 0.82)',
-		labelColor: '#F6FBFF'
-	},
-	'candy-pop': {
-		name: 'Candy Pop',
-		bodyClass: 'theme-candy-pop',
-		stageColor: '#FFD4E7',
-		bodyBg: '#FFDFF0',
-		fondTint: 0xFFE3F1,
-		fond2Tint: 0xFF9ED1,
-		cloudTint: 0xFFF3FA,
-		cloud2Tint: 0xFF62B0,
-		fond2Alpha: 0.95,
-		labelBg: 'rgba(255, 107, 176, 0.88)',
-		labelColor: '#FFF7FB'
-	}
-};
+var GAME_WIDTH = 1300;
+var GAME_HEIGHT = 700;
+var HORIZON_Y = 400;
+var OFFSCREEN_X = -220;
+var STORAGE_KEY = "piclouds-theme";
 
-function getInitialTheme() {
-	var params = new URLSearchParams(window.location.search);
-	var requestedTheme = params.get(THEME_QUERY_PARAM);
-	if (requestedTheme && THEMES[requestedTheme]) {
-		return requestedTheme;
-	}
+var game = new Phaser.Game(
+	GAME_WIDTH,
+	GAME_HEIGHT,
+	Phaser.CANVAS,
+	"game",
+	{ preload: preload, create: create, update: update },
+	false,
+	false
+);
 
-	var storedTheme = localStorage.getItem(STORAGE_KEY);
-	if (storedTheme && THEMES[storedTheme]) {
-		return storedTheme;
-	}
-
-	return 'default';
-}
-
-var currentTheme = getInitialTheme();
-var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'game', { preload: preload, create: create, update: update }, false, false);
-var nuages = []; var densityDivider = 4; var velocityDivider = 0.6;
-var nuages2 = []; var field; var fond; var fond2;
-var order0; var order1; var order2; var order3; var order4;
-var order5; var order6; var order7; var order8; var order9;
-var nn = 0; var jj = 0; var sum = 0; var lock = 0;
+var nuages = [];
+var nuages2 = [];
+var digitGroups = [];
+var fond = null;
+var fond2 = null;
+var generatedTextures = null;
+var currentTheme = null;
+var currentThemeId = getSavedThemeId();
+var timer = 0;
 var decimal = -1;
+var themeSelect = null;
+
 var pi = [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,8,4,1,9,7,1,6,9,3,9,9,3,7,5,1,0,5,8,2,0,9,7,4,9,4,4,5,9,2,3,0,7,8,1,6,4,0,6,2,8,6,2,0,8,9,9,8,6,2,8,0,3,4,8,2,5,3,4,2,1,1,7,0,6,7,9,8,2,1,4,8,0,8,6,5,1,3,2,8,2,3,0,6,6,4,7,0,9,3,8,4,4,6,0,9,5,5,0,5,8,2,2,3,1,7,2,5,3,5,9,4,0,8,1,2,8,4,8,1,1,1,7,4,5,0,2,8,4,1,0,2,7,0,1,9,3,8,5,2,1,1,0,5,5,5,9,6,4,4,6,2,2,9,4,8,9,5,4,9,3,0,3,8,1,9,6,4,4,2,8,8,1,0,9,7,5,6,6,5,9,3,3,4,4,6,1,2,8,4,7,5,6,4,8,2,3,3,7,8,6,7,8,3,1,6,5,2,7,1,2,0,1,9,0,9,1,4,5,6,4,8,5,6,6,9,2,3,4,6,0,3,4,8,6,1,0,4,5,4,3,2,6,6,4,8,2,1,3,3,9,3,6,0,7,2,6,0,2,4,9,1,4,1,2,7,3,7,2,4,5,8,7,0,0,6,6,0,6,3,1,5,5,8,8,1,7,4,8,8,1,5,2,0,9,2,0,9,6,2,8,2,9,2,5,4,0,9,1,7,1,5,3,6,4,3,6,7,8,9,2,5,9,0,3,6,0,0,1,1,3,3,0,5,3,0,5,4,8,8,2,0,4,6,6,5,2,1,3,8,4,1,4,6,9,5,1,9,4,1,5,1,1,6,0,9,4,3,3,0,5,7,2,7,0,3,6,5,7,5,9,5,9,1,9,5,3,0,9,2,1,8,6,1,1,7,3,8,1,9,3,2,6,1,1,7,9,3,1,0,5,1,1,8,5,4,8,0,7,4,4,6,2,3,7,9,9,6,2,7,4,9,5,6,7,3,5,1,8,8,5,7,5,2,7,2,4,8,9,1,2,2,7,9,3,8,1,8,3,0,1,1,9,4,9,1,2,9,8,3,3,6,7,3,3,6,2,4,4,0,6,5,6,6,4,3,0,8,6,0,2,1,3,9,4,9,4,6,3,9,5,2,2,4,7,3,7,1,9,0,7,0,2,1,7,9,8,6,0,9,4,3,7,0,2,7,7,0,5,3,9,2,1,7,1,7,6,2,9,3,1,7,6,7,5,2,3,8,4,6,7,4,8,1,8,4,6,7,6,6,9,4,0,5,1,3,2,0,0,0,5,6,8,1,2,7,1,4,5,2,6,3,5,6,0,8,2,7,7,8,5,7,7,1,3,4,2,7,5,7,7,8,9,6,0,9,1,7,3,6,3,7,1,7,8,7,2,1,4,6,8,4,4,0,9,0,1,2,2,4,9,5,3,4,3,0,1,4,6,5,4,9,5,8,5,3,7,1,0,5,0,7,9,2,2,7,9,6,8,9,2,5,8,9,2,3,5,4,2,0,1,9,9,5,6,1,1,2,1,2,9,0,2,1,9,6,0,8,6,4,0,3,4,4,1,8,1,5,9,8,1,3,6,2,9,7,7,4,7,7,1,3,0,9,9,6,0,5,1,8,7,0,7,2,1,1,3,4,9,9,9,9,9,9,8,3,7,2,9,7,8,0,4,9,9,5,1,0,5,9,7,3,1,7,3,2,8,1,6,0,9,6,3,1,8,5,9,5,0,2,4,4,5,9,4,5,5,3,4,6,9,0,8,3,0,2,6,4,2,5,2,2,3,0,8,2,5,3,3,4,4,6,8,5,0,3,5,2,6,1,9,3,1,1,8,8,1,7,1,0,1,0,0,0,3,1,3,7,8,3,8,7,5,2,8,8,6,5,8,7,5,3,3,2,0,8,3,8,1,4,2,0];
 
-function randInt(min, max) {
-	return Math.floor(Math.random() * (max - min + 1)) + min;
-}
+var THEMES = {
+	original: {
+		label: "Original Clouds",
+		densityDivider: 4,
+		velocityDivider: 0.6,
+		stageColor: "#4488AA",
+		bodyColor: "rgb(67, 169, 223)",
+		panelBg: "rgba(255, 255, 255, 0.84)",
+		panelBorder: "rgba(18, 53, 72, 0.2)",
+		panelText: "#123548",
+		panelShadow: "rgba(23, 57, 77, 0.14)",
+		buildScene: buildOriginalScene,
+		spawnUpper: spawnOriginalUpper,
+		spawnLower: spawnOriginalLower,
+		updateItem: driftOriginalItem
+	},
+	festival: {
+		label: "Kite Festival",
+		densityDivider: 3.2,
+		velocityDivider: 0.72,
+		stageColor: "#F3DFC0",
+		bodyColor: "#EFCF97",
+		panelBg: "rgba(255, 248, 232, 0.93)",
+		panelBorder: "rgba(140, 85, 39, 0.22)",
+		panelText: "#63321A",
+		panelShadow: "rgba(120, 73, 36, 0.16)",
+		buildScene: buildFestivalScene,
+		spawnUpper: spawnFestivalKite,
+		spawnLower: spawnFestivalPinwheel,
+		updateItem: driftFestivalItem
+	}
+};
 
 for (var i = 0; i < 10000; i++) {
 	pi.push(randInt(0, 9));
 }
 
-var timer = 0;
-
-function applyTheme(name) {
-	if (!THEMES[name]) {
-		return;
-	}
-
-	currentTheme = name;
-	localStorage.setItem(STORAGE_KEY, name);
-
-	var params = new URLSearchParams(window.location.search);
-	if (params.get(THEME_QUERY_PARAM) !== name) {
-		params.set(THEME_QUERY_PARAM, name);
-		window.history.replaceState({}, '', window.location.pathname + '?' + params.toString());
-	}
-
-	var theme = THEMES[name];
-	document.body.className = theme.bodyClass;
-	document.body.style.backgroundColor = theme.bodyBg;
-
-	var label = document.getElementById('theme-label');
-	if (label) {
-		label.textContent = theme.name;
-		label.style.background = theme.labelBg;
-		label.style.color = theme.labelColor;
-	}
-
-	var buttons = document.querySelectorAll('.theme-button');
-	Array.prototype.forEach.call(buttons, function(button) {
-		button.classList.toggle('active', button.getAttribute('data-theme') === name);
-	});
-
-	if (game && game.stage) {
-		game.stage.backgroundColor = theme.stageColor;
-	}
-
-	if (fond) {
-		fond.tint = theme.fondTint;
-	}
-	if (fond2) {
-		fond2.tint = theme.fond2Tint;
-		fond2.alpha = theme.fond2Alpha;
-	}
-
-	for (var index = 0; index <= decimal; index++) {
-		if (nuages[index] && nuages[index].alive) {
-			nuages[index].tint = theme.cloudTint;
-		}
-		if (nuages2[index] && nuages2[index].alive) {
-			nuages2[index].tint = theme.cloud2Tint;
-		}
-	}
+function randInt(min, max) {
+	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 function preload() {
-	game.load.image('nuage', 'nuage.png');
-	game.load.image('nuage2', 'nuage2.png');
-	game.load.image('field', 'field.png');
-	game.load.image('fond', 'fond.png');
-	game.load.image('fond2', 'fond2.png');
+	game.load.image("nuage", "nuage.png");
+	game.load.image("nuage2", "nuage2.png");
+	game.load.image("field", "field.png");
+	game.load.image("fond", "fond.png");
+	game.load.image("fond2", "fond2.png");
 }
 
 function create() {
 	game.time.desiredFps = 30;
-	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
-	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
-	order0 = game.add.group();
-	order1 = game.add.group();
-	order2 = game.add.group();
-	order3 = game.add.group();
-	order4 = game.add.group();
-	order5 = game.add.group();
-	order6 = game.add.group();
-	order7 = game.add.group();
-	order8 = game.add.group();
-	order9 = game.add.group();
-	applyTheme(currentTheme);
+	initThemeSelector();
+	ensureGeneratedTextures();
+	applyTheme(currentThemeId, false);
 }
 
 function update() {
+	var digit;
+	var upper;
+	var lower;
+	var index;
+
+	if (!currentTheme) {
+		return;
+	}
+
 	timer++;
 
-	if (timer > (pi[decimal + 1]) * densityDivider) {
+	if (timer > pi[decimal + 1] * currentTheme.densityDivider) {
 		decimal++;
 		timer = 0;
-		var theme = THEMES[currentTheme];
-
-		nuages.push(game.add.tileSprite(-200, 400 - (pi[decimal] * 34 - 15), 768, 312, 'nuage'));
-		nuages[decimal].anchor.x = 0.7;
-		nuages[decimal].anchor.y = 0.5;
-		nuages[decimal].scale.setTo((pi[decimal]) / 10, (pi[decimal]) / 10);
-		nuages[decimal].alpha = 0.9;
-		nuages[decimal].tint = theme.cloudTint;
-
-		nuages2.push(game.add.tileSprite(-200, 400 + (pi[decimal] * 34 - 15), 768, 312, 'nuage2'));
-		nuages2[decimal].anchor.x = 0.7;
-		nuages2[decimal].anchor.y = 0.5;
-		nuages2[decimal].scale.setTo((pi[decimal]) / 10, (pi[decimal]) / 10);
-		nuages2[decimal].alpha = 0.99;
-		nuages2[decimal].tint = theme.cloud2Tint;
-
-		switch (pi[decimal]) {
-		case 0:
-			order0.add(nuages[decimal]);
-			order0.add(nuages2[decimal]);
-			break;
-		case 1:
-			order1.add(nuages[decimal]);
-			order1.add(nuages2[decimal]);
-			break;
-		case 2:
-			order2.add(nuages[decimal]);
-			order2.add(nuages2[decimal]);
-			break;
-		case 3:
-			order3.add(nuages[decimal]);
-			order3.add(nuages2[decimal]);
-			break;
-		case 4:
-			order4.add(nuages[decimal]);
-			order4.add(nuages2[decimal]);
-			break;
-		case 5:
-			order5.add(nuages[decimal]);
-			order5.add(nuages2[decimal]);
-			break;
-		case 6:
-			order6.add(nuages[decimal]);
-			order6.add(nuages2[decimal]);
-			break;
-		case 7:
-			order7.add(nuages[decimal]);
-			order7.add(nuages2[decimal]);
-			break;
-		case 8:
-			order8.add(nuages[decimal]);
-			order8.add(nuages2[decimal]);
-			break;
-		case 9:
-			order9.add(nuages[decimal]);
-			order9.add(nuages2[decimal]);
-			break;
-		}
+		digit = pi[decimal];
+		upper = currentTheme.spawnUpper(digit, decimal);
+		lower = currentTheme.spawnLower(digit, decimal);
+		nuages[decimal] = upper;
+		nuages2[decimal] = lower;
+		digitGroups[digit].add(upper);
+		digitGroups[digit].add(lower);
 	}
 
-	while (jj <= decimal) {
-		if (nuages[jj].x > 1800) {
-			nuages[jj].destroy();
-			nuages2[jj].destroy();
-		}
-		nuages[jj].x += (pi[jj]) / Math.abs(velocityDivider);
-		nuages2[jj].x += (pi[jj]) / Math.abs(velocityDivider);
-		jj++;
-	}
-	jj = 0;
+	for (index = 0; index <= decimal; index++) {
+		upper = nuages[index];
+		lower = nuages2[index];
 
-	game.world.bringToTop(order0);
-	game.world.bringToTop(order1);
-	game.world.bringToTop(order2);
-	game.world.bringToTop(order3);
-	game.world.bringToTop(order4);
-	game.world.bringToTop(order5);
-	game.world.bringToTop(order6);
-	game.world.bringToTop(order7);
-	game.world.bringToTop(order8);
-	game.world.bringToTop(order9);
-	fond2.bringToTop();
+		if (!upper || !lower || !upper.alive || !lower.alive) {
+			continue;
+		}
+
+		if (upper.x > GAME_WIDTH + 500) {
+			upper.destroy();
+			lower.destroy();
+			continue;
+		}
+
+		currentTheme.updateItem(upper, pi[index], "upper");
+		currentTheme.updateItem(lower, pi[index], "lower");
+	}
+
+	bringLayersToTop();
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-	var buttons = document.querySelectorAll('.theme-button');
-	Array.prototype.forEach.call(buttons, function(button) {
-		button.addEventListener('click', function() {
-			applyTheme(button.getAttribute('data-theme'));
-		});
-	});
+function initThemeSelector() {
+	var select = document.getElementById("theme-select");
+	var themeId;
+	var option;
 
-	applyTheme(currentTheme);
-});
-	</script>
+	if (!select) {
+		return;
+	}
+
+	themeSelect = select;
+
+	for (themeId in THEMES) {
+		if (!THEMES.hasOwnProperty(themeId)) {
+			continue;
+		}
+
+		option = document.createElement("option");
+		option.value = themeId;
+		option.textContent = THEMES[themeId].label;
+		themeSelect.appendChild(option);
+	}
+
+	themeSelect.value = THEMES[currentThemeId] ? currentThemeId : "original";
+	themeSelect.addEventListener("change", function () {
+		applyTheme(themeSelect.value, true);
+	});
+}
+
+function applyTheme(themeId, persistChoice) {
+	currentThemeId = THEMES[themeId] ? themeId : "original";
+	currentTheme = THEMES[currentThemeId];
+
+	applyThemePanelStyles(currentTheme);
+	resetScene();
+	currentTheme.buildScene();
+
+	if (themeSelect) {
+		themeSelect.value = currentThemeId;
+	}
+
+	if (persistChoice !== false) {
+		saveThemeId(currentThemeId);
+	}
+}
+
+function applyThemePanelStyles(theme) {
+	document.body.style.backgroundColor = theme.bodyColor;
+	document.documentElement.style.setProperty("--panel-bg", theme.panelBg);
+	document.documentElement.style.setProperty("--panel-border", theme.panelBorder);
+	document.documentElement.style.setProperty("--panel-text", theme.panelText);
+	document.documentElement.style.setProperty("--panel-shadow", theme.panelShadow);
+}
+
+function resetScene() {
+	destroyItems(nuages);
+	destroyItems(nuages2);
+	destroyGroups();
+
+	if (fond) {
+		fond.destroy();
+		fond = null;
+	}
+
+	if (fond2) {
+		fond2.destroy();
+		fond2 = null;
+	}
+
+	nuages = [];
+	nuages2 = [];
+	timer = 0;
+	decimal = -1;
+}
+
+function destroyItems(items) {
+	var index;
+
+	for (index = 0; index < items.length; index++) {
+		if (items[index] && items[index].destroy) {
+			items[index].destroy();
+		}
+	}
+}
+
+function destroyGroups() {
+	var index;
+
+	for (index = 0; index < digitGroups.length; index++) {
+		if (digitGroups[index] && digitGroups[index].destroy) {
+			digitGroups[index].destroy();
+		}
+	}
+
+	digitGroups = [];
+}
+
+function setupDigitGroups() {
+	var index;
+
+	for (index = 0; index < 10; index++) {
+		digitGroups.push(game.add.group());
+	}
+}
+
+function bringLayersToTop() {
+	var index;
+
+	for (index = 0; index < digitGroups.length; index++) {
+		game.world.bringToTop(digitGroups[index]);
+	}
+
+	if (fond2) {
+		game.world.bringToTop(fond2);
+	}
+}
+
+function buildOriginalScene() {
+	game.stage.backgroundColor = THEMES.original.stageColor;
+	fond = game.add.tileSprite(0, 0, GAME_WIDTH, HORIZON_Y, "fond");
+	fond2 = game.add.tileSprite(0, HORIZON_Y, GAME_WIDTH, GAME_HEIGHT - HORIZON_Y, "fond2");
+	fond2.alpha = 0.9;
+	setupDigitGroups();
+}
+
+function buildFestivalScene() {
+	var x;
+	var colorStops = [0xD86648, 0xF0B445, 0x6A9C78, 0x6B7FD7, 0xD85C86];
+
+	game.stage.backgroundColor = THEMES.festival.stageColor;
+	fond = game.add.graphics(0, 0);
+	fond.beginFill(0xF6E7C8, 1);
+	fond.drawRect(0, 0, GAME_WIDTH, HORIZON_Y);
+	fond.endFill();
+
+	fond.beginFill(0xF1CB63, 0.9);
+	fond.drawCircle(1050, 110, 170);
+	fond.endFill();
+
+	fond.beginFill(0xF4D1A2, 1);
+	fond.drawEllipse(160, 350, 420, 140);
+	fond.drawEllipse(470, 365, 520, 130);
+	fond.drawEllipse(920, 350, 560, 140);
+	fond.drawEllipse(1225, 365, 380, 120);
+	fond.endFill();
+
+	fond.lineStyle(5, 0xC68A5A, 0.35);
+	fond.moveTo(0, 42);
+	for (x = 0; x <= GAME_WIDTH; x += 80) {
+		fond.lineTo(x + 40, 54);
+		fond.lineTo(x + 80, 42);
+	}
+
+	for (x = 0; x <= GAME_WIDTH; x += 80) {
+		fond.beginFill(colorStops[(x / 80) % colorStops.length], 1);
+		fond.moveTo(x + 8, 42);
+		fond.lineTo(x + 40, 82);
+		fond.lineTo(x + 72, 42);
+		fond.endFill();
+	}
+
+	fond.lineStyle(3, 0xEAD8BF, 0.8);
+	fond.moveTo(120, 120);
+	fond.bezierCurveTo(220, 80, 320, 80, 420, 120);
+	fond.moveTo(520, 165);
+	fond.bezierCurveTo(620, 130, 720, 130, 820, 165);
+	fond.moveTo(860, 215);
+	fond.bezierCurveTo(980, 180, 1080, 180, 1200, 220);
+
+	setupDigitGroups();
+
+	fond2 = game.add.graphics(0, HORIZON_Y);
+	fond2.beginFill(0xE7B566, 1);
+	fond2.drawRect(0, 0, GAME_WIDTH, GAME_HEIGHT - HORIZON_Y);
+	fond2.endFill();
+
+	for (x = 0; x <= GAME_WIDTH; x += 110) {
+		fond2.beginFill(colorStops[(x / 110 + 1) % colorStops.length], 0.9);
+		fond2.moveTo(x, 58);
+		fond2.lineTo(x + 55, 0);
+		fond2.lineTo(x + 110, 58);
+		fond2.endFill();
+	}
+
+	for (x = 0; x <= GAME_WIDTH; x += 65) {
+		fond2.beginFill((x / 65) % 2 === 0 ? 0xFFF4E0 : 0xF2D3A3, 1);
+		fond2.drawRect(x, 72, 38, 228);
+		fond2.endFill();
+	}
+
+	fond2.beginFill(0xD38B4A, 1);
+	fond2.drawRect(0, 248, GAME_WIDTH, 52);
+	fond2.endFill();
+}
+
+function spawnOriginalUpper(digit) {
+	var sprite = game.add.tileSprite(OFFSCREEN_X, HORIZON_Y - (digit * 34 - 15), 768, 312, "nuage");
+	var scale = digit / 10;
+
+	sprite.anchor.x = 0.7;
+	sprite.anchor.y = 0.5;
+	sprite.scale.setTo(scale, scale);
+	sprite.alpha = 0.99;
+	return sprite;
+}
+
+function spawnOriginalLower(digit) {
+	var sprite = game.add.tileSprite(OFFSCREEN_X, HORIZON_Y + (digit * 34 - 15), 768, 312, "nuage2");
+	var scale = digit / 10;
+
+	sprite.anchor.x = 0.7;
+	sprite.anchor.y = 0.5;
+	sprite.scale.setTo(scale, scale);
+	return sprite;
+}
+
+function spawnFestivalKite(digit, index) {
+	var sprite = game.add.sprite(
+		OFFSCREEN_X,
+		HORIZON_Y - (digit * 28 + 18),
+		generatedTextures.kites[index % generatedTextures.kites.length]
+	);
+	var scale = 0.45 + digit * 0.055;
+
+	sprite.anchor.setTo(0.5, 0.32);
+	sprite.scale.setTo(scale, scale);
+	sprite.alpha = 0.97;
+	sprite.rotation = Phaser.Math.degToRad(-10 + digit * 2);
+	sprite.data = {
+		baseY: sprite.y,
+		phase: index * 9,
+		bob: 3 + digit * 0.7,
+		rotationStep: (digit % 2 === 0 ? 1 : -1) * (0.002 + digit * 0.0002)
+	};
+	return sprite;
+}
+
+function spawnFestivalPinwheel(digit, index) {
+	var sprite = game.add.sprite(
+		OFFSCREEN_X,
+		HORIZON_Y + (digit * 26 + 12),
+		generatedTextures.pinwheels[(digit + index) % generatedTextures.pinwheels.length]
+	);
+	var scale = 0.42 + digit * 0.05;
+
+	sprite.anchor.setTo(0.5, 0.1);
+	sprite.scale.setTo(scale, scale);
+	sprite.data = {
+		baseY: sprite.y,
+		phase: index * 7,
+		bob: 2 + digit * 0.4,
+		spin: 0.012 + digit * 0.002
+	};
+	return sprite;
+}
+
+function driftOriginalItem(item, digit) {
+	item.x += digit / Math.abs(THEMES.original.velocityDivider);
+}
+
+function driftFestivalItem(item, digit, layer) {
+	item.x += digit / Math.abs(THEMES.festival.velocityDivider);
+
+	if (!item.data) {
+		return;
+	}
+
+	item.y = item.data.baseY + Math.sin((timer + item.data.phase) / 10) * item.data.bob;
+
+	if (layer === "upper") {
+		item.rotation += item.data.rotationStep;
+		return;
+	}
+
+	item.rotation += item.data.spin;
+}
+
+function ensureGeneratedTextures() {
+	if (generatedTextures) {
+		return;
+	}
+
+	generatedTextures = {
+		kites: [
+			createKiteTexture(0xD76048, 0xF2C14F, 0xFFFFFF),
+			createKiteTexture(0x5B7CDA, 0xF0E1A2, 0xFFF7E6),
+			createKiteTexture(0x5E9B78, 0xEFD267, 0xFFF7E6),
+			createKiteTexture(0xD96A87, 0xF9E1B2, 0xFFF7E6)
+		],
+		pinwheels: [
+			createPinwheelTexture(0xD76048, 0xF5D77D, 0x8C5A36),
+			createPinwheelTexture(0x5B7CDA, 0xF4EAD1, 0x8C5A36),
+			createPinwheelTexture(0x5E9B78, 0xF2C36D, 0x8C5A36),
+			createPinwheelTexture(0xD96A87, 0xF7E2C9, 0x8C5A36)
+		]
+	};
+}
+
+function createKiteTexture(primary, secondary, tail) {
+	var graphics = game.make.graphics(0, 0);
+	var texture;
+
+	graphics.lineStyle(4, 0x6A3D27, 0.35);
+	graphics.beginFill(primary, 1);
+	graphics.moveTo(70, 10);
+	graphics.lineTo(122, 58);
+	graphics.lineTo(70, 114);
+	graphics.lineTo(18, 58);
+	graphics.lineTo(70, 10);
+	graphics.endFill();
+
+	graphics.beginFill(secondary, 1);
+	graphics.moveTo(70, 24);
+	graphics.lineTo(96, 58);
+	graphics.lineTo(70, 92);
+	graphics.lineTo(44, 58);
+	graphics.lineTo(70, 24);
+	graphics.endFill();
+
+	graphics.lineStyle(4, 0x76523A, 0.45);
+	graphics.moveTo(70, 114);
+	graphics.lineTo(108, 152);
+
+	graphics.beginFill(tail, 1);
+	graphics.drawCircle(80, 126, 10);
+	graphics.drawCircle(92, 138, 10);
+	graphics.drawCircle(104, 150, 10);
+	graphics.endFill();
+
+	texture = graphics.generateTexture();
+	graphics.destroy();
+	return texture;
+}
+
+function createPinwheelTexture(primary, secondary, stick) {
+	var graphics = game.make.graphics(0, 0);
+	var texture;
+
+	graphics.lineStyle(4, 0x7B4B2D, 0.28);
+	graphics.beginFill(primary, 1);
+	graphics.moveTo(64, 14);
+	graphics.lineTo(96, 50);
+	graphics.lineTo(64, 64);
+	graphics.endFill();
+
+	graphics.beginFill(secondary, 1);
+	graphics.moveTo(114, 64);
+	graphics.lineTo(78, 96);
+	graphics.lineTo(64, 64);
+	graphics.endFill();
+
+	graphics.beginFill(primary, 1);
+	graphics.moveTo(64, 114);
+	graphics.lineTo(32, 78);
+	graphics.lineTo(64, 64);
+	graphics.endFill();
+
+	graphics.beginFill(secondary, 1);
+	graphics.moveTo(14, 64);
+	graphics.lineTo(50, 32);
+	graphics.lineTo(64, 64);
+	graphics.endFill();
+
+	graphics.beginFill(0xFFF5E6, 1);
+	graphics.drawCircle(64, 64, 20);
+	graphics.endFill();
+
+	graphics.lineStyle(6, stick, 1);
+	graphics.moveTo(64, 74);
+	graphics.lineTo(64, 158);
+
+	texture = graphics.generateTexture();
+	graphics.destroy();
+	return texture;
+}
+
+function getSavedThemeId() {
+	try {
+		return localStorage.getItem(STORAGE_KEY) || "original";
+	} catch (error) {
+		return "original";
+	}
+}
+
+function saveThemeId(themeId) {
+	try {
+		localStorage.setItem(STORAGE_KEY, themeId);
+	} catch (error) {
+	}
+}
+
+  </script>
 </head>
-<body class="theme-default">
-	<div class="page-shell">
-		<div class="hud-card">
-			<p class="eyebrow">Pi Clouds Theme Lab</p>
-			<h1>Pick a sky</h1>
-			<p class="description">The classic cloud scene stays intact, and Candy Pop turns the same flow into a bright bubblegum boardwalk.</p>
-			<div class="theme-switcher" aria-label="Theme switcher">
-				<button class="theme-button active" type="button" data-theme="default">
-					<span class="theme-swatch swatch-default"></span>
-					Sky
-				</button>
-				<button class="theme-button" type="button" data-theme="candy-pop">
-					<span class="theme-swatch swatch-candy"></span>
-					Candy Pop
-				</button>
-			</div>
-			<div id="theme-label" class="theme-label">Sky</div>
-		</div>
-		<div id="game-shell">
-			<div class="candy-decor candy-left"></div>
-			<div class="candy-decor candy-right"></div>
-			<div id="game"></div>
-		</div>
+<body>
+	<div class="theme-panel">
+		<label for="theme-select">Theme</label>
+		<select id="theme-select"></select>
+		<span class="theme-note">Stored on this browser.</span>
 	</div>
+	<div id="game"></div>
 </body>
 </html>
