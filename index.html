@@ -41,7 +41,7 @@ function preload() {
 }
 function create() {
 	game.time.desiredFps = 30;
-	game.stage.backgroundColor = "#4488AA";
+	game.stage.backgroundColor = "#0a0a2e";
 	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
 	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
 	order0 = game.add.group();
@@ -158,7 +158,7 @@ function update() {
 
 
 </head>
-<body style="background-color: rgb(67,169,223);">
+<body style="background-color: rgb(10,10,46);">
 	<div id="game" style="
 		cursor: none;
 		position: absolute;
@@ -172,7 +172,8 @@ function update() {
 		image-rendering: -webkit-optimize-contrast;
 		image-rendering: optimize-contrast;
 		-ms-interpolation-mode: nearest-neighbor;
-		image-rendering : pixelated;">
+		image-rendering : pixelated;
+		filter: brightness(0.96) saturate(0.9);">
 	</div>
 </body>
 </html>
