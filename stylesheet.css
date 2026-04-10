@@ -18,7 +18,7 @@ body {
 	width: 100%;
 	max-width: 1300px;
 	min-height: 100vh;
-	padding: 18px;
+	padding: 0;
 	box-sizing: border-box;
 	overflow: hidden;
 }
@@ -133,7 +133,7 @@ body {
 
 @media (max-width: 720px) {
 	.page {
-		padding: 12px;
+		padding: 0 12px;
 		padding-top: 230px;
 	}
 
