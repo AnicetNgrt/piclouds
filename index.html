@@ -5,7 +5,209 @@
 	<link href="stylesheet.css" rel="stylesheet">
 	<meta charset="utf-8"/>
 	<script type="text/javascript" src="phaser.min.js"></script>
+	<style>
+		#theme-switcher {
+			position: fixed;
+			bottom: 24px;
+			right: 24px;
+			z-index: 100;
+			display: flex;
+			flex-direction: column;
+			gap: 8px;
+			align-items: flex-end;
+		}
+		#theme-panel {
+			display: flex;
+			gap: 10px;
+			background: rgba(0,0,0,0.25);
+			border-radius: 14px;
+			padding: 10px 14px;
+			backdrop-filter: blur(6px);
+			border: 1px solid rgba(255,255,255,0.15);
+		}
+		.theme-btn {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 5px;
+			cursor: pointer;
+			user-select: none;
+		}
+		.theme-swatch {
+			width: 36px;
+			height: 36px;
+			border-radius: 50%;
+			border: 2.5px solid rgba(255,255,255,0.3);
+			transition: all 0.2s ease;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+		}
+		.theme-btn:hover .theme-swatch {
+			border-color: rgba(255,255,255,0.8);
+			transform: scale(1.1);
+		}
+		.theme-btn.active .theme-swatch {
+			border-color: #fff;
+			border-width: 3px;
+			transform: scale(1.12);
+			box-shadow: 0 2px 14px rgba(255,255,255,0.4);
+		}
+		.theme-label {
+			font-family: 'Helvetica Neue', Arial, sans-serif;
+			font-size: 9px;
+			font-weight: 700;
+			text-transform: uppercase;
+			letter-spacing: 1.2px;
+			color: rgba(255,255,255,0.7);
+			transition: color 0.2s ease;
+		}
+		.theme-btn.active .theme-label {
+			color: #fff;
+		}
+		#theme-hint {
+			font-family: 'Helvetica Neue', Arial, sans-serif;
+			font-size: 9px;
+			color: rgba(255,255,255,0.35);
+			text-align: right;
+			letter-spacing: 0.5px;
+			padding-right: 4px;
+		}
+		#theme-toast {
+			position: fixed;
+			top: 24px;
+			left: 50%;
+			transform: translateX(-50%) translateY(-40px);
+			background: rgba(0,0,0,0.5);
+			color: rgba(255,255,255,0.9);
+			font-family: 'Helvetica Neue', Arial, sans-serif;
+			font-size: 12px;
+			font-weight: 600;
+			letter-spacing: 2px;
+			text-transform: uppercase;
+			padding: 8px 20px;
+			border-radius: 20px;
+			backdrop-filter: blur(6px);
+			border: 1px solid rgba(255,255,255,0.2);
+			transition: transform 0.3s ease, opacity 0.3s ease;
+			opacity: 0;
+			pointer-events: none;
+			z-index: 101;
+		}
+		#theme-toast.show {
+			transform: translateX(-50%) translateY(0);
+			opacity: 1;
+		}
+	</style>
 	<script>
+// ─── Theme Definitions ───────────────────────────────────────────────────────
+//
+// PIXI tint is a multiplicative blend: finalColor = srcColor × tintColor / 255
+// Source images are sky-blue gradients, so tinting with dark/warm/grey colors
+// shifts the whole palette convincingly.
+//
+var themes = {
+	day: {
+		name: "Day",
+		key: "1",
+		stageColor: "#4488AA",
+		bodyColor: "rgb(67,169,223)",
+		fondTint:   0xFFFFFF,   // no shift — original bright sky
+		fond2Tint:  0xDDEEFF,   // very slight cool tint for reflection
+		cloudTint:  0xFFFFFF,   // pure white clouds
+		fond2Alpha: 0.90,
+		swatch:     "#4488AA"
+	},
+	dusk: {
+		name: "Dusk",
+		key: "2",
+		stageColor: "#553355",
+		bodyColor:  "rgb(140,70,130)",
+		fondTint:   0xFF99CC,   // pink: blue sky → purple-pink gradient
+		fond2Tint:  0xCC5599,   // deeper pink for the water reflection
+		cloudTint:  0xFFDDEE,   // pale blush clouds
+		fond2Alpha: 0.85,
+		swatch:     "linear-gradient(135deg, #FF99CC, #CC5599)"
+	},
+	night: {
+		name: "Night",
+		key: "3",
+		stageColor: "#050A18",
+		bodyColor:  "rgb(8,15,35)",
+		fondTint:   0x1A2B55,   // near-black deep blue — darkens sky dramatically
+		fond2Tint:  0x0D1A33,   // even deeper for the abyss-like reflection
+		cloudTint:  0x5566AA,   // muted indigo clouds lit by moonlight
+		fond2Alpha: 0.97,
+		swatch:     "linear-gradient(135deg, #1A2B55, #050A18)"
+	},
+	storm: {
+		name: "Storm",
+		key: "4",
+		stageColor: "#1E2530",
+		bodyColor:  "rgb(38,48,65)",
+		fondTint:   0x778899,   // cool blue-grey desaturates the sky
+		fond2Tint:  0x445566,   // darker grey-blue reflection
+		cloudTint:  0xAABBCC,   // heavy, grey cloud mass
+		fond2Alpha: 0.97,
+		swatch:     "linear-gradient(135deg, #778899, #1E2530)"
+	}
+};
+
+var currentThemeName = 'day';
+
+function applyTheme(themeName) {
+	currentThemeName = themeName;
+	var theme = themes[themeName];
+
+	// Stage background
+	if (typeof game !== 'undefined' && game.stage) {
+		game.stage.backgroundColor = theme.stageColor;
+	}
+	// Body fallback background
+	document.body.style.backgroundColor = theme.bodyColor;
+
+	// Background tile sprites
+	if (typeof fond !== 'undefined' && fond) {
+		fond.tint = theme.fondTint;
+	}
+	if (typeof fond2 !== 'undefined' && fond2) {
+		fond2.tint  = theme.fond2Tint;
+		fond2.alpha = theme.fond2Alpha;
+	}
+
+	// Existing cloud sprites
+	for (var i = 0; i < nuages.length; i++) {
+		if (nuages[i] && nuages[i].game) nuages[i].tint = theme.cloudTint;
+	}
+	for (var i = 0; i < nuages2.length; i++) {
+		if (nuages2[i] && nuages2[i].game) nuages2[i].tint = theme.cloudTint;
+	}
+
+	// Sync UI buttons
+	document.querySelectorAll('.theme-btn').forEach(function(btn) {
+		btn.classList.toggle('active', btn.dataset.theme === themeName);
+	});
+
+	// Brief toast notification
+	showToast(theme.name);
+}
+
+function showToast(name) {
+	var toast = document.getElementById('theme-toast');
+	if (!toast) return;
+	toast.textContent = name;
+	toast.classList.add('show');
+	clearTimeout(toast._timer);
+	toast._timer = setTimeout(function() { toast.classList.remove('show'); }, 1400);
+}
+
+// Keyboard shortcuts 1–4
+document.addEventListener('keydown', function(e) {
+	if (e.key === '1') applyTheme('day');
+	else if (e.key === '2') applyTheme('dusk');
+	else if (e.key === '3') applyTheme('night');
+	else if (e.key === '4') applyTheme('storm');
+});
+
+// ─── Game ─────────────────────────────────────────────────────────────────────
 var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds', { preload: preload, create: create, update: update }, false, false);
 var nuages = []; var densityDivider = 4; var velocityDivider = 0.6;
 var nuages2 = []; var field; var fond; var fond2;
@@ -16,10 +218,9 @@ var pi = [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,
 function randInt(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-		
+
 for (var i = 0; i<10000; i++) {
 	pi.push(randInt(0,9));
-	console.log(pi[886+i]);
 }
 
 var timer = 0;
@@ -41,9 +242,17 @@ function preload() {
 }
 function create() {
 	game.time.desiredFps = 30;
-	game.stage.backgroundColor = "#4488AA";
+
+	var t = themes[currentThemeName];
+	game.stage.backgroundColor = t.stageColor;
+
 	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
+	fond.tint = t.fondTint;
+
 	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
+	fond2.tint  = t.fond2Tint;
+	fond2.alpha = t.fond2Alpha;
+
 	order0 = game.add.group();
 	order1 = game.add.group();
 	order2 = game.add.group();
@@ -54,11 +263,6 @@ function create() {
 	order7 = game.add.group();
 	order8 = game.add.group();
 	order9 = game.add.group();
-	//fond2.angle = 180;
-	fond2.alpha = 0.9;
-	//field = game.add.tileSprite(0, 465, 1300, 300, 'field');
-	//field.alpha = 0.2;
-
 }
 function update() {
 
@@ -68,17 +272,21 @@ function update() {
 
 		decimal++;
 		timer = 0;
-		nuages.push(game.add.tileSprite(-200, 400-(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage'));
+
+		var t = themes[currentThemeName];
+
+		nuages.push(game.add.tileSprite(-200, 400-(pi[decimal]*34-15), 768, 312, 'nuage'));
 		nuages[decimal].anchor.x = 0.7;
 		nuages[decimal].anchor.y = 0.5;
-		nuages[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
-		nuages[decimal].alpha = 0.9;
-		//sum += pi[decimal];
-		nuages2.push(game.add.tileSprite(-200, 400+(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage2'));
+		nuages[decimal].scale.setTo((pi[decimal])/10, (pi[decimal])/10);
+		nuages[decimal].alpha = 0.99;
+		nuages[decimal].tint  = t.cloudTint;
+
+		nuages2.push(game.add.tileSprite(-200, 400+(pi[decimal]*34-15), 768, 312, 'nuage2'));
 		nuages2[decimal].anchor.x = 0.7;
 		nuages2[decimal].anchor.y = 0.5;
-		nuages2[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
-		nuages[decimal].alpha = 0.99;
+		nuages2[decimal].scale.setTo((pi[decimal])/10, (pi[decimal])/10);
+		nuages2[decimal].tint  = t.cloudTint;
 
 		switch(pi[decimal]) {
 		case 0:
@@ -130,10 +338,7 @@ function update() {
 		}
 		nuages[jj].x += (pi[jj])/Math.abs(velocityDivider);
 		nuages2[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		//nuages[jj].angle += (1/(pi[jj]))*3;
 		jj++;
-		//if (nuages[jj].x > 1300) {
-		//}
 	}
 	jj = 0;
 
@@ -149,14 +354,7 @@ function update() {
 	game.world.bringToTop(order9);
 	fond2.bringToTop();
 }
-
-
-
   </script>
-
-
-
-
 </head>
 <body style="background-color: rgb(67,169,223);">
 	<div id="game" style="
@@ -164,8 +362,6 @@ function update() {
 		position: absolute;
 		TOP: 0px;
 		LEFT: 0px;
-
-
 		image-rendering: optimizeSpeed;
 		image-rendering: -moz-crisp-edges;
 		image-rendering: -o-crisp-edges;
@@ -173,6 +369,37 @@ function update() {
 		image-rendering: optimize-contrast;
 		-ms-interpolation-mode: nearest-neighbor;
 		image-rendering : pixelated;">
+	</div>
+
+	<!-- Theme toast notification -->
+	<div id="theme-toast"></div>
+
+	<!-- Theme switcher overlay -->
+	<div id="theme-switcher">
+		<div id="theme-panel">
+
+			<div class="theme-btn active" data-theme="day" onclick="applyTheme('day')" title="Day — press 1">
+				<div class="theme-swatch" style="background: #4488AA;"></div>
+				<span class="theme-label">Day</span>
+			</div>
+
+			<div class="theme-btn" data-theme="dusk" onclick="applyTheme('dusk')" title="Dusk — press 2">
+				<div class="theme-swatch" style="background: linear-gradient(135deg, #FF99CC, #CC5599);"></div>
+				<span class="theme-label">Dusk</span>
+			</div>
+
+			<div class="theme-btn" data-theme="night" onclick="applyTheme('night')" title="Night — press 3">
+				<div class="theme-swatch" style="background: linear-gradient(135deg, #1A2B55, #050A18);"></div>
+				<span class="theme-label">Night</span>
+			</div>
+
+			<div class="theme-btn" data-theme="storm" onclick="applyTheme('storm')" title="Storm — press 4">
+				<div class="theme-swatch" style="background: linear-gradient(135deg, #778899, #1E2530);"></div>
+				<span class="theme-label">Storm</span>
+			</div>
+
+		</div>
+		<div id="theme-hint">keys 1 – 4</div>
 	</div>
 </body>
 </html>
