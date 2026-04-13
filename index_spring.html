@@ -68,9 +68,11 @@ function create() {
 
 	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
 	fond.tint = 0xFFE4EC;
+	fond.alpha = 0.12; // faint — let the pale pink stage background dominate
 
 	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
 	fond2.tint = 0xFFE4EC;
+	fond2.alpha = 0.12; // faint — same reason
 
 	order0 = game.add.group();
 	order1 = game.add.group();
@@ -82,8 +84,6 @@ function create() {
 	order7 = game.add.group();
 	order8 = game.add.group();
 	order9 = game.add.group();
-
-	fond2.alpha = 0.9;
 
 	petalsGroup = game.add.group();
 }
@@ -198,7 +198,7 @@ function update() {
 	game.world.bringToTop(order8);
 	game.world.bringToTop(order9);
 	fond2.bringToTop();
-	petalsGroup.bringToTop(); // petals float in front of everything
+	game.world.bringToTop(petalsGroup); // petals float in front of everything
 }
 
 
