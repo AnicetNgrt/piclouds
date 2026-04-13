@@ -2,10 +2,252 @@
 <html>
 <head>
 	<title>Nuages de Pi</title>
-	<link href="stylesheet.css" rel="stylesheet">
 	<meta charset="utf-8"/>
 	<script type="text/javascript" src="phaser.min.js"></script>
 	<script>
+// ── Ocean Depths theme ─────────────────────────────────────────────────────────
+// All imagery generated at runtime via HTML5 Canvas; no external assets needed
+// for the themed sprites/backgrounds. Pi-driven logic is unchanged.
+var oceanImages = (function () {
+
+	function makeFond() {
+		var c = document.createElement('canvas');
+		c.width = 1300; c.height = 700;
+		var ctx = c.getContext('2d');
+
+		// Deep ocean gradient — lighter near surface, abyssal below
+		var g = ctx.createLinearGradient(0, 0, 0, 700);
+		g.addColorStop(0,   '#004d80');
+		g.addColorStop(0.2, '#002a55');
+		g.addColorStop(0.6, '#001433');
+		g.addColorStop(1,   '#000d1f');
+		ctx.fillStyle = g;
+		ctx.fillRect(0, 0, 1300, 700);
+
+		// Crepuscular light rays filtering down from above
+		var rayXs = [60, 200, 360, 530, 680, 840, 1000, 1140, 1260];
+		for (var i = 0; i < rayXs.length; i++) {
+			var rx = rayXs[i];
+			var spread = 18 + (i % 3) * 12;
+			var rg = ctx.createLinearGradient(rx, 0, rx + spread * 2, 620);
+			rg.addColorStop(0,   'rgba(120,220,255,0.18)');
+			rg.addColorStop(0.4, 'rgba(60,170,230,0.07)');
+			rg.addColorStop(1,   'rgba(0,80,160,0)');
+			ctx.fillStyle = rg;
+			ctx.beginPath();
+			ctx.moveTo(rx - spread, 0);
+			ctx.lineTo(rx + spread, 0);
+			ctx.lineTo(rx + spread * 2 + 80, 700);
+			ctx.lineTo(rx - spread + 30, 700);
+			ctx.closePath();
+			ctx.fill();
+		}
+
+		// Suspended particles / marine snow
+		var snow = [
+			[40,60],[130,180],[290,95],[440,310],[590,155],[740,410],[890,220],[1040,370],[1200,110],
+			[80,480],[230,570],[390,440],[540,530],[700,460],[860,590],[1010,510],[1160,575],[310,320],
+			[660,280],[950,340],[1100,200],[200,430],[760,530],[1240,380]
+		];
+		for (var p = 0; p < snow.length; p++) {
+			ctx.beginPath();
+			ctx.arc(snow[p][0], snow[p][1], 1 + (p % 3) * 0.5, 0, Math.PI * 2);
+			ctx.fillStyle = 'rgba(190,245,255,' + (0.25 + (p % 5) * 0.08) + ')';
+			ctx.fill();
+		}
+
+		return c.toDataURL('image/png');
+	}
+
+	function makeFond2() {
+		// Semi-transparent abyss overlay — drawn on top of sprites for depth
+		var c = document.createElement('canvas');
+		c.width = 1300; c.height = 700;
+		var ctx = c.getContext('2d');
+		ctx.clearRect(0, 0, 1300, 700);
+
+		// Darkening gradient (transparent top → nearly opaque bottom)
+		var g = ctx.createLinearGradient(0, 0, 0, 700);
+		g.addColorStop(0,    'rgba(0,20,50,0)');
+		g.addColorStop(0.35, 'rgba(0,10,30,0.45)');
+		g.addColorStop(1,    'rgba(0,4,12,0.82)');
+		ctx.fillStyle = g;
+		ctx.fillRect(0, 0, 1300, 700);
+
+		// Bioluminescent glows scattered near the seabed
+		var glows = [
+			[90,  620, 5,  'rgba(0,255,200,0.7)'],
+			[240, 660, 3,  'rgba(100,210,255,0.6)'],
+			[410, 635, 6,  'rgba(0,210,185,0.5)'],
+			[590, 675, 4,  'rgba(80,255,225,0.7)'],
+			[760, 645, 5,  'rgba(0,195,210,0.6)'],
+			[940, 685, 3,  'rgba(130,255,205,0.5)'],
+			[1090,640, 6,  'rgba(0,230,185,0.7)'],
+			[1240,668, 4,  'rgba(70,215,255,0.6)'],
+			[170, 590, 3,  'rgba(190,90,255,0.5)'],
+			[500, 600, 4,  'rgba(210,70,255,0.6)'],
+			[740, 615, 3,  'rgba(160,55,255,0.5)'],
+			[1050,605, 5,  'rgba(190,100,255,0.6)'],
+			[1180,580, 2,  'rgba(0,255,180,0.5)'],
+			[330, 580, 2,  'rgba(100,255,210,0.4)']
+		];
+		for (var i = 0; i < glows.length; i++) {
+			var gx = glows[i][0], gy = glows[i][1], gr = glows[i][2], gc = glows[i][3];
+			var rg = ctx.createRadialGradient(gx, gy, 0, gx, gy, gr * 6);
+			rg.addColorStop(0, gc);
+			rg.addColorStop(1, 'rgba(0,0,0,0)');
+			ctx.fillStyle = rg;
+			ctx.beginPath();
+			ctx.arc(gx, gy, gr * 6, 0, Math.PI * 2);
+			ctx.fill();
+			// bright core
+			ctx.beginPath();
+			ctx.arc(gx, gy, gr, 0, Math.PI * 2);
+			ctx.fillStyle = 'rgba(255,255,255,0.85)';
+			ctx.fill();
+		}
+
+		return c.toDataURL('image/png');
+	}
+
+	function makeNuage() {
+		// Jellyfish cluster — 768×312 — cyan / turquoise bioluminescent tones
+		var c = document.createElement('canvas');
+		c.width = 768; c.height = 312;
+		var ctx = c.getContext('2d');
+		ctx.clearRect(0, 0, 768, 312);
+
+		var jellies = [
+			{x: 110, y: 90,  r: 52},
+			{x: 300, y: 115, r: 68},
+			{x: 510, y: 80,  r: 48},
+			{x: 670, y: 105, r: 58}
+		];
+
+		for (var k = 0; k < jellies.length; k++) {
+			var jx = jellies[k].x, jy = jellies[k].y, jr = jellies[k].r;
+
+			// Outer glow halo
+			var halo = ctx.createRadialGradient(jx, jy, 0, jx, jy, jr * 2.4);
+			halo.addColorStop(0, 'rgba(0,255,220,0.14)');
+			halo.addColorStop(1, 'rgba(0,180,255,0)');
+			ctx.fillStyle = halo;
+			ctx.beginPath();
+			ctx.arc(jx, jy, jr * 2.4, 0, Math.PI * 2);
+			ctx.fill();
+
+			// Bell (filled semicircle)
+			var bell = ctx.createRadialGradient(jx, jy - jr * 0.15, jr * 0.15, jx, jy, jr);
+			bell.addColorStop(0,   'rgba(200,255,245,0.95)');
+			bell.addColorStop(0.35,'rgba(0,235,210,0.80)');
+			bell.addColorStop(0.75,'rgba(0,160,210,0.55)');
+			bell.addColorStop(1,   'rgba(0,80,170,0)');
+			ctx.fillStyle = bell;
+			ctx.beginPath();
+			ctx.arc(jx, jy, jr, Math.PI, 0);
+			ctx.closePath();
+			ctx.fill();
+
+			// Inner radial rib
+			ctx.strokeStyle = 'rgba(140,255,225,0.45)';
+			ctx.lineWidth = 1;
+			ctx.beginPath();
+			ctx.arc(jx, jy, jr * 0.55, Math.PI * 1.1, Math.PI * 1.9);
+			ctx.stroke();
+
+			// Tentacles
+			var nT = 8;
+			for (var t = 0; t < nT; t++) {
+				var tx = jx - jr * 0.85 + (t / (nT - 1)) * jr * 1.7;
+				var amp = 7 + (t % 4) * 3;
+				ctx.strokeStyle = 'rgba(0,225,205,' + (0.28 + (t % 3) * 0.15) + ')';
+				ctx.lineWidth = 0.8 + (t % 3) * 0.4;
+				ctx.beginPath();
+				ctx.moveTo(tx, jy);
+				for (var s = 1; s <= 7; s++) {
+					ctx.lineTo(tx + Math.sin(s * 1.1 + t * 0.9) * amp, jy + s * 17);
+				}
+				ctx.stroke();
+			}
+		}
+
+		return c.toDataURL('image/png');
+	}
+
+	function makeNuage2() {
+		// Sea anemone / coral formation — 768×312 — amber / purple tones
+		var c = document.createElement('canvas');
+		c.width = 768; c.height = 312;
+		var ctx = c.getContext('2d');
+		ctx.clearRect(0, 0, 768, 312);
+
+		var corals = [
+			{x: 95,  y: 195, h: 75,  ca: 'rgba(255,155,0,',  cb: 'rgba(200,45,210,'},
+			{x: 275, y: 215, h: 95,  ca: 'rgba(195,70,255,',  cb: 'rgba(255,125,0,'},
+			{x: 475, y: 185, h: 85,  ca: 'rgba(255,135,15,',  cb: 'rgba(175,40,220,'},
+			{x: 655, y: 205, h: 72,  ca: 'rgba(215,55,220,',  cb: 'rgba(255,175,0,'}
+		];
+
+		for (var ci = 0; ci < corals.length; ci++) {
+			var cx = corals[ci].x, cy = corals[ci].y, ch = corals[ci].h;
+			var ca = corals[ci].ca, cb = corals[ci].cb;
+
+			// Glow bloom
+			var bloom = ctx.createRadialGradient(cx, cy - ch * 0.4, 0, cx, cy, ch * 1.6);
+			bloom.addColorStop(0, ca + '0.12)');
+			bloom.addColorStop(1, 'rgba(0,0,0,0)');
+			ctx.fillStyle = bloom;
+			ctx.beginPath();
+			ctx.arc(cx, cy, ch * 1.6, 0, Math.PI * 2);
+			ctx.fill();
+
+			// Branching tentacle arms
+			var nArms = 9 + (ci % 3) * 2;
+			for (var a = 0; a < nArms; a++) {
+				var ang = (a / nArms) * Math.PI - Math.PI / 12 + Math.sin(a * 0.65) * 0.22;
+				var len = ch * (0.55 + (a % 4) * 0.13);
+				var tipX = cx + Math.cos(ang) * len;
+				var tipY = cy - Math.abs(Math.sin(ang + 0.4)) * len * 1.15;
+
+				ctx.strokeStyle = ca + (0.45 + (a % 5) * 0.1) + ')';
+				ctx.lineWidth = 1.5 + (a % 3) * 0.8;
+				ctx.lineCap = 'round';
+				ctx.beginPath();
+				ctx.moveTo(cx, cy);
+				ctx.quadraticCurveTo(
+					cx + Math.cos(ang + 0.28) * len * 0.48,
+					cy - len * 0.35,
+					tipX, tipY
+				);
+				ctx.stroke();
+
+				// Glowing tip
+				var tg = ctx.createRadialGradient(tipX, tipY, 0, tipX, tipY, 5 + (a % 4) * 1.5);
+				tg.addColorStop(0, cb + '0.92)');
+				tg.addColorStop(1, ca + '0)');
+				ctx.fillStyle = tg;
+				ctx.beginPath();
+				ctx.arc(tipX, tipY, 5 + (a % 4) * 1.5, 0, Math.PI * 2);
+				ctx.fill();
+			}
+
+			// Stem
+			ctx.strokeStyle = ca + '0.75)';
+			ctx.lineWidth = 5;
+			ctx.lineCap = 'round';
+			ctx.beginPath();
+			ctx.moveTo(cx, cy);
+			ctx.lineTo(cx, cy + 28);
+			ctx.stroke();
+		}
+
+		return c.toDataURL('image/png');
+	}
+
+	return { fond: makeFond(), fond2: makeFond2(), nuage: makeNuage(), nuage2: makeNuage2() };
+}());
+// ──────────────────────────────────────────────────────────────────────────────
+
 var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds', { preload: preload, create: create, update: update }, false, false);
 var nuages = []; var densityDivider = 4; var velocityDivider = 0.6;
 var nuages2 = []; var field; var fond; var fond2;
@@ -16,7 +258,7 @@ var pi = [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,
 function randInt(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-		
+
 for (var i = 0; i<10000; i++) {
 	pi.push(randInt(0,9));
 	console.log(pi[886+i]);
@@ -33,15 +275,15 @@ function sleep(milliseconds) {
 	}
 }
 function preload() {
-	game.load.image('nuage','nuage.png');
-	game.load.image('nuage2','nuage2.png');
-	game.load.image('field','field.png');
-	game.load.image('fond','fond.png');
-	game.load.image('fond2','fond2.png');
+	game.load.image('nuage',  oceanImages.nuage);
+	game.load.image('nuage2', oceanImages.nuage2);
+	game.load.image('field',  'field.png');
+	game.load.image('fond',   oceanImages.fond);
+	game.load.image('fond2',  oceanImages.fond2);
 }
 function create() {
 	game.time.desiredFps = 30;
-	game.stage.backgroundColor = "#4488AA";
+	game.stage.backgroundColor = "#001a33";
 	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
 	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
 	order0 = game.add.group();
@@ -54,10 +296,7 @@ function create() {
 	order7 = game.add.group();
 	order8 = game.add.group();
 	order9 = game.add.group();
-	//fond2.angle = 180;
 	fond2.alpha = 0.9;
-	//field = game.add.tileSprite(0, 465, 1300, 300, 'field');
-	//field.alpha = 0.2;
 
 }
 function update() {
@@ -68,16 +307,15 @@ function update() {
 
 		decimal++;
 		timer = 0;
-		nuages.push(game.add.tileSprite(-200, 400-(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage'));
+		nuages.push(game.add.tileSprite(-200, 400-(pi[decimal]*34-15), 768, 312, 'nuage'));
 		nuages[decimal].anchor.x = 0.7;
 		nuages[decimal].anchor.y = 0.5;
-		nuages[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
+		nuages[decimal].scale.setTo((pi[decimal])/10, (pi[decimal])/10);
 		nuages[decimal].alpha = 0.9;
-		//sum += pi[decimal];
-		nuages2.push(game.add.tileSprite(-200, 400+(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage2'));
+		nuages2.push(game.add.tileSprite(-200, 400+(pi[decimal]*34-15), 768, 312, 'nuage2'));
 		nuages2[decimal].anchor.x = 0.7;
 		nuages2[decimal].anchor.y = 0.5;
-		nuages2[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
+		nuages2[decimal].scale.setTo((pi[decimal])/10, (pi[decimal])/10);
 		nuages[decimal].alpha = 0.99;
 
 		switch(pi[decimal]) {
@@ -130,10 +368,7 @@ function update() {
 		}
 		nuages[jj].x += (pi[jj])/Math.abs(velocityDivider);
 		nuages2[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		//nuages[jj].angle += (1/(pi[jj]))*3;
 		jj++;
-		//if (nuages[jj].x > 1300) {
-		//}
 	}
 	jj = 0;
 
@@ -158,8 +393,8 @@ function update() {
 
 
 </head>
-<body style="background-color: rgb(67,169,223);">
-	<div id="game" style="
+<body style="background-color: #001a33;">
+	<div id="PIclouds" style="
 		cursor: none;
 		position: absolute;
 		TOP: 0px;
