@@ -6,6 +6,177 @@
 	<meta charset="utf-8"/>
 	<script type="text/javascript" src="phaser.min.js"></script>
 	<script>
+// ============================================================
+//  OUTER SPACE THEME — programmatic texture generation
+//  All textures are drawn on off-screen <canvas> elements and
+//  converted to data-URLs before Phaser initialises, so no
+//  external PNG assets are needed for the theme visuals.
+// ============================================================
+
+// Deterministic PRNG (Mulberry32) so textures are identical on every load.
+function _prng(seed) {
+	return function() {
+		seed = (seed + 0x6D2B79F5) | 0;
+		var t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+		t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+		return ((t >>> 0) / 4294967296);
+	};
+}
+
+// Solid deep-space starfield — used for the upper background (fond).
+function _makeStarfield(w, h, seed) {
+	var cv = document.createElement('canvas');
+	cv.width = w; cv.height = h;
+	var c = cv.getContext('2d');
+	var r = _prng(seed);
+
+	// Deep-space gradient background
+	var bg = c.createLinearGradient(0, 0, 0, h);
+	bg.addColorStop(0,    '#00000d');
+	bg.addColorStop(0.45, '#06061c');
+	bg.addColorStop(1,    '#0a0325');
+	c.fillStyle = bg;
+	c.fillRect(0, 0, w, h);
+
+	// ~500 tiny background stars with subtle colour tints
+	var tints = ['255,255,255', '215,218,255', '255,238,210', '198,238,255'];
+	for (var i = 0; i < 500; i++) {
+		c.beginPath();
+		c.arc(r() * w, r() * h, r() * 1.1 + 0.15, 0, 6.2832);
+		c.fillStyle = 'rgba(' + tints[(r() * 4) | 0] + ',' + (r() * 0.5 + 0.25) + ')';
+		c.fill();
+	}
+
+	// ~25 brighter stars with soft glow halos
+	for (var j = 0; j < 25; j++) {
+		var bx = r() * w, by = r() * h, gr = r() * 5 + 3;
+		var gl = c.createRadialGradient(bx, by, 0, bx, by, gr);
+		gl.addColorStop(0,    'rgba(255,255,255,0.95)');
+		gl.addColorStop(0.35, 'rgba(195,205,255,0.35)');
+		gl.addColorStop(1,    'rgba(0,0,0,0)');
+		c.fillStyle = gl;
+		c.fillRect(bx - gr, by - gr, gr * 2, gr * 2);
+	}
+
+	// Faint distant-nebula glow blobs for depth
+	var n1 = c.createRadialGradient(w * 0.25, h * 0.5, 0, w * 0.25, h * 0.5, w * 0.35);
+	n1.addColorStop(0, 'rgba(28,8,58,0.22)'); n1.addColorStop(1, 'rgba(0,0,0,0)');
+	c.fillStyle = n1; c.fillRect(0, 0, w, h);
+
+	var n2 = c.createRadialGradient(w * 0.78, h * 0.4, 0, w * 0.78, h * 0.4, w * 0.30);
+	n2.addColorStop(0, 'rgba(8,22,48,0.18)'); n2.addColorStop(1, 'rgba(0,0,0,0)');
+	c.fillStyle = n2; c.fillRect(0, 0, w, h);
+
+	return cv.toDataURL('image/png');
+}
+
+// Semi-transparent deep-space overlay — used for the lower tileSprite (fond2).
+// Kept mostly transparent so the nuages2 nebulae that appear behind it remain visible.
+function _makeFond2Overlay(w, h) {
+	var cv = document.createElement('canvas');
+	cv.width = w; cv.height = h;
+	var c = cv.getContext('2d');
+	var r = _prng(0xF00D1EA7);
+
+	// Start fully transparent
+	c.clearRect(0, 0, w, h);
+
+	// Very subtle dark depth haze
+	var haze = c.createLinearGradient(0, 0, 0, h);
+	haze.addColorStop(0, 'rgba(0,0,6,0.18)');
+	haze.addColorStop(1, 'rgba(0,0,20,0.48)');
+	c.fillStyle = haze; c.fillRect(0, 0, w, h);
+
+	// Sparse, dim lower-half stars
+	for (var i = 0; i < 130; i++) {
+		c.beginPath();
+		c.arc(r() * w, r() * h, r() * 0.7 + 0.1, 0, 6.2832);
+		c.fillStyle = 'rgba(185,190,255,' + (r() * 0.22 + 0.06) + ')';
+		c.fill();
+	}
+
+	return cv.toDataURL('image/png');
+}
+
+// Gaseous nebula cloud sprite — transparent background, layered soft colour blobs.
+// upper=true  → purples / blues / pinks  (nuage,  top clouds)
+// upper=false → oranges / reds / ambers  (nuage2, lower clouds)
+function _makeNebula(w, h, upper) {
+	var cv = document.createElement('canvas');
+	cv.width = w; cv.height = h;
+	var c = cv.getContext('2d');
+	c.clearRect(0, 0, w, h);
+	var r = _prng(upper ? 0xABCDEF12 : 0x12345678);
+
+	var cols = upper
+		? [[155,0,222],[68,0,178],[72,138,255],[255,72,208],[178,88,255],[92,198,255],[225,118,255]]
+		: [[255,92,0],[208,18,18],[255,152,12],[178,38,78],[255,128,48],[208,52,158],[255,58,58]];
+
+	// Layer 1 — large diffuse outer haze (14 blobs)
+	for (var i = 0; i < 14; i++) {
+		var x = r() * w, y = h * 0.04 + r() * h * 0.92;
+		var rad = 90 + r() * 210;
+		var col = cols[(r() * cols.length) | 0];
+		var alpha = 0.05 + r() * 0.22;
+		var g = c.createRadialGradient(x, y, 0, x, y, rad);
+		g.addColorStop(0,    'rgba(' + col + ',' + alpha + ')');
+		g.addColorStop(0.65, 'rgba(' + col + ',' + (alpha * 0.3) + ')');
+		g.addColorStop(1,    'rgba(' + col + ',0)');
+		c.fillStyle = g; c.fillRect(0, 0, w, h);
+	}
+
+	// Layer 2 — denser mid-layer blobs (9 blobs)
+	for (var j = 0; j < 9; j++) {
+		var x2 = w * 0.08 + r() * w * 0.84;
+		var y2 = h * 0.08 + r() * h * 0.84;
+		var rad2 = 35 + r() * 95;
+		var col2 = cols[(r() * cols.length) | 0];
+		var alpha2 = 0.16 + r() * 0.38;
+		var g2 = c.createRadialGradient(x2, y2, 0, x2, y2, rad2);
+		g2.addColorStop(0,   'rgba(' + col2 + ',' + alpha2 + ')');
+		g2.addColorStop(0.5, 'rgba(' + col2 + ',' + (alpha2 * 0.45) + ')');
+		g2.addColorStop(1,   'rgba(' + col2 + ',0)');
+		c.fillStyle = g2; c.fillRect(0, 0, w, h);
+	}
+
+	// Layer 3 — bright emission cores (5 spots)
+	for (var k = 0; k < 5; k++) {
+		var cx = w * 0.12 + r() * w * 0.76;
+		var cy = h * 0.18 + r() * h * 0.64;
+		var cr = 7 + r() * 32;
+		var col3 = cols[(r() * cols.length) | 0];
+		var cg = c.createRadialGradient(cx, cy, 0, cx, cy, cr);
+		cg.addColorStop(0,    'rgba(255,255,255,0.65)');
+		cg.addColorStop(0.22, 'rgba(' + col3 + ',0.55)');
+		cg.addColorStop(0.72, 'rgba(' + col3 + ',0.12)');
+		cg.addColorStop(1,    'rgba(' + col3 + ',0)');
+		c.fillStyle = cg; c.fillRect(0, 0, w, h);
+	}
+
+	// Layer 4 — embedded nebula star points (55)
+	for (var l = 0; l < 55; l++) {
+		c.beginPath();
+		c.arc(r() * w, r() * h, r() * 1.25 + 0.25, 0, 6.2832);
+		c.fillStyle = 'rgba(255,255,255,' + (r() * 0.52 + 0.12) + ')';
+		c.fill();
+	}
+
+	return cv.toDataURL('image/png');
+}
+
+// Pre-generate all textures before the Phaser game object is created.
+// Phaser's loader resolves data:-prefixed URLs directly without XHR,
+// so these can be passed straight to game.load.image().
+var _TX = {
+	fond:   _makeStarfield(1300, 400, 0xDEADBEEF),
+	fond2:  _makeFond2Overlay(1300, 300),
+	nuage:  _makeNebula(768, 312, true),
+	nuage2: _makeNebula(768, 312, false)
+};
+// ============================================================
+//  END TEXTURE GENERATION
+// ============================================================
+
 var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds', { preload: preload, create: create, update: update }, false, false);
 var nuages = []; var densityDivider = 4; var velocityDivider = 0.6;
 var nuages2 = []; var field; var fond; var fond2;
@@ -16,7 +187,7 @@ var pi = [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,
 function randInt(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-		
+
 for (var i = 0; i<10000; i++) {
 	pi.push(randInt(0,9));
 	console.log(pi[886+i]);
@@ -33,15 +204,15 @@ function sleep(milliseconds) {
 	}
 }
 function preload() {
-	game.load.image('nuage','nuage.png');
-	game.load.image('nuage2','nuage2.png');
-	game.load.image('field','field.png');
-	game.load.image('fond','fond.png');
-	game.load.image('fond2','fond2.png');
+	game.load.image('nuage',  _TX.nuage);
+	game.load.image('nuage2', _TX.nuage2);
+	game.load.image('field',  'field.png');
+	game.load.image('fond',   _TX.fond);
+	game.load.image('fond2',  _TX.fond2);
 }
 function create() {
 	game.time.desiredFps = 30;
-	game.stage.backgroundColor = "#4488AA";
+	game.stage.backgroundColor = "#000005";
 	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
 	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
 	order0 = game.add.group();
@@ -158,7 +329,7 @@ function update() {
 
 
 </head>
-<body style="background-color: rgb(67,169,223);">
+<body style="background-color: #000005;">
 	<div id="game" style="
 		cursor: none;
 		position: absolute;
