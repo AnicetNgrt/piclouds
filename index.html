@@ -1,9 +1,289 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Nuages de Pi</title>
+	<title>Nuages de Pi — Volcanic Ash</title>
 	<link href="stylesheet.css" rel="stylesheet">
 	<meta charset="utf-8"/>
+	<script>
+	// Generate all Volcanic Ash theme assets as canvas data URLs
+	// before Phaser loads so they are ready for game.load.image()
+	(function() {
+
+		function genVolcanicSky() {
+			var cv = document.createElement('canvas');
+			cv.width = 1300; cv.height = 400;
+			var ctx = cv.getContext('2d');
+
+			// Dark sky gradient: near-black top → deep ember-orange at horizon
+			var skyGrad = ctx.createLinearGradient(0, 0, 0, 400);
+			skyGrad.addColorStop(0,    '#040100');
+			skyGrad.addColorStop(0.28, '#0e0400');
+			skyGrad.addColorStop(0.58, '#1f0800');
+			skyGrad.addColorStop(0.78, '#4a1200');
+			skyGrad.addColorStop(0.91, '#7a2000');
+			skyGrad.addColorStop(1,    '#b03500');
+			ctx.fillStyle = skyGrad;
+			ctx.fillRect(0, 0, 1300, 400);
+
+			// Faint stars — fixed positions, warm amber tint
+			var stars = [
+				[50,20,1],[120,45,1],[200,15,1.5],[350,60,1],[500,25,1],
+				[680,40,1],[750,10,1.5],[900,55,1],[1050,30,1],[1180,20,1],
+				[1250,50,1],[80,70,1],[280,80,1],[450,75,1],[600,65,1],
+				[820,85,1],[1000,70,1],[150,90,1],[400,100,1],[700,95,1],
+				[1100,88,1],[160,35,1],[320,48,1],[490,20,1],[640,55,1],
+				[880,30,1],[1030,60,1],[1200,42,1],[75,110,1],[600,110,1],
+				[1000,115,1],[230,55,0.8],[560,38,0.8],[940,48,0.8]
+			];
+			stars.forEach(function(s) {
+				ctx.fillStyle = 'rgba(255, 200, 150, 0.5)';
+				ctx.beginPath();
+				ctx.arc(s[0], s[1], s[2], 0, Math.PI * 2);
+				ctx.fill();
+			});
+
+			// Lava glow orbs on horizon (broad, soft radial blobs)
+			[[200, 392, 170, 0.36], [625, 400, 230, 0.50], [1055, 388, 140, 0.31]].forEach(function(g) {
+				var grd = ctx.createRadialGradient(g[0], g[1], 8, g[0], g[1], g[2]);
+				grd.addColorStop(0,    'rgba(255, 120, 0, ' + g[3] + ')');
+				grd.addColorStop(0.38, 'rgba(220, 60, 0, ' + (g[3] * 0.52) + ')');
+				grd.addColorStop(0.72, 'rgba(120, 18, 0, ' + (g[3] * 0.22) + ')');
+				grd.addColorStop(1,    'rgba(0, 0, 0, 0)');
+				ctx.fillStyle = grd;
+				ctx.fillRect(0, 0, 1300, 400);
+			});
+
+			// Volcanic mountain silhouettes (two prominent peaks)
+			ctx.fillStyle = '#060100';
+			ctx.beginPath();
+			ctx.moveTo(0, 400);
+			ctx.lineTo(0, 312);
+			ctx.quadraticCurveTo(52, 288, 102, 260);
+			ctx.lineTo(168, 307);
+			ctx.quadraticCurveTo(222, 287, 268, 270);
+			ctx.lineTo(382, 142);   // peak 1
+			ctx.lineTo(444, 272);
+			ctx.quadraticCurveTo(492, 254, 533, 240);
+			ctx.lineTo(578, 310);
+			ctx.quadraticCurveTo(622, 292, 657, 274);
+			ctx.lineTo(733, 152);   // peak 2
+			ctx.lineTo(792, 280);
+			ctx.quadraticCurveTo(842, 262, 882, 250);
+			ctx.lineTo(952, 294);
+			ctx.quadraticCurveTo(1002, 274, 1047, 250);
+			ctx.lineTo(1097, 300);
+			ctx.quadraticCurveTo(1142, 284, 1182, 264);
+			ctx.lineTo(1232, 300);
+			ctx.lineTo(1300, 280);
+			ctx.lineTo(1300, 400);
+			ctx.closePath();
+			ctx.fill();
+
+			// Eruption glow – peak 1 at (382, 142)
+			var e1 = ctx.createRadialGradient(382, 142, 0, 382, 142, 92);
+			e1.addColorStop(0,    'rgba(255, 165, 0, 0.92)');
+			e1.addColorStop(0.22, 'rgba(255, 90, 0, 0.68)');
+			e1.addColorStop(0.52, 'rgba(180, 30, 0, 0.32)');
+			e1.addColorStop(1,    'rgba(0, 0, 0, 0)');
+			ctx.fillStyle = e1;
+			ctx.fillRect(290, 50, 184, 195);
+
+			// Eruption glow – peak 2 at (733, 152)
+			var e2 = ctx.createRadialGradient(733, 152, 0, 733, 152, 115);
+			e2.addColorStop(0,    'rgba(255, 145, 0, 0.88)');
+			e2.addColorStop(0.28, 'rgba(222, 70, 0, 0.58)');
+			e2.addColorStop(0.58, 'rgba(160, 24, 0, 0.26)');
+			e2.addColorStop(1,    'rgba(0, 0, 0, 0)');
+			ctx.fillStyle = e2;
+			ctx.fillRect(618, 38, 230, 226);
+
+			// Drifting ash wisps in upper sky
+			[[100,62],[305,42],[505,72],[702,47],[955,67],[1155,52]].forEach(function(a) {
+				var w = ctx.createRadialGradient(a[0], a[1], 5, a[0], a[1], 47);
+				w.addColorStop(0, 'rgba(55, 45, 40, 0.24)');
+				w.addColorStop(1, 'rgba(0, 0, 0, 0)');
+				ctx.fillStyle = w;
+				ctx.fillRect(a[0] - 58, a[1] - 58, 116, 116);
+			});
+
+			return cv.toDataURL();
+		}
+
+		// fond2 — volcanic terrain foreground (brought to top every frame so
+		// clouds appear to drift behind it; top is transparent so near-horizon
+		// clouds still show through)
+		function genVolcanicGround() {
+			var cv = document.createElement('canvas');
+			cv.width = 1300; cv.height = 300;
+			var ctx = cv.getContext('2d');
+
+			// Ground gradient — transparent at very top, dark rock below
+			var gg = ctx.createLinearGradient(0, 0, 0, 300);
+			gg.addColorStop(0,    'rgba(20, 8, 0, 0.0)');
+			gg.addColorStop(0.10, 'rgba(12, 4, 0, 0.52)');
+			gg.addColorStop(0.26, '#0d0400');
+			gg.addColorStop(1,    '#040100');
+			ctx.fillStyle = gg;
+			ctx.fillRect(0, 0, 1300, 300);
+
+			// Rock/obsidian ridge silhouette
+			ctx.fillStyle = '#070200';
+			ctx.beginPath();
+			ctx.moveTo(0, 300);
+			ctx.lineTo(0, 188);
+			ctx.quadraticCurveTo(68, 164, 128, 144);
+			ctx.lineTo(192, 180);
+			ctx.quadraticCurveTo(238, 160, 274, 137);
+			ctx.lineTo(348, 174);
+			ctx.quadraticCurveTo(398, 154, 444, 130);
+			ctx.lineTo(514, 167);
+			ctx.quadraticCurveTo(562, 147, 608, 117);
+			ctx.lineTo(678, 160);
+			ctx.quadraticCurveTo(728, 140, 774, 124);
+			ctx.lineTo(852, 164);
+			ctx.quadraticCurveTo(904, 144, 952, 134);
+			ctx.lineTo(1018, 170);
+			ctx.quadraticCurveTo(1072, 152, 1122, 140);
+			ctx.lineTo(1192, 174);
+			ctx.lineTo(1300, 160);
+			ctx.lineTo(1300, 300);
+			ctx.closePath();
+			ctx.fill();
+
+			// Lava flow channels glowing through cracks
+			[[148, 212, 78, 0.68], [494, 207, 60, 0.74], [894, 210, 70, 0.60], [1158, 217, 54, 0.50]].forEach(function(lv) {
+				var lg = ctx.createRadialGradient(lv[0], lv[1], 4, lv[0], lv[1], lv[2]);
+				lg.addColorStop(0,    'rgba(255, 115, 0, ' + lv[3] + ')');
+				lg.addColorStop(0.32, 'rgba(212, 55, 0, ' + (lv[3] * 0.56) + ')');
+				lg.addColorStop(0.68, 'rgba(140, 20, 0, ' + (lv[3] * 0.26) + ')');
+				lg.addColorStop(1,    'rgba(0, 0, 0, 0)');
+				ctx.fillStyle = lg;
+				ctx.fillRect(lv[0] - lv[2] - 12, lv[1] - lv[2] - 12, (lv[2] + 12) * 2, (lv[2] + 12) * 2);
+			});
+
+			// Smoke columns rising from hot ground
+			[[188, 92], [424, 87], [682, 80], [924, 94], [1162, 84]].forEach(function(sm) {
+				var sg = ctx.createRadialGradient(sm[0], sm[1], 5, sm[0], sm[1], 64);
+				sg.addColorStop(0, 'rgba(50, 40, 34, 0.40)');
+				sg.addColorStop(0.6, 'rgba(28, 18, 12, 0.18)');
+				sg.addColorStop(1,   'rgba(0, 0, 0, 0)');
+				ctx.fillStyle = sg;
+				ctx.fillRect(sm[0] - 78, sm[1] - 78, 156, 178);
+			});
+
+			return cv.toDataURL();
+		}
+
+		// nuage — billowing ash/smoke cloud, dark grey with ember-orange edge glow
+		function genAshCloud() {
+			var cv = document.createElement('canvas');
+			cv.width = 768; cv.height = 312;
+			var ctx = cv.getContext('2d');
+			ctx.clearRect(0, 0, 768, 312);
+
+			var puffs = [
+				{x: 390, y: 155, r: 118},
+				{x: 474, y: 120, r: 90},
+				{x: 306, y: 138, r: 100},
+				{x: 498, y: 178, r: 74},
+				{x: 290, y: 168, r: 80},
+				{x: 444, y: 86,  r: 70},
+				{x: 336, y: 86,  r: 60},
+				{x: 558, y: 148, r: 64},
+				{x: 236, y: 152, r: 60},
+				{x: 422, y: 202, r: 54}
+			];
+
+			puffs.forEach(function(p) {
+				// Ember glow ring around each puff
+				var eg = ctx.createRadialGradient(p.x, p.y, p.r * 0.62, p.x, p.y, p.r * 1.45);
+				eg.addColorStop(0,    'rgba(0, 0, 0, 0)');
+				eg.addColorStop(0.52, 'rgba(148, 44, 5, 0.18)');
+				eg.addColorStop(0.76, 'rgba(198, 76, 0, 0.30)');
+				eg.addColorStop(1,    'rgba(0, 0, 0, 0)');
+				ctx.fillStyle = eg;
+				ctx.beginPath();
+				ctx.arc(p.x, p.y, p.r * 1.45, 0, Math.PI * 2);
+				ctx.fill();
+
+				// Ash smoke body — dark charcoal, slightly translucent
+				var sc = ctx.createRadialGradient(
+					p.x - p.r * 0.12, p.y - p.r * 0.18, 0,
+					p.x, p.y, p.r
+				);
+				sc.addColorStop(0,    'rgba(94, 82, 74, 0.74)');
+				sc.addColorStop(0.36, 'rgba(70, 58, 51, 0.70)');
+				sc.addColorStop(0.70, 'rgba(48, 38, 31, 0.54)');
+				sc.addColorStop(1,    'rgba(26, 16, 9, 0)');
+				ctx.fillStyle = sc;
+				ctx.beginPath();
+				ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+				ctx.fill();
+			});
+
+			return cv.toDataURL();
+		}
+
+		// nuage2 — ground-level lava smoke / flow cloud, darker with stronger red tones
+		function genLavaSmoke() {
+			var cv = document.createElement('canvas');
+			cv.width = 768; cv.height = 312;
+			var ctx = cv.getContext('2d');
+			ctx.clearRect(0, 0, 768, 312);
+
+			// Flatter, more elongated puffs to suggest ground-hugging flow
+			var puffs = [
+				{x: 407, y: 184, r: 108, rx: 1.48, ry: 0.66},
+				{x: 320, y: 174, r:  84, rx: 1.34, ry: 0.62},
+				{x: 490, y: 190, r:  90, rx: 1.24, ry: 0.59},
+				{x: 250, y: 190, r:  70, rx: 1.30, ry: 0.52},
+				{x: 552, y: 180, r:  74, rx: 1.14, ry: 0.57},
+				{x: 394, y: 144, r:  64, rx: 1.06, ry: 0.84},
+				{x: 464, y: 147, r:  60, rx: 1.17, ry: 0.74},
+				{x: 352, y: 218, r:  57, rx: 1.32, ry: 0.50},
+				{x: 464, y: 220, r:  52, rx: 1.22, ry: 0.48}
+			];
+
+			puffs.forEach(function(p) {
+				ctx.save();
+				ctx.translate(p.x, p.y);
+				ctx.scale(p.rx, p.ry);
+
+				// Hot lava ember glow — stronger red-orange
+				var lg = ctx.createRadialGradient(0, 0, p.r * 0.50, 0, 0, p.r * 1.54);
+				lg.addColorStop(0,    'rgba(0, 0, 0, 0)');
+				lg.addColorStop(0.46, 'rgba(198, 58, 0, 0.24)');
+				lg.addColorStop(0.70, 'rgba(250, 90, 0, 0.34)');
+				lg.addColorStop(1,    'rgba(0, 0, 0, 0)');
+				ctx.fillStyle = lg;
+				ctx.beginPath();
+				ctx.arc(0, 0, p.r * 1.54, 0, Math.PI * 2);
+				ctx.fill();
+
+				// Dark reddish-brown smoke core
+				var ls = ctx.createRadialGradient(-p.r * 0.10, -p.r * 0.12, 0, 0, 0, p.r);
+				ls.addColorStop(0,    'rgba(60, 26, 10, 0.80)');
+				ls.addColorStop(0.33, 'rgba(50, 18, 5, 0.74)');
+				ls.addColorStop(0.66, 'rgba(34, 10, 2, 0.60)');
+				ls.addColorStop(1,    'rgba(15, 3, 0, 0)');
+				ctx.fillStyle = ls;
+				ctx.beginPath();
+				ctx.arc(0, 0, p.r, 0, Math.PI * 2);
+				ctx.fill();
+
+				ctx.restore();
+			});
+
+			return cv.toDataURL();
+		}
+
+		// Expose URLs for the Phaser preload function
+		window.VOLCANIC_SKY_URL    = genVolcanicSky();
+		window.VOLCANIC_GROUND_URL = genVolcanicGround();
+		window.ASH_CLOUD_URL       = genAshCloud();
+		window.LAVA_SMOKE_URL      = genLavaSmoke();
+	})();
+	</script>
 	<script type="text/javascript" src="phaser.min.js"></script>
 	<script>
 var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds', { preload: preload, create: create, update: update }, false, false);
@@ -16,7 +296,7 @@ var pi = [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,
 function randInt(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-		
+
 for (var i = 0; i<10000; i++) {
 	pi.push(randInt(0,9));
 	console.log(pi[886+i]);
@@ -33,15 +313,15 @@ function sleep(milliseconds) {
 	}
 }
 function preload() {
-	game.load.image('nuage','nuage.png');
-	game.load.image('nuage2','nuage2.png');
-	game.load.image('field','field.png');
-	game.load.image('fond','fond.png');
-	game.load.image('fond2','fond2.png');
+	game.load.image('nuage',  window.ASH_CLOUD_URL);
+	game.load.image('nuage2', window.LAVA_SMOKE_URL);
+	game.load.image('field',  'field.png');
+	game.load.image('fond',   window.VOLCANIC_SKY_URL);
+	game.load.image('fond2',  window.VOLCANIC_GROUND_URL);
 }
 function create() {
 	game.time.desiredFps = 30;
-	game.stage.backgroundColor = "#4488AA";
+	game.stage.backgroundColor = "#1a0a00";
 	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
 	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
 	order0 = game.add.group();
@@ -158,7 +438,7 @@ function update() {
 
 
 </head>
-<body style="background-color: rgb(67,169,223);">
+<body style="background-color: #1a0a00;">
 	<div id="game" style="
 		cursor: none;
 		position: absolute;
