@@ -1,0 +1,47 @@
+/* Nuages de Pi — Theme System */
+
+:root {
+  /* Nuit Polaire (Polar Night) */
+  --sky-bg:        #0A0E1A;
+  --body-bg:       #070B14;
+  --cloud-primary: #1A3A4A;
+  --cloud-secondary: #0D2233;
+  --cloud-highlight: #4ECDC4;
+  --theme-name:    "Nuit Polaire";
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--body-bg);
+  overflow: hidden;
+}
+
+#game {
+  cursor: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  image-rendering: optimizeSpeed;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -o-crisp-edges;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: optimize-contrast;
+  -ms-interpolation-mode: nearest-neighbor;
+  image-rendering: pixelated;
+}
+
+#theme-label {
+  position: fixed;
+  bottom: 14px;
+  right: 18px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--cloud-highlight);
+  opacity: 0.38;
+  pointer-events: none;
+  user-select: none;
+  z-index: 999;
+}
