@@ -1,0 +1,33 @@
+* {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	overflow: hidden;
+	transition: background-color 0.6s ease;
+}
+
+/* ── Theme Label ───────────────────────────────────────────────── */
+#theme-label {
+	position: fixed;
+	bottom: 12px;
+	right: 14px;
+	padding: 4px 11px;
+	border-radius: 4px;
+	font-family: sans-serif;
+	font-size: 12px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	border: 1px solid;
+	opacity: 0.88;
+	z-index: 1000;
+	pointer-events: none;
+	transition: background 0.4s, color 0.4s;
+}
+
+/* ── Aube theme: warm glow filter on the canvas ────────────────── */
+body.theme-aube #game canvas {
+	filter: brightness(1.03) saturate(1.2) sepia(0.18);
+}
