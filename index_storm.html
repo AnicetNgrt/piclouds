@@ -27,6 +27,7 @@ var timer = 0;
 
 // Lightning state — initialised in create() once game.time is available
 var nextLightning = 0;
+var lightningFlash = null; // tracked globally so update() can keep it above fond2
 
 function sleep(milliseconds) {
 	var start = new Date().getTime();
@@ -157,16 +158,21 @@ function update() {
 	game.world.bringToTop(order9);
 	fond2.bringToTop();
 
+	// Keep any active lightning flash on top of fond2 every frame
+	if (lightningFlash && lightningFlash.alive) {
+		lightningFlash.bringToTop();
+	}
+
 	// Lightning flash: trigger randomly every 8–15 seconds
 	if (game.time.now >= nextLightning) {
 		nextLightning = game.time.now + randInt(8000, 15000);
-		var flash = game.add.graphics(0, 0);
-		flash.beginFill(0xFFFFFF, 0.4);
-		flash.drawRect(0, 0, 1300, 700);
-		flash.endFill();
+		lightningFlash = game.add.graphics(0, 0);
+		lightningFlash.beginFill(0xFFFFFF, 0.4);
+		lightningFlash.drawRect(0, 0, 1300, 700);
+		lightningFlash.endFill();
 		// Tween alpha from 1 → 0 over 200ms then destroy
-		game.add.tween(flash).to({ alpha: 0 }, 200, Phaser.Easing.Linear.None, true)
-			.onComplete.add(function() { flash.destroy(); });
+		game.add.tween(lightningFlash).to({ alpha: 0 }, 200, Phaser.Easing.Linear.None, true)
+			.onComplete.add(function() { lightningFlash.destroy(); lightningFlash = null; });
 	}
 }
 
