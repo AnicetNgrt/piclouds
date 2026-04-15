@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Nuages de Pi — Inferno Blaze</title>
+	<link href="stylesheet.css" rel="stylesheet">
+	<meta charset="utf-8"/>
+	<style>
+	body {
+		background-color: #0A0100;
+		overflow: hidden;
+		margin: 0;
+		padding: 0;
+	}
+	canvas { display: block; }
+	@keyframes infernoGlow {
+		0%   { box-shadow: 0 0 22px 6px rgba(210, 55, 0, 0.42); }
+		28%  { box-shadow: 0 0 48px 16px rgba(255, 90, 0, 0.30); }
+		58%  { box-shadow: 0 0 35px 10px rgba(255, 40, 0, 0.38); }
+		80%  { box-shadow: 0 0 55px 18px rgba(255, 110, 0, 0.24); }
+		100% { box-shadow: 0 0 22px 6px rgba(210, 55, 0, 0.42); }
+	}
+	#PIclouds canvas, canvas {
+		animation: infernoGlow 3.5s ease-in-out infinite;
+	}
+	</style>
+	<script type="text/javascript" src="phaser.min.js"></script>
+	<script>
+// =============================================================
+// Nuages de Pi — Inferno Blaze Theme
+// Intense red and orange flames consuming the sky. Dense fire-
+// smoke clouds drift through a burning sky. Rising embers spiral
+// upward, and periodic flame eruptions scar the horizon.
+// =============================================================
+
+var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds',
+	{ preload: preload, create: create, update: update }, false, false);
+
+// Medium-dense, energetic pace — fire breathes and surges
+var nuages = []; var densityDivider = 3.0; var velocityDivider = 0.50;
+var nuages2 = []; var field; var fond; var fond2;
+var nn = 0; var jj = 0; var sum = 0; var lock = 0;
+var decimal = -1;
+var pi = [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,8,4,1,9,7,1,6,9,3,9,9,3,7,5,1,0,5,8,2,0,9,7,4,9,4,4,5,9,2,3,0,7,8,1,6,4,0,6,2,8,6,2,0,8,9,9,8,6,2,8,0,3,4,8,2,5,3,4,2,1,1,7,0,6,7,9,8,2,1,4,8,0,8,6,5,1,3,2,8,2,3,0,6,6,4,7,0,9,3,8,4,4,6,0,9,5,5,0,5,8,2,2,3,1,7,2,5,3,5,9,4,0,8,1,2,8,4,8,1,1,1,7,4,5,0,2,8,4,1,0,2,7,0,1,9,3,8,5,2,1,1,0,5,5,5,9,6,4,4,6,2,2,9,4,8,9,5,4,9,3,0,3,8,1,9,6,4,4,2,8,8,1,0,9,7,5,6,6,5,9,3,3,4,4,6,1,2,8,4,7,5,6,4,8,2,3,3,7,8,6,7,8,3,1,6,5,2,7,1,2,0,1,9,0,9,1,4,5,6,4,8,5,6,6,9,2,3,4,6,0,3,4,8,6,1,0,4,5,4,3,2,6,6,4,8,2,1,3,3,9,3,6,0,7,2,6,0,2,4,9,1,4,1,2,7,3,7,2,4,5,8,7,0,0,6,6,0,6,3,1,5,5,8,8,1,7,4,8,8,1,5,2,0,9,2,0,9,6,2,8,2,9,2,5,4,0,9,1,7,1,5,3,6,4,3,6,7,8,9,2,5,9,0,3,6,0,0,1,1,3,3,0,5,3,0,5,4,8,8,2,0,4,6,6,5,2,1,3,8,4,1,4,6,9,5,1,9,4,1,5,1,1,6,0,9,4,3,3,0,5,7,2,7,0,3,6,5,7,5,9,5,9,1,9,5,3,0,9,2,1,8,6,1,1,7,3,8,1,9,3,2,6,1,1,7,9,3,1,0,5,1,1,8,5,4,8,0,7,4,4,6,2,3,7,9,9,6,2,7,4,9,5,6,7,3,5,1,8,8,5,7,5,2,7,2,4,8,9,1,2,2,7,9,3,8,1,8,3,0,1,1,9,4,9,1,2,9,8,3,3,6,7,3,3,6,2,4,4,0,6,5,6,6,4,3,0,8,6,0,2,1,3,9,4,9,4,6,3,9,5,2,2,4,7,3,7,1,9,0,7,0,2,1,7,9,8,6,0,9,4,3,7,0,2,7,7,0,5,3,9,2,1,7,1,7,6,2,9,3,1,7,6,7,5,2,3,8,4,6,7,4,8,1,8,4,6,7,6,6,9,4,0,5,1,3,2,0,0,0,5,6,8,1,2,7,1,4,5,2,6,3,5,6,0,8,2,7,7,8,5,7,7,1,3,4,2,7,5,7,7,8,9,6,0,9,1,7,3,6,3,7,1,7,8,7,2,1,4,6,8,4,4,0,9,0,1,2,2,4,9,5,3,4,3,0,1,4,6,5,4,9,5,8,5,3,7,1,0,5,0,7,9,2,2,7,9,6,8,9,2,5,8,9,2,3,5,4,2,0,1,9,9,5,6,1,1,2,1,2,9,0,2,1,9,6,0,8,6,4,0,3,4,4,1,8,1,5,9,8,1,3,6,2,9,7,7,4,7,7,1,3,0,9,9,6,0,5,1,8,7,0,7,2,1,1,3,4,9,9,9,9,9,9,8,3,7,2,9,7,8,0,4,9,9,5,1,0,5,9,7,3,1,7,3,2,8,1,6,0,9,6,3,1,8,5,9,5,0,2,4,4,5,9,4,5,5,3,4,6,9,0,8,3,0,2,6,4,2,5,2,2,3,0,8,2,5,3,3,4,4,6,8,5,0,3,5,2,6,1,9,3,1,1,8,8,1,7,1,0,1,0,0,0,3,1,3,7,8,3,8,7,5,2,8,8,6,5,8,7,5,3,3,2,0,8,3,8,1,4,2,0];
+
+function randInt(min, max) {
+	return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+for (var i = 0; i < 10000; i++) {
+	pi.push(randInt(0, 9));
+}
+
+var timer = 0;
+
+// ------------------------------------------------------------------
+// Ember system — rising sparks of fire, redrawn each frame
+// ------------------------------------------------------------------
+var embers = [];
+var emberGfx;
+var EMBER_COUNT = 200;
+
+// Hot ember color palette: white-yellow core → orange → deep red
+var EMBER_COLORS = [
+	0xFFEE66,  // white-hot yellow (newest, hottest)
+	0xFFCC22,  // bright gold
+	0xFF9900,  // vivid orange
+	0xFF6600,  // deep orange
+	0xFF3300,  // red-orange
+	0xDD1100   // dark red (oldest, coolest)
+];
+
+function randomEmberColor() {
+	// Weight toward the hotter colors (more hot embers than cool)
+	var roll = Math.random();
+	if (roll < 0.15) return EMBER_COLORS[0];
+	if (roll < 0.30) return EMBER_COLORS[1];
+	if (roll < 0.55) return EMBER_COLORS[2];
+	if (roll < 0.75) return EMBER_COLORS[3];
+	if (roll < 0.90) return EMBER_COLORS[4];
+	return EMBER_COLORS[5];
+}
+
+function spawnEmber(em) {
+	em.x    = Math.random() * 1300;
+	em.y    = 680 + Math.random() * 40;         // spawn just below canvas bottom
+	em.vy   = -(1.8 + Math.random() * 3.2);     // rise speed: 1.8–5.0 px/frame
+	em.vx   = (Math.random() - 0.5) * 0.8;     // slight horizontal drift
+	em.color = randomEmberColor();
+	em.size  = 1 + Math.random() * 1.5;         // 1.0–2.5 px thickness
+}
+
+// ------------------------------------------------------------------
+// Flame eruption system — periodic bursts of flame tendrils from
+// the horizon, consuming the sky
+// ------------------------------------------------------------------
+var flameGroup;
+var nextEruption  = 0;   // ms timestamp of next scheduled eruption
+var secondEruption = -1; // ms timestamp of optional follow-up
+
+// Draw a jagged upward flame tendril from (x0, y0) rising to y1.
+// y0 > y1 (y0 is near the bottom, y1 is higher on screen).
+// Returns array of Graphics objects for tweening.
+function drawFlameTendril(x0, y0, y1, depth) {
+	var results = [];
+	var STEPS = 10 + randInt(0, 5);
+	var stepH = (y1 - y0) / STEPS;   // negative: going upward
+	var cx = x0;
+	var pts = [{ x: x0, y: y0 }];
+
+	// Build the jagged upward path with symmetric sway (flames bend in wind)
+	for (var s = 0; s < STEPS; s++) {
+		cx += (Math.random() - 0.5) * 70;
+		cx = Math.max(20, Math.min(1280, cx));
+		pts.push({ x: cx, y: y0 + stepH * (s + 1) });
+	}
+
+	// Layer 1 — wide outer glow (deep orange, very transparent)
+	var glow = game.add.graphics(0, 0);
+	flameGroup.add(glow);
+	glow.lineStyle(12, 0xFF4400, 0.12);
+	glow.moveTo(pts[0].x, pts[0].y);
+	for (var p = 1; p < pts.length; p++) glow.lineTo(pts[p].x, pts[p].y);
+	results.push(glow);
+
+	// Layer 2 — mid halo (vivid orange-red)
+	var mid = game.add.graphics(0, 0);
+	flameGroup.add(mid);
+	mid.lineStyle(5, 0xFF6600, 0.48);
+	mid.moveTo(pts[0].x, pts[0].y);
+	for (var p = 1; p < pts.length; p++) mid.lineTo(pts[p].x, pts[p].y);
+	results.push(mid);
+
+	// Layer 3 — bright yellow-white core (white-hot center of the flame)
+	var core = game.add.graphics(0, 0);
+	flameGroup.add(core);
+	core.lineStyle(2, 0xFFCC44, 0.88);
+	core.moveTo(pts[0].x, pts[0].y);
+	for (var p = 1; p < pts.length; p++) core.lineTo(pts[p].x, pts[p].y);
+	results.push(core);
+
+	// Optional branch: a secondary tongue splitting off upward
+	if (depth > 0 && Math.random() < 0.50) {
+		var bpi = randInt(2, STEPS - 2);
+		// Branch goes further upward from the midpoint
+		var branchEndY = pts[bpi].y + (y1 - pts[bpi].y) * (0.4 + Math.random() * 0.5);
+		var sub = drawFlameTendril(pts[bpi].x, pts[bpi].y, branchEndY, depth - 1);
+		for (var s = 0; s < sub.length; s++) results.push(sub[s]);
+	}
+
+	return results;
+}
+
+// Execute a single flame eruption: 2–4 tendrils + orange-red sky flash.
+function doEruption() {
+	var numTendrils = 2 + randInt(0, 2);  // 2–4 simultaneous tongues
+
+	for (var t = 0; t < numTendrils; t++) {
+		var bx   = randInt(100, 1200);
+		var endY = randInt(60, 380);       // how high the flame reaches
+		var tendrils = drawFlameTendril(bx, 695, endY, 2);
+
+		// Fade each tendril layer after a visible hold
+		for (var i = 0; i < tendrils.length; i++) {
+			(function(g) {
+				game.add.tween(g)
+					.to({ alpha: 0 }, 380 + randInt(0, 220), Phaser.Easing.Quadratic.Out, true)
+					.onComplete.add(function() { g.destroy(); });
+			})(tendrils[i]);
+		}
+	}
+
+	// Full-screen orange-red flash — sky lights up from below
+	var flash = game.add.graphics(0, 0);
+	flameGroup.add(flash);
+	flash.beginFill(0xFF3300, 0.22);
+	flash.drawRect(0, 0, 1300, 700);
+	flash.endFill();
+	game.add.tween(flash)
+		.to({ alpha: 0 }, 220, Phaser.Easing.Quadratic.Out, true)
+		.onComplete.add(function() { flash.destroy(); });
+}
+
+// Trigger an eruption event: always one burst, 40% chance of a follow-up.
+function triggerEruption() {
+	doEruption();
+	if (Math.random() < 0.40) {
+		secondEruption = game.time.now + randInt(60, 140);
+	}
+}
+
+// ------------------------------------------------------------------
+function preload() {
+	game.load.image('nuage',  'nuage.png');
+	game.load.image('nuage2', 'nuage2.png');
+	game.load.image('field',  'field.png');
+	game.load.image('fond',   'fond.png');
+	game.load.image('fond2',  'fond2.png');
+}
+
+function create() {
+	game.time.desiredFps = 30;
+
+	// Near-black sky scorched with deep crimson — hell has arrived
+	game.stage.backgroundColor = '#120200';
+
+	// Upper sky tile — deep dark red-black, like smoke and ash
+	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
+	fond.tint  = 0x1C0500;
+	fond.alpha = 0.92;
+
+	// Lower ground reflection — dark molten amber glow from the inferno below
+	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
+	fond2.tint  = 0x2E0A00;
+	fond2.alpha = 0.90;
+
+	order0 = game.add.group(); order1 = game.add.group();
+	order2 = game.add.group(); order3 = game.add.group();
+	order4 = game.add.group(); order5 = game.add.group();
+	order6 = game.add.group(); order7 = game.add.group();
+	order8 = game.add.group(); order9 = game.add.group();
+
+	// Ember Graphics — a single object redrawn every frame
+	emberGfx = game.add.graphics(0, 0);
+
+	// Scatter embers across the full screen at startup
+	for (var e = 0; e < EMBER_COUNT; e++) {
+		var em = {};
+		spawnEmber(em);
+		em.y = Math.random() * 720;  // pre-scattered vertically
+		embers.push(em);
+	}
+
+	// Flame group — always raised above everything in update()
+	flameGroup = game.add.group();
+
+	// Amber-red ambient glow on the canvas
+	if (game.canvas) {
+		game.canvas.style.boxShadow = '0 0 50px 16px rgba(210, 60, 0, 0.50)';
+	}
+
+	// First eruption: 3–8 seconds after load
+	nextEruption = game.time.now + randInt(3000, 8000);
+}
+
+function update() {
+
+	timer++;
+
+	// ---- Embers -------------------------------------------------------
+	// Rising sparks of fire — redrawn each frame for performance
+	emberGfx.clear();
+	for (var e = 0; e < embers.length; e++) {
+		var em = embers[e];
+
+		// Physics: rise and wobble
+		em.x += em.vx + (Math.random() - 0.5) * 0.8;
+		em.y += em.vy;
+
+		// Wrap horizontally; respawn at bottom when off-screen top
+		if (em.x < -5)   { em.x = 1305; }
+		if (em.x > 1305) { em.x = -5; }
+		if (em.y < -8) {
+			spawnEmber(em);
+			continue;
+		}
+
+		// Alpha based on height: bright near the fire (bottom), fading as they rise
+		var alpha = (em.y / 700) * 0.80;
+		if (alpha < 0.04) alpha = 0.04;
+
+		// Draw as a short upward streak (the streak direction matches rise)
+		emberGfx.lineStyle(em.size, em.color, alpha);
+		emberGfx.moveTo(em.x, em.y);
+		emberGfx.lineTo(em.x + (Math.random() - 0.5) * 1.5, em.y - em.size * 2.5);
+	}
+
+	// ---- Cloud spawning -----------------------------------------------
+	if (timer > (pi[decimal + 1]) * densityDivider) {
+
+		decimal++;
+		timer = 0;
+
+		// Upper cloud — deep red-orange fire-smoke billowing upward
+		var cloud = game.add.tileSprite(-200, 400 - (pi[decimal] * 34 - 15), 768, 312, 'nuage');
+		cloud.anchor.x = 0.7;
+		cloud.anchor.y = 0.5;
+		cloud.scale.setTo(pi[decimal] / 10, pi[decimal] / 10);
+		cloud.alpha = 0.93;
+		cloud.tint = 0xAA2600;   // deep burnt red-orange
+		nuages.push(cloud);
+
+		// Lower reflection — dark rust, as if lit from the inferno beneath
+		var cloud2 = game.add.tileSprite(-200, 400 + (pi[decimal] * 34 - 15), 768, 312, 'nuage2');
+		cloud2.anchor.x = 0.7;
+		cloud2.anchor.y = 0.5;
+		cloud2.scale.setTo(pi[decimal] / 10, pi[decimal] / 10);
+		cloud2.tint = 0x771800;  // dark rust-red
+		nuages2.push(cloud2);
+
+		nuages[decimal].alpha = 0.99;
+
+		switch (pi[decimal]) {
+		case 0: order0.add(nuages[decimal]); order0.add(nuages2[decimal]); break;
+		case 1: order1.add(nuages[decimal]); order1.add(nuages2[decimal]); break;
+		case 2: order2.add(nuages[decimal]); order2.add(nuages2[decimal]); break;
+		case 3: order3.add(nuages[decimal]); order3.add(nuages2[decimal]); break;
+		case 4: order4.add(nuages[decimal]); order4.add(nuages2[decimal]); break;
+		case 5: order5.add(nuages[decimal]); order5.add(nuages2[decimal]); break;
+		case 6: order6.add(nuages[decimal]); order6.add(nuages2[decimal]); break;
+		case 7: order7.add(nuages[decimal]); order7.add(nuages2[decimal]); break;
+		case 8: order8.add(nuages[decimal]); order8.add(nuages2[decimal]); break;
+		case 9: order9.add(nuages[decimal]); order9.add(nuages2[decimal]); break;
+		}
+	}
+
+	// ---- Cloud movement -----------------------------------------------
+	while (jj <= decimal) {
+		if (nuages[jj].x > 1800) {
+			nuages[jj].destroy();
+		}
+		nuages[jj].x  += pi[jj] / Math.abs(velocityDivider);
+		nuages2[jj].x += pi[jj] / Math.abs(velocityDivider);
+		jj++;
+	}
+	jj = 0;
+
+	// ---- Depth sort: clouds → fond2 → embers → flame eruptions -------
+	game.world.bringToTop(order0); game.world.bringToTop(order1);
+	game.world.bringToTop(order2); game.world.bringToTop(order3);
+	game.world.bringToTop(order4); game.world.bringToTop(order5);
+	game.world.bringToTop(order6); game.world.bringToTop(order7);
+	game.world.bringToTop(order8); game.world.bringToTop(order9);
+	fond2.bringToTop();                      // ground reflection sits above clouds
+	game.world.bringToTop(emberGfx);         // embers above reflection (Graphics: use world.bringToTop)
+	game.world.bringToTop(flameGroup);       // eruptions always on top of everything
+
+	// ---- Eruption triggers -------------------------------------------
+	if (game.time.now >= nextEruption) {
+		nextEruption = game.time.now + randInt(4000, 10000);
+		triggerEruption();
+	}
+	if (secondEruption > 0 && game.time.now >= secondEruption) {
+		secondEruption = -1;
+		doEruption();
+	}
+}
+
+	</script>
+</head>
+<body style="background-color: #0A0100;">
+	<div id="game" style="
+		cursor: none;
+		position: absolute;
+		TOP: 0px;
+		LEFT: 0px;
+
+		image-rendering: optimizeSpeed;
+		image-rendering: -moz-crisp-edges;
+		image-rendering: -o-crisp-edges;
+		image-rendering: -webkit-optimize-contrast;
+		image-rendering: optimize-contrast;
+		-ms-interpolation-mode: nearest-neighbor;
+		image-rendering: pixelated;">
+	</div>
+</body>
+</html>
