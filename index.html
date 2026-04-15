@@ -1,13 +1,347 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Nuages de Pi</title>
+	<title>Nuages de Pi — Magma Underground</title>
 	<link href="stylesheet.css" rel="stylesheet">
 	<meta charset="utf-8"/>
+	<script>
+	// ================================================================
+	//  MAGMA UNDERGROUND — procedural canvas asset generation
+	//  All assets are generated before Phaser loads so they are ready
+	//  for game.load.image() in preload().
+	// ================================================================
+	(function() {
+
+		// ── fond (upper half, 1300×400) ──────────────────────────────
+		// Dark underground cavern ceiling with glowing orange cracks
+		// and rising heat glow from the lava pools below.
+		function genMagmaSky() {
+			var cv = document.createElement('canvas');
+			cv.width = 1300; cv.height = 400;
+			var ctx = cv.getContext('2d');
+
+			// Base gradient: near-black rock at top, warming to deep ember-orange at horizon
+			var skyGrad = ctx.createLinearGradient(0, 0, 0, 400);
+			skyGrad.addColorStop(0,    '#040100');
+			skyGrad.addColorStop(0.22, '#090200');
+			skyGrad.addColorStop(0.48, '#130400');
+			skyGrad.addColorStop(0.70, '#200700');
+			skyGrad.addColorStop(0.86, '#370c00');
+			skyGrad.addColorStop(1,    '#561500');
+			ctx.fillStyle = skyGrad;
+			ctx.fillRect(0, 0, 1300, 400);
+
+			// Jagged rock ceiling silhouette — top edge of cavern
+			ctx.fillStyle = '#030000';
+			ctx.beginPath();
+			ctx.moveTo(0, 0);
+			ctx.lineTo(0, 88);
+			ctx.lineTo(42,  68);
+			ctx.lineTo(88,  98);
+			ctx.lineTo(132, 58);
+			ctx.lineTo(178, 84);
+			ctx.lineTo(228, 48);
+			ctx.lineTo(282, 76);
+			ctx.lineTo(344, 38);
+			ctx.lineTo(398, 70);
+			ctx.lineTo(452, 32);
+			ctx.lineTo(514, 62);
+			ctx.lineTo(572, 26);
+			ctx.lineTo(636, 58);
+			ctx.lineTo(698, 22);
+			ctx.lineTo(764, 55);
+			ctx.lineTo(822, 18);
+			ctx.lineTo(888, 52);
+			ctx.lineTo(944, 28);
+			ctx.lineTo(1006, 60);
+			ctx.lineTo(1064, 34);
+			ctx.lineTo(1132, 66);
+			ctx.lineTo(1190, 42);
+			ctx.lineTo(1244, 72);
+			ctx.lineTo(1300, 48);
+			ctx.lineTo(1300, 0);
+			ctx.closePath();
+			ctx.fill();
+
+			// Glowing cracks radiating down from ceiling
+			var cracks = [
+				// [x1, y1, x2, y2, lineWidth, coreOpacity]
+				[95,   78, 140, 160, 2.5, 0.72],
+				[140, 160, 122, 240, 2.0, 0.55],   // branch
+				[140, 160, 165, 245, 1.8, 0.50],
+				[252, 105, 308, 205, 3.0, 0.80],
+				[308, 205, 350, 270, 2.2, 0.65],
+				[308, 205, 290, 278, 1.6, 0.52],   // branch
+				[438,  62, 488, 155, 2.5, 0.72],
+				[488, 155, 464, 235, 2.0, 0.60],
+				[488, 155, 510, 228, 1.6, 0.50],
+				[648, 118, 700, 225, 3.0, 0.82],
+				[700, 225, 718, 318, 2.5, 0.70],
+				[700, 225, 678, 302, 1.5, 0.52],   // branch
+				[848,  68, 902, 172, 2.5, 0.76],
+				[902, 172, 928, 265, 2.0, 0.66],
+				[902, 172, 885, 260, 1.4, 0.50],
+				[1052, 88, 1104, 198, 3.0, 0.82],
+				[1104,198, 1132, 312, 2.5, 0.70],
+				[1232, 58, 1278, 152, 2.0, 0.65],
+				[1278,152, 1292, 250, 1.6, 0.55]
+			];
+
+			cracks.forEach(function(c) {
+				// Wide soft glow
+				ctx.strokeStyle = 'rgba(255, 65, 0, ' + (c[5] * 0.30) + ')';
+				ctx.lineWidth   = c[4] + 8;
+				ctx.lineCap     = 'round';
+				ctx.beginPath(); ctx.moveTo(c[0], c[1]); ctx.lineTo(c[2], c[3]); ctx.stroke();
+
+				// Mid orange glow
+				ctx.strokeStyle = 'rgba(255, 110, 0, ' + (c[5] * 0.55) + ')';
+				ctx.lineWidth   = c[4] + 3;
+				ctx.beginPath(); ctx.moveTo(c[0], c[1]); ctx.lineTo(c[2], c[3]); ctx.stroke();
+
+				// Bright yellow-orange core
+				ctx.strokeStyle = 'rgba(255, 210, 60, ' + c[5] + ')';
+				ctx.lineWidth   = Math.max(1, c[4] - 1);
+				ctx.beginPath(); ctx.moveTo(c[0], c[1]); ctx.lineTo(c[2], c[3]); ctx.stroke();
+			});
+
+			// Upward ambient glow from lava pools — radial blobs on lower portion
+			[[210, 400, 195, 0.30], [620, 400, 250, 0.38], [1045, 400, 185, 0.26]].forEach(function(g) {
+				var grd = ctx.createRadialGradient(g[0], g[1], 8, g[0], g[1], g[2]);
+				grd.addColorStop(0,    'rgba(255, 95, 0, ' + g[3] + ')');
+				grd.addColorStop(0.38, 'rgba(210, 48, 0, ' + (g[3] * 0.52) + ')');
+				grd.addColorStop(0.70, 'rgba(110, 14, 0, ' + (g[3] * 0.22) + ')');
+				grd.addColorStop(1,    'rgba(0, 0, 0, 0)');
+				ctx.fillStyle = grd;
+				ctx.fillRect(0, 200, 1300, 200);
+			});
+
+			return cv.toDataURL();
+		}
+
+		// ── fond2 (lower half, 1300×300) ─────────────────────────────
+		// Cracked lava rock floor with rivers of glowing magma and
+		// smoke columns rising from fissures.
+		function genMagmaGround() {
+			var cv = document.createElement('canvas');
+			cv.width = 1300; cv.height = 300;
+			var ctx = cv.getContext('2d');
+
+			// Transparent at top, solid dark rock at bottom
+			var gg = ctx.createLinearGradient(0, 0, 0, 300);
+			gg.addColorStop(0,    'rgba(25, 5, 0, 0.0)');
+			gg.addColorStop(0.08, 'rgba(18, 4, 0, 0.58)');
+			gg.addColorStop(0.22, '#130400');
+			gg.addColorStop(1,    '#050100');
+			ctx.fillStyle = gg;
+			ctx.fillRect(0, 0, 1300, 300);
+
+			// Rock ridge silhouette
+			ctx.fillStyle = '#070200';
+			ctx.beginPath();
+			ctx.moveTo(0, 300);
+			ctx.lineTo(0, 162);
+			ctx.lineTo(52,  178);
+			ctx.lineTo(108, 148);
+			ctx.lineTo(172, 170);
+			ctx.lineTo(238, 140);
+			ctx.lineTo(308, 163);
+			ctx.lineTo(378, 134);
+			ctx.lineTo(452, 157);
+			ctx.lineTo(528, 128);
+			ctx.lineTo(604, 152);
+			ctx.lineTo(678, 124);
+			ctx.lineTo(758, 146);
+			ctx.lineTo(832, 118);
+			ctx.lineTo(908, 144);
+			ctx.lineTo(982, 126);
+			ctx.lineTo(1058, 152);
+			ctx.lineTo(1132, 124);
+			ctx.lineTo(1208, 148);
+			ctx.lineTo(1300, 136);
+			ctx.lineTo(1300, 300);
+			ctx.closePath();
+			ctx.fill();
+
+			// Lava rivers — bright glowing channels in the rock
+			[
+				{x: 72,   y: 192, w: 115, intensity: 0.92},
+				{x: 290,  y: 182, w: 94,  intensity: 0.86},
+				{x: 468,  y: 198, w: 128, intensity: 0.94},
+				{x: 658,  y: 186, w: 102, intensity: 0.88},
+				{x: 848,  y: 194, w: 118, intensity: 0.90},
+				{x: 1048, y: 180, w: 98,  intensity: 0.85},
+				{x: 1196, y: 192, w: 82,  intensity: 0.80}
+			].forEach(function(lv) {
+				var cx = lv.x + lv.w / 2;
+				var cy = lv.y;
+
+				// Wide ambient halo
+				var halo = ctx.createRadialGradient(cx, cy, 4, cx, cy, lv.w * 0.95);
+				halo.addColorStop(0,   'rgba(255, 115, 0, ' + lv.intensity + ')');
+				halo.addColorStop(0.28,'rgba(230, 64,  0, ' + (lv.intensity * 0.62) + ')');
+				halo.addColorStop(0.58,'rgba(175, 28,  0, ' + (lv.intensity * 0.32) + ')');
+				halo.addColorStop(1,   'rgba(0, 0, 0, 0)');
+				ctx.fillStyle = halo;
+				ctx.fillRect(lv.x - lv.w * 0.6, lv.y - 50, lv.w * 2.2, 110);
+
+				// Bright yellow-orange lava core
+				var core = ctx.createRadialGradient(cx, cy, 0, cx, cy, lv.w * 0.46);
+				core.addColorStop(0,   'rgba(255, 235, 85, 0.96)');
+				core.addColorStop(0.22,'rgba(255, 148, 0, 0.90)');
+				core.addColorStop(0.52,'rgba(215, 58, 0, 0.76)');
+				core.addColorStop(1,   'rgba(0, 0, 0, 0)');
+				ctx.fillStyle = core;
+				ctx.fillRect(lv.x, lv.y - 20, lv.w, 45);
+			});
+
+			// Crack network across the floor
+			[
+				[0,   218, 118, 192, 2.5, 0.82],
+				[118, 192, 242, 208, 2.2, 0.76],
+				[242, 208, 292, 182, 1.8, 0.70],
+				[118, 192, 155, 244, 1.5, 0.62],
+				[360, 202, 468, 198, 2.5, 0.85],
+				[468, 198, 572, 212, 2.2, 0.80],
+				[655, 192, 758, 208, 2.5, 0.82],
+				[758, 208, 848, 194, 2.2, 0.76],
+				[898, 205, 996, 192, 2.5, 0.84],
+				[996, 192, 1096, 206, 2.2, 0.78],
+				[1148, 198, 1300, 212, 2.5, 0.76]
+			].forEach(function(c) {
+				ctx.strokeStyle = 'rgba(255, 88, 0, ' + (c[5] * 0.45) + ')';
+				ctx.lineWidth   = c[4] + 6; ctx.lineCap = 'round';
+				ctx.beginPath(); ctx.moveTo(c[0], c[1]); ctx.lineTo(c[2], c[3]); ctx.stroke();
+
+				ctx.strokeStyle = 'rgba(255, 195, 48, ' + c[5] + ')';
+				ctx.lineWidth   = Math.max(1, c[4] - 0.5);
+				ctx.beginPath(); ctx.moveTo(c[0], c[1]); ctx.lineTo(c[2], c[3]); ctx.stroke();
+			});
+
+			// Smoke columns rising from hot fissures
+			[[190, 90], [426, 84], [684, 78], [926, 92], [1164, 82]].forEach(function(sm) {
+				var sg = ctx.createRadialGradient(sm[0], sm[1], 4, sm[0], sm[1], 60);
+				sg.addColorStop(0, 'rgba(45, 35, 28, 0.38)');
+				sg.addColorStop(0.55, 'rgba(25, 15, 8, 0.16)');
+				sg.addColorStop(1,   'rgba(0, 0, 0, 0)');
+				ctx.fillStyle = sg;
+				ctx.fillRect(sm[0] - 72, sm[1] - 72, 144, 170);
+			});
+
+			return cv.toDataURL();
+		}
+
+		// ── nuage (upper cloud, 768×312) ─────────────────────────────
+		// Dark rock/smoke formations drifting across the cavern ceiling,
+		// lit from below by the lava glow.
+		function genMagmaCloud() {
+			var cv = document.createElement('canvas');
+			cv.width = 768; cv.height = 312;
+			var ctx = cv.getContext('2d');
+			ctx.clearRect(0, 0, 768, 312);
+
+			var puffs = [
+				{x: 390, y: 150, r: 112},
+				{x: 472, y: 118, r:  88},
+				{x: 308, y: 134, r:  98},
+				{x: 498, y: 175, r:  72},
+				{x: 292, y: 164, r:  78},
+				{x: 448, y:  88, r:  68},
+				{x: 338, y:  90, r:  60},
+				{x: 556, y: 148, r:  62},
+				{x: 238, y: 150, r:  60},
+				{x: 424, y: 198, r:  54}
+			];
+
+			puffs.forEach(function(p) {
+				// Orange heat glow ring — lava illuminating rock from below
+				var eg = ctx.createRadialGradient(p.x, p.y, p.r * 0.58, p.x, p.y, p.r * 1.52);
+				eg.addColorStop(0,    'rgba(0, 0, 0, 0)');
+				eg.addColorStop(0.42, 'rgba(165, 42, 0, 0.20)');
+				eg.addColorStop(0.70, 'rgba(220, 78, 0, 0.36)');
+				eg.addColorStop(0.88, 'rgba(255, 112, 0, 0.18)');
+				eg.addColorStop(1,    'rgba(0, 0, 0, 0)');
+				ctx.fillStyle = eg;
+				ctx.beginPath(); ctx.arc(p.x, p.y, p.r * 1.52, 0, Math.PI * 2); ctx.fill();
+
+				// Dark rock body — charcoal with warm undertones
+				var sc = ctx.createRadialGradient(
+					p.x - p.r * 0.14, p.y - p.r * 0.18, 0,
+					p.x, p.y, p.r
+				);
+				sc.addColorStop(0,    'rgba(48, 28, 16, 0.82)');
+				sc.addColorStop(0.34, 'rgba(34, 16, 6, 0.78)');
+				sc.addColorStop(0.68, 'rgba(22, 7, 1, 0.62)');
+				sc.addColorStop(1,    'rgba(8, 2, 0, 0)');
+				ctx.fillStyle = sc;
+				ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+			});
+
+			return cv.toDataURL();
+		}
+
+		// ── nuage2 (lower "cloud", 768×312) ──────────────────────────
+		// Magma blobs and rising heat masses near the ground —
+		// darker, flatter, with intense lava-orange edges.
+		function genMagmaBlob() {
+			var cv = document.createElement('canvas');
+			cv.width = 768; cv.height = 312;
+			var ctx = cv.getContext('2d');
+			ctx.clearRect(0, 0, 768, 312);
+
+			var puffs = [
+				{x: 408, y: 185, r: 104, rx: 1.46, ry: 0.63},
+				{x: 322, y: 174, r:  84, rx: 1.33, ry: 0.59},
+				{x: 492, y: 190, r:  90, rx: 1.24, ry: 0.57},
+				{x: 252, y: 190, r:  70, rx: 1.30, ry: 0.52},
+				{x: 554, y: 180, r:  74, rx: 1.14, ry: 0.56},
+				{x: 396, y: 145, r:  64, rx: 1.06, ry: 0.83},
+				{x: 465, y: 148, r:  60, rx: 1.16, ry: 0.73},
+				{x: 354, y: 218, r:  57, rx: 1.32, ry: 0.50},
+				{x: 463, y: 220, r:  52, rx: 1.21, ry: 0.48}
+			];
+
+			puffs.forEach(function(p) {
+				ctx.save();
+				ctx.translate(p.x, p.y);
+				ctx.scale(p.rx, p.ry);
+
+				// Intense lava ember glow — bright orange-yellow
+				var lg = ctx.createRadialGradient(0, 0, p.r * 0.44, 0, 0, p.r * 1.56);
+				lg.addColorStop(0,    'rgba(0, 0, 0, 0)');
+				lg.addColorStop(0.38, 'rgba(215, 65, 0, 0.30)');
+				lg.addColorStop(0.62, 'rgba(255, 108, 0, 0.46)');
+				lg.addColorStop(0.82, 'rgba(255, 158, 18, 0.24)');
+				lg.addColorStop(1,    'rgba(0, 0, 0, 0)');
+				ctx.fillStyle = lg;
+				ctx.beginPath(); ctx.arc(0, 0, p.r * 1.56, 0, Math.PI * 2); ctx.fill();
+
+				// Dark reddish-brown rock/smoke core
+				var ls = ctx.createRadialGradient(-p.r * 0.09, -p.r * 0.11, 0, 0, 0, p.r);
+				ls.addColorStop(0,    'rgba(72, 28, 8, 0.86)');
+				ls.addColorStop(0.30, 'rgba(52, 16, 3, 0.80)');
+				ls.addColorStop(0.62, 'rgba(33, 8, 1, 0.65)');
+				ls.addColorStop(1,    'rgba(12, 2, 0, 0)');
+				ctx.fillStyle = ls;
+				ctx.beginPath(); ctx.arc(0, 0, p.r, 0, Math.PI * 2); ctx.fill();
+
+				ctx.restore();
+			});
+
+			return cv.toDataURL();
+		}
+
+		// Expose as global URLs for Phaser preload
+		window.MAGMA_SKY_URL    = genMagmaSky();
+		window.MAGMA_GROUND_URL = genMagmaGround();
+		window.MAGMA_CLOUD_URL  = genMagmaCloud();
+		window.MAGMA_BLOB_URL   = genMagmaBlob();
+	})();
+	</script>
 	<script type="text/javascript" src="phaser.min.js"></script>
 	<script>
 var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds', { preload: preload, create: create, update: update }, false, false);
-var nuages = []; var densityDivider = 4; var velocityDivider = 0.6;
+var nuages = []; var densityDivider = 3.6; var velocityDivider = 0.55;
 var nuages2 = []; var field; var fond; var fond2;
 var nn = 0; var jj = 0; var sum = 0; var lock = 0;
 var decimal = -1;
@@ -16,32 +350,28 @@ var pi = [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,
 function randInt(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-		
-for (var i = 0; i<10000; i++) {
-	pi.push(randInt(0,9));
-	console.log(pi[886+i]);
+
+for (var i = 0; i < 10000; i++) {
+	pi.push(randInt(0, 9));
 }
 
 var timer = 0;
 
-function sleep(milliseconds) {
-	var start = new Date().getTime();
-	for (var i = 0; i < 1e7; i++) {
-		if ((new Date().getTime() - start) > milliseconds){
-		 break;
-		}
-	}
-}
+// Lava surge effect — periodic warm flash rising from the ground
+var nextLavaSurge = 0;
+var lavaSurgeGraphic = null;
+
 function preload() {
-	game.load.image('nuage','nuage.png');
-	game.load.image('nuage2','nuage2.png');
-	game.load.image('field','field.png');
-	game.load.image('fond','fond.png');
-	game.load.image('fond2','fond2.png');
+	game.load.image('nuage',  window.MAGMA_CLOUD_URL);
+	game.load.image('nuage2', window.MAGMA_BLOB_URL);
+	game.load.image('field',  'field.png');
+	game.load.image('fond',   window.MAGMA_SKY_URL);
+	game.load.image('fond2',  window.MAGMA_GROUND_URL);
 }
+
 function create() {
 	game.time.desiredFps = 30;
-	game.stage.backgroundColor = "#4488AA";
+	game.stage.backgroundColor = '#0a0200';
 	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
 	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
 	order0 = game.add.group();
@@ -54,30 +384,29 @@ function create() {
 	order7 = game.add.group();
 	order8 = game.add.group();
 	order9 = game.add.group();
-	//fond2.angle = 180;
-	fond2.alpha = 0.9;
-	//field = game.add.tileSprite(0, 465, 1300, 300, 'field');
-	//field.alpha = 0.2;
+	fond2.alpha = 0.95;
 
+	// First lava surge after 5–9 seconds
+	nextLavaSurge = game.time.now + randInt(5000, 9000);
 }
+
 function update() {
 
 	timer++;
 
-	if (timer > (pi[decimal+1])*densityDivider) {
+	if (timer > (pi[decimal+1]) * densityDivider) {
 
 		decimal++;
 		timer = 0;
-		nuages.push(game.add.tileSprite(-200, 400-(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage'));
+		nuages.push(game.add.tileSprite(-200, 400-(pi[decimal]*34-15), 768, 312, 'nuage'));
 		nuages[decimal].anchor.x = 0.7;
 		nuages[decimal].anchor.y = 0.5;
-		nuages[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
+		nuages[decimal].scale.setTo((pi[decimal])/10, (pi[decimal])/10);
 		nuages[decimal].alpha = 0.9;
-		//sum += pi[decimal];
-		nuages2.push(game.add.tileSprite(-200, 400+(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage2'));
+		nuages2.push(game.add.tileSprite(-200, 400+(pi[decimal]*34-15), 768, 312, 'nuage2'));
 		nuages2[decimal].anchor.x = 0.7;
 		nuages2[decimal].anchor.y = 0.5;
-		nuages2[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
+		nuages2[decimal].scale.setTo((pi[decimal])/10, (pi[decimal])/10);
 		nuages[decimal].alpha = 0.99;
 
 		switch(pi[decimal]) {
@@ -124,16 +453,13 @@ function update() {
 		}
 	}
 
-	while (jj <= decimal ) {
+	while (jj <= decimal) {
 		if (nuages[jj].x > 1800) {
 			nuages[jj].destroy();
 		}
-		nuages[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		nuages2[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		//nuages[jj].angle += (1/(pi[jj]))*3;
+		nuages[jj].x  += (pi[jj]) / Math.abs(velocityDivider);
+		nuages2[jj].x += (pi[jj]) / Math.abs(velocityDivider);
 		jj++;
-		//if (nuages[jj].x > 1300) {
-		//}
 	}
 	jj = 0;
 
@@ -148,23 +474,124 @@ function update() {
 	game.world.bringToTop(order8);
 	game.world.bringToTop(order9);
 	fond2.bringToTop();
+
+	// Lava surge: periodic warm glow flaring up from the ground
+	if (game.time.now >= nextLavaSurge) {
+		nextLavaSurge = game.time.now + randInt(7000, 16000);
+
+		lavaSurgeGraphic = game.add.graphics(0, 400);
+		lavaSurgeGraphic.beginFill(0xFF4400, 0.22);
+		lavaSurgeGraphic.drawRect(0, -100, 1300, 400);
+		lavaSurgeGraphic.endFill();
+
+		game.add.tween(lavaSurgeGraphic).to(
+			{ alpha: 0, y: 250 }, 2200,
+			Phaser.Easing.Quadratic.Out, true
+		).onComplete.add(function() {
+			if (lavaSurgeGraphic) {
+				lavaSurgeGraphic.destroy();
+				lavaSurgeGraphic = null;
+			}
+		});
+	}
+
+	// Keep surge overlay visible above fond2
+	if (lavaSurgeGraphic && lavaSurgeGraphic.alive) {
+		lavaSurgeGraphic.bringToTop();
+	}
 }
 
-
-
-  </script>
-
-
-
-
+	</script>
 </head>
-<body style="background-color: rgb(67,169,223);">
+<style>
+/* ================================================================
+   MAGMA UNDERGROUND — CSS effects layer
+   Rising embers, pulsing lava glow, heat shimmer
+================================================================ */
+
+/* Rising ember particles */
+#embers {
+	pointer-events: none;
+	position: absolute;
+	top: 0; left: 0;
+	width: 1300px; height: 700px;
+	overflow: hidden;
+	z-index: 8;
+}
+
+.ember {
+	position: absolute;
+	border-radius: 50%;
+	background: radial-gradient(
+		circle,
+		rgba(255, 228, 80, 0.92) 0%,
+		rgba(255, 100, 0, 0.62) 45%,
+		rgba(200, 32, 0, 0) 100%
+	);
+	animation: riseUp linear infinite;
+	pointer-events: none;
+}
+
+@keyframes riseUp {
+	0%   { transform: translateY(0px)    translateX(0px);   opacity: 0.85; }
+	22%  { transform: translateY(-18%)   translateX(7px);   opacity: 0.92; }
+	48%  { transform: translateY(-42%)   translateX(-5px);  opacity: 0.70; }
+	74%  { transform: translateY(-70%)   translateX(9px);   opacity: 0.38; }
+	100% { transform: translateY(-108%)  translateX(0px);   opacity: 0;    }
+}
+
+/* Ambient lava glow pulsing at screen bottom */
+#lava-glow {
+	pointer-events: none;
+	position: absolute;
+	bottom: 0; left: 0;
+	width: 1300px; height: 140px;
+	z-index: 6;
+	background: linear-gradient(
+		to top,
+		rgba(255, 95, 0, 0.28) 0%,
+		rgba(220, 48, 0, 0.14) 45%,
+		rgba(0, 0, 0, 0) 100%
+	);
+	animation: lavaGlow 4.8s ease-in-out infinite alternate;
+}
+
+@keyframes lavaGlow {
+	0%   { opacity: 0.45; }
+	35%  { opacity: 1.00; }
+	65%  { opacity: 0.55; }
+	100% { opacity: 0.88; }
+}
+
+/* Heat shimmer — subtle vertical distortion near ground */
+#heat-shimmer {
+	pointer-events: none;
+	position: absolute;
+	bottom: 0; left: 0;
+	width: 1300px; height: 320px;
+	z-index: 5;
+	background: linear-gradient(
+		to top,
+		rgba(255, 72, 0, 0.04) 0%,
+		rgba(255, 52, 0, 0.025) 28%,
+		rgba(0, 0, 0, 0) 100%
+	);
+	animation: heatShimmer 3.2s ease-in-out infinite alternate;
+}
+
+@keyframes heatShimmer {
+	0%   { opacity: 0.35; transform: scaleY(1.000); }
+	30%  { opacity: 0.82; transform: scaleY(1.018); }
+	62%  { opacity: 0.48; transform: scaleY(0.994); }
+	100% { opacity: 0.92; transform: scaleY(1.010); }
+}
+</style>
+<body style="background-color: #0a0200;">
 	<div id="game" style="
 		cursor: none;
 		position: absolute;
 		TOP: 0px;
 		LEFT: 0px;
-
 
 		image-rendering: optimizeSpeed;
 		image-rendering: -moz-crisp-edges;
@@ -174,5 +601,53 @@ function update() {
 		-ms-interpolation-mode: nearest-neighbor;
 		image-rendering : pixelated;">
 	</div>
+	<div id="embers"></div>
+	<div id="heat-shimmer"></div>
+	<div id="lava-glow"></div>
+	<script>
+	// Populate ember particles dynamically
+	(function() {
+		var container = document.getElementById('embers');
+		var emberDefs = [
+			// [left%, bottom%, sizePx, durationS, delayS]
+			[ 6,  4, 3.5, 5.2, 0.0],
+			[14,  8, 2.5, 6.8, 0.9],
+			[21,  3, 4.0, 4.5, 1.6],
+			[29, 13, 2.0, 7.2, 0.4],
+			[37,  6, 3.0, 5.8, 2.2],
+			[44,  4, 4.5, 4.2, 0.7],
+			[51, 11, 2.5, 6.5, 1.9],
+			[59,  7, 3.0, 5.5, 0.3],
+			[67,  3, 4.0, 4.8, 1.4],
+			[74,  9, 2.0, 7.0, 0.8],
+			[82,  5, 3.5, 5.3, 2.5],
+			[89,  8, 2.5, 6.2, 1.1],
+			[ 4, 21, 2.0, 8.5, 3.3],
+			[17, 19, 3.0, 7.8, 2.9],
+			[34, 23, 2.5, 8.2, 0.6],
+			[49, 16, 3.5, 6.9, 3.6],
+			[64, 21, 2.0, 8.0, 1.7],
+			[79, 19, 3.0, 7.5, 2.3],
+			[94, 12, 2.5, 7.1, 1.0],
+			[11, 31, 1.8, 9.5, 4.1],
+			[41, 29, 2.2, 8.8, 1.3],
+			[69, 33, 1.8, 9.2, 3.9],
+			[24,  2, 3.2, 5.6, 0.2],
+			[56,  2, 2.8, 6.1, 1.5],
+			[85,  2, 3.8, 4.9, 0.5]
+		];
+		emberDefs.forEach(function(e) {
+			var el = document.createElement('div');
+			el.className = 'ember';
+			el.style.left            = e[0] + '%';
+			el.style.bottom          = e[1] + '%';
+			el.style.width           = e[2] + 'px';
+			el.style.height          = e[2] + 'px';
+			el.style.animationDuration = e[3] + 's';
+			el.style.animationDelay    = '-' + e[4] + 's';
+			container.appendChild(el);
+		});
+	})();
+	</script>
 </body>
 </html>
