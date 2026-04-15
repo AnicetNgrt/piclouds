@@ -1,0 +1,107 @@
+* {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	overflow: hidden;
+	transition: background-color 0.6s ease;
+}
+
+/* ── Theme Switcher ─────────────────────────────── */
+#theme-switcher {
+	position: fixed;
+	top: 12px;
+	right: 12px;
+	z-index: 1000;
+	display: flex;
+	gap: 6px;
+	align-items: center;
+}
+
+.theme-btn {
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	border: 3px solid rgba(255,255,255,0.8);
+	cursor: pointer;
+	transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+	box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+	outline: none;
+}
+
+.theme-btn:hover {
+	transform: scale(1.15);
+	border-color: #fff;
+	box-shadow: 0 3px 10px rgba(0,0,0,0.45);
+}
+
+.theme-btn.active {
+	border-color: #fff;
+	box-shadow: 0 0 0 2px rgba(255,255,255,0.5), 0 3px 10px rgba(0,0,0,0.4);
+	transform: scale(1.1);
+}
+
+/* ── Colour swatches ─────────────────────────────── */
+.theme-btn[data-theme="bioluminescence"] {
+	background: radial-gradient(circle at 40% 40%, #00FFAA 0%, #007755 40%, #001133 100%);
+}
+.theme-btn[data-theme="default"] { background: linear-gradient(135deg, #4488aa 0%, #43a9df 100%); }
+.theme-btn[data-theme="dark"]    { background: linear-gradient(135deg, #0a0e1a 0%, #1a2a4a 100%); }
+.theme-btn[data-theme="storm"]   { background: linear-gradient(135deg, #2c3e50 0%, #4a5568 100%); }
+
+/* ── Theme Label ───────────────────────────────── */
+#theme-label {
+	position: fixed;
+	bottom: 12px;
+	right: 12px;
+	padding: 3px 10px;
+	border-radius: 4px;
+	font-family: sans-serif;
+	font-size: 12px;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	border: 1px solid;
+	opacity: 0.85;
+	z-index: 1000;
+	pointer-events: none;
+	transition: background 0.3s, color 0.3s;
+}
+
+/* ── Dark theme canvas filter ──────────────────── */
+body.theme-dark #PIclouds canvas {
+	filter: brightness(0.82) saturate(0.6) hue-rotate(200deg);
+}
+
+/* ── Bioluminescence canvas filter & glow ──────── */
+@keyframes bioGlowPulse {
+	0%   {
+		box-shadow:
+			0 0 24px  6px rgba(0, 230, 140, 0.22),
+			0 0 60px 18px rgba(0, 180, 255, 0.08);
+	}
+	45%  {
+		box-shadow:
+			0 0 40px 12px rgba(0, 200, 255, 0.28),
+			0 0 90px 30px rgba(0, 255, 160, 0.10);
+	}
+	100% {
+		box-shadow:
+			0 0 24px  6px rgba(0, 230, 140, 0.22),
+			0 0 60px 18px rgba(0, 180, 255, 0.08);
+	}
+}
+
+body.theme-bioluminescence #PIclouds canvas {
+	filter: brightness(0.72) saturate(3.2) hue-rotate(148deg);
+	animation: bioGlowPulse 5s ease-in-out infinite;
+}
+
+/* Bioluminescence theme switcher button gets an active glow */
+body.theme-bioluminescence .theme-btn[data-theme="bioluminescence"] {
+	border-color: #00FFAA;
+	box-shadow:
+		0 0 0 2px rgba(0, 255, 170, 0.55),
+		0 0 12px 4px rgba(0, 220, 150, 0.50);
+}

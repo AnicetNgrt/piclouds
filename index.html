@@ -1,11 +1,100 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Nuages de Pi</title>
+	<title>Nuages de Pi — Bioluminescence</title>
 	<link href="stylesheet.css" rel="stylesheet">
 	<meta charset="utf-8"/>
 	<script type="text/javascript" src="phaser.min.js"></script>
 	<script>
+
+/* ── Themes ──────────────────────────────────────────────────── */
+var THEMES = {
+	'bioluminescence': {
+		name:       'Bioluminescence',
+		stageColor: '#000D1A',
+		bodyBg:     '#000508',
+		cloudTint:  0x00EE99,
+		cloud2Tint: 0x002255,
+		fond2Alpha: 0.80,
+		labelBg:    'rgba(0,30,50,0.82)',
+		labelColor: '#00FFAA'
+	},
+	'default': {
+		name:       'Default',
+		stageColor: '#4488AA',
+		bodyBg:     'rgb(67,169,223)',
+		cloudTint:  0xFFFFFF,
+		cloud2Tint: 0xDDEEFF,
+		fond2Alpha: 0.9,
+		labelBg:    'rgba(40,120,180,0.75)',
+		labelColor: '#ffffff'
+	},
+	'dark': {
+		name:       'Dark',
+		stageColor: '#0a1628',
+		bodyBg:     '#050810',
+		cloudTint:  0xAABBCC,
+		cloud2Tint: 0x334455,
+		fond2Alpha: 0.7,
+		labelBg:    'rgba(5,8,16,0.80)',
+		labelColor: '#7799bb'
+	},
+	'storm': {
+		name:       'Storm',
+		stageColor: '#1a2533',
+		bodyBg:     '#2c3e50',
+		cloudTint:  0xAABBCC,
+		cloud2Tint: 0x556677,
+		fond2Alpha: 0.85,
+		labelBg:    'rgba(26,37,51,0.80)',
+		labelColor: '#aabbcc'
+	}
+};
+
+var currentTheme = localStorage.getItem('piclouds-theme') || 'bioluminescence';
+if (!THEMES[currentTheme]) currentTheme = 'bioluminescence';
+
+function applyTheme(name) {
+	if (!THEMES[name]) return;
+	currentTheme = name;
+	localStorage.setItem('piclouds-theme', name);
+
+	var t = THEMES[name];
+
+	document.body.className = 'theme-' + name;
+	document.body.style.backgroundColor = t.bodyBg;
+
+	if (game && game.stage) {
+		game.stage.backgroundColor = t.stageColor;
+	}
+
+	if (fond)  { fond.tint  = t.cloudTint; }
+	if (fond2) { fond2.tint = t.cloud2Tint; fond2.alpha = t.fond2Alpha; }
+
+	for (var i = 0; i <= decimal; i++) {
+		if (nuages[i]  && nuages[i].game)  nuages[i].tint  = t.cloudTint;
+		if (nuages2[i] && nuages2[i].game) nuages2[i].tint = t.cloud2Tint;
+	}
+
+	var el = document.getElementById('theme-label');
+	if (el) {
+		el.textContent = t.name;
+		el.style.background  = t.labelBg;
+		el.style.color       = t.labelColor;
+		el.style.borderColor = t.labelColor;
+	}
+
+	document.querySelectorAll('.theme-btn').forEach(function(btn) {
+		btn.classList.toggle('active', btn.getAttribute('data-theme') === name);
+	});
+
+	/* Show/hide bio particles based on theme */
+	if (bioGfx) {
+		bioGfx.visible = (name === 'bioluminescence');
+	}
+}
+
+/* ── Game ─────────────────────────────────────────────────────── */
 var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds', { preload: preload, create: create, update: update }, false, false);
 var nuages = []; var densityDivider = 4; var velocityDivider = 0.6;
 var nuages2 = []; var field; var fond; var fond2;
@@ -16,34 +105,89 @@ var pi = [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,
 function randInt(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-		
-for (var i = 0; i<10000; i++) {
-	pi.push(randInt(0,9));
-	console.log(pi[886+i]);
+
+for (var i = 0; i < 10000; i++) {
+	pi.push(randInt(0, 9));
 }
 
 var timer = 0;
 
-function sleep(milliseconds) {
-	var start = new Date().getTime();
-	for (var i = 0; i < 1e7; i++) {
-		if ((new Date().getTime() - start) > milliseconds){
-		 break;
-		}
+/* ── Bioluminescent Particle System ──────────────────────────── */
+var BIO_COUNT = 90;
+var bioGfx = null;
+var bioParticles = [];
+/* Three bioluminescent color families: green, cyan, blue */
+var BIO_COLORS = [0x00FF88, 0x00DDFF, 0x22AAFF];
+
+function initBioParticles() {
+	for (var b = 0; b < BIO_COUNT; b++) {
+		bioParticles.push({
+			x:        Math.random() * 1300,
+			y:        Math.random() * 700,
+			vy:       -(0.15 + Math.random() * 0.55),   /* slow upward drift */
+			phase:    Math.random() * Math.PI * 2,       /* sine-wave oscillation phase */
+			diameter: 4 + Math.floor(Math.random() * 8), /* core size (px, used as Phaser diameter) */
+			colorIdx: Math.floor(Math.random() * 3),
+			speed:    0.012 + Math.random() * 0.014      /* individual pulse speed */
+		});
 	}
 }
-function preload() {
-	game.load.image('nuage','nuage.png');
-	game.load.image('nuage2','nuage2.png');
-	game.load.image('field','field.png');
-	game.load.image('fond','fond.png');
-	game.load.image('fond2','fond2.png');
+
+function updateBioParticles() {
+	bioGfx.clear();
+	for (var b = 0; b < BIO_COUNT; b++) {
+		var p = bioParticles[b];
+
+		p.phase += p.speed;
+		/* Gentle sine-wave horizontal sway */
+		p.x += Math.sin(p.phase) * 0.45;
+		p.y += p.vy;
+
+		/* Wrap back to bottom when particle drifts off the top */
+		if (p.y < -12) {
+			p.y = 712;
+			p.x = Math.random() * 1300;
+		}
+
+		/* Pulsing alpha: gentle breathing rhythm */
+		var pulse = 0.30 + 0.60 * (0.5 + 0.5 * Math.sin(p.phase * 1.4));
+		var col   = BIO_COLORS[p.colorIdx];
+
+		/* Soft outer halo — large, very transparent */
+		bioGfx.beginFill(col, pulse * 0.10);
+		bioGfx.drawCircle(p.x, p.y, p.diameter * 4);
+		bioGfx.endFill();
+
+		/* Mid glow ring */
+		bioGfx.beginFill(col, pulse * 0.22);
+		bioGfx.drawCircle(p.x, p.y, p.diameter * 2);
+		bioGfx.endFill();
+
+		/* Bright core orb */
+		bioGfx.beginFill(col, pulse * 0.85);
+		bioGfx.drawCircle(p.x, p.y, p.diameter);
+		bioGfx.endFill();
+	}
 }
+
+/* ── Phaser Lifecycle ─────────────────────────────────────────── */
+function preload() {
+	game.load.image('nuage',  'nuage.png');
+	game.load.image('nuage2', 'nuage2.png');
+	game.load.image('field',  'field.png');
+	game.load.image('fond',   'fond.png');
+	game.load.image('fond2',  'fond2.png');
+}
+
 function create() {
 	game.time.desiredFps = 30;
-	game.stage.backgroundColor = "#4488AA";
-	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
+
+	var t = THEMES[currentTheme];
+	game.stage.backgroundColor = t.stageColor;
+
+	fond  = game.add.tileSprite(0, 0,   1300, 400, 'fond');
 	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
+
 	order0 = game.add.group();
 	order1 = game.add.group();
 	order2 = game.add.group();
@@ -54,89 +198,64 @@ function create() {
 	order7 = game.add.group();
 	order8 = game.add.group();
 	order9 = game.add.group();
-	//fond2.angle = 180;
-	fond2.alpha = 0.9;
-	//field = game.add.tileSprite(0, 465, 1300, 300, 'field');
-	//field.alpha = 0.2;
 
+	fond.tint   = t.cloudTint;
+	fond2.tint  = t.cloud2Tint;
+	fond2.alpha = t.fond2Alpha;
+
+	/* Bioluminescent particle layer */
+	bioGfx = game.add.graphics(0, 0);
+	initBioParticles();
+
+	applyTheme(currentTheme);
 }
-function update() {
 
+function update() {
 	timer++;
 
-	if (timer > (pi[decimal+1])*densityDivider) {
-
+	if (timer > (pi[decimal + 1]) * densityDivider) {
 		decimal++;
 		timer = 0;
-		nuages.push(game.add.tileSprite(-200, 400-(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage'));
+		var t = THEMES[currentTheme];
+
+		nuages.push(game.add.tileSprite(-200, 400 - (pi[decimal] * 34 - 15), 768, 312, 'nuage'));
 		nuages[decimal].anchor.x = 0.7;
 		nuages[decimal].anchor.y = 0.5;
-		nuages[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
-		nuages[decimal].alpha = 0.9;
-		//sum += pi[decimal];
-		nuages2.push(game.add.tileSprite(-200, 400+(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage2'));
-		nuages2[decimal].anchor.x = 0.7;
-		nuages2[decimal].anchor.y = 0.5;
-		nuages2[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
+		nuages[decimal].scale.setTo(pi[decimal] / 10, pi[decimal] / 10);
+		nuages[decimal].tint  = t.cloudTint;
 		nuages[decimal].alpha = 0.99;
 
-		switch(pi[decimal]) {
-		case 0:
-			order0.add(nuages[decimal]);
-			order0.add(nuages2[decimal]);
-			break;
-		case 1:
-			order1.add(nuages[decimal]);
-			order1.add(nuages2[decimal]);
-			break;
-		case 2:
-			order2.add(nuages[decimal]);
-			order2.add(nuages2[decimal]);
-			break;
-		case 3:
-			order3.add(nuages[decimal]);
-			order3.add(nuages2[decimal]);
-			break;
-		case 4:
-			order4.add(nuages[decimal]);
-			order4.add(nuages2[decimal]);
-			break;
-		case 5:
-			order5.add(nuages[decimal]);
-			order5.add(nuages2[decimal]);
-			break;
-		case 6:
-			order6.add(nuages[decimal]);
-			order6.add(nuages2[decimal]);
-			break;
-		case 7:
-			order7.add(nuages[decimal]);
-			order7.add(nuages2[decimal]);
-			break;
-		case 8:
-			order8.add(nuages[decimal]);
-			order8.add(nuages2[decimal]);
-			break;
-		case 9:
-			order9.add(nuages[decimal]);
-			order9.add(nuages2[decimal]);
-			break;
+		nuages2.push(game.add.tileSprite(-200, 400 + (pi[decimal] * 34 - 15), 768, 312, 'nuage2'));
+		nuages2[decimal].anchor.x = 0.7;
+		nuages2[decimal].anchor.y = 0.5;
+		nuages2[decimal].scale.setTo(pi[decimal] / 10, pi[decimal] / 10);
+		nuages2[decimal].tint = t.cloud2Tint;
+
+		switch (pi[decimal]) {
+		case 0: order0.add(nuages[decimal]); order0.add(nuages2[decimal]); break;
+		case 1: order1.add(nuages[decimal]); order1.add(nuages2[decimal]); break;
+		case 2: order2.add(nuages[decimal]); order2.add(nuages2[decimal]); break;
+		case 3: order3.add(nuages[decimal]); order3.add(nuages2[decimal]); break;
+		case 4: order4.add(nuages[decimal]); order4.add(nuages2[decimal]); break;
+		case 5: order5.add(nuages[decimal]); order5.add(nuages2[decimal]); break;
+		case 6: order6.add(nuages[decimal]); order6.add(nuages2[decimal]); break;
+		case 7: order7.add(nuages[decimal]); order7.add(nuages2[decimal]); break;
+		case 8: order8.add(nuages[decimal]); order8.add(nuages2[decimal]); break;
+		case 9: order9.add(nuages[decimal]); order9.add(nuages2[decimal]); break;
 		}
 	}
 
-	while (jj <= decimal ) {
+	while (jj <= decimal) {
 		if (nuages[jj].x > 1800) {
 			nuages[jj].destroy();
 		}
-		nuages[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		nuages2[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		//nuages[jj].angle += (1/(pi[jj]))*3;
+		nuages[jj].x  += pi[jj] / Math.abs(velocityDivider);
+		nuages2[jj].x += pi[jj] / Math.abs(velocityDivider);
 		jj++;
-		//if (nuages[jj].x > 1300) {
-		//}
 	}
 	jj = 0;
 
+	/* Depth-sort cloud groups */
 	game.world.bringToTop(order0);
 	game.world.bringToTop(order1);
 	game.world.bringToTop(order2);
@@ -147,32 +266,51 @@ function update() {
 	game.world.bringToTop(order7);
 	game.world.bringToTop(order8);
 	game.world.bringToTop(order9);
+
+	/* Water reflection sits above clouds */
 	fond2.bringToTop();
+
+	/* Bio particles float above everything as foreground plankton */
+	if (bioGfx && bioGfx.visible) {
+		updateBioParticles();
+		game.world.bringToTop(bioGfx);
+	}
 }
 
-
-
-  </script>
-
-
-
-
+	</script>
 </head>
-<body style="background-color: rgb(67,169,223);">
-	<div id="game" style="
+<body>
+	<div id="PIclouds" style="
 		cursor: none;
 		position: absolute;
-		TOP: 0px;
-		LEFT: 0px;
-
-
+		top: 0px;
+		left: 0px;
 		image-rendering: optimizeSpeed;
 		image-rendering: -moz-crisp-edges;
 		image-rendering: -o-crisp-edges;
 		image-rendering: -webkit-optimize-contrast;
 		image-rendering: optimize-contrast;
 		-ms-interpolation-mode: nearest-neighbor;
-		image-rendering : pixelated;">
+		image-rendering: pixelated;">
 	</div>
+
+	<!-- Theme switcher -->
+	<div id="theme-switcher">
+		<button class="theme-btn" data-theme="bioluminescence" title="Bioluminescence"></button>
+		<button class="theme-btn" data-theme="default"         title="Default"></button>
+		<button class="theme-btn" data-theme="dark"            title="Dark"></button>
+		<button class="theme-btn" data-theme="storm"           title="Storm"></button>
+	</div>
+
+	<!-- Theme label -->
+	<div id="theme-label"></div>
+
+	<script>
+		document.querySelectorAll('.theme-btn').forEach(function(btn) {
+			btn.addEventListener('click', function() {
+				applyTheme(this.getAttribute('data-theme'));
+			});
+		});
+	</script>
 </body>
 </html>
