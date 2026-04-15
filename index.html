@@ -5,6 +5,151 @@
 	<link href="stylesheet.css" rel="stylesheet">
 	<meta charset="utf-8"/>
 	<script type="text/javascript" src="phaser.min.js"></script>
+	<style>
+		body { margin: 0; overflow: hidden; }
+		#theme-switcher {
+			position: fixed;
+			bottom: 20px;
+			left: 50%;
+			transform: translateX(-50%);
+			z-index: 1000;
+			display: flex;
+			gap: 10px;
+			padding: 8px 20px;
+			background: rgba(0,0,0,0.45);
+			border-radius: 30px;
+		}
+		.theme-btn {
+			padding: 6px 18px;
+			border: 2px solid rgba(255,255,255,0.5);
+			border-radius: 20px;
+			background: transparent;
+			color: rgba(255,255,255,0.85);
+			font-family: 'Courier New', monospace;
+			font-size: 12px;
+			font-weight: bold;
+			cursor: pointer;
+			letter-spacing: 0.5px;
+			transition: border-color 0.15s, color 0.15s, background 0.15s, box-shadow 0.15s;
+		}
+		.theme-btn:hover {
+			background: rgba(255,255,255,0.15);
+			border-color: rgba(255,255,255,0.9);
+			color: white;
+		}
+		.theme-btn.active {
+			background: rgba(255,255,255,0.2);
+			border-color: white;
+			color: white;
+		}
+		.theme-tonnerre .theme-btn.active {
+			border-color: #8aabcc;
+			color: #8aabcc;
+			box-shadow: 0 0 10px rgba(138,171,204,0.6);
+		}
+		.theme-graffiti .theme-btn.active {
+			border-color: #FF6B35;
+			color: #FF6B35;
+			box-shadow: 0 0 14px rgba(255,107,53,0.8);
+			text-shadow: 0 0 8px rgba(255,107,53,0.9);
+		}
+		.theme-graffiti #theme-switcher {
+			background: rgba(0,0,0,0.65);
+			border: 1px solid rgba(255,107,53,0.3);
+		}
+		.theme-rainbow .theme-btn.active {
+			border-color: #FF00CC;
+			color: #FF00CC;
+			box-shadow: 0 0 14px rgba(255,0,204,0.7);
+		}
+
+		/* ── Rainbow Prism CSS effects ── */
+		#rainbow-effects {
+			position: fixed;
+			inset: 0;
+			pointer-events: none;
+			z-index: 500;
+		}
+		#rainbow-rays {
+			position: absolute;
+			inset: 0;
+			background: conic-gradient(
+				from 270deg at 50% 110%,
+				rgba(255,34,68,0.07)   0deg,
+				rgba(255,85,0,0.07)    36deg,
+				rgba(255,170,0,0.07)   72deg,
+				rgba(221,238,0,0.07)  108deg,
+				rgba(102,255,0,0.07)  144deg,
+				rgba(0,255,136,0.07)  180deg,
+				rgba(0,221,255,0.07)  216deg,
+				rgba(0,85,255,0.07)   252deg,
+				rgba(119,0,255,0.07)  288deg,
+				rgba(255,0,204,0.07)  324deg,
+				rgba(255,34,68,0.07)  360deg
+			);
+			animation: rainbow-rotate 20s linear infinite;
+		}
+		@keyframes rainbow-rotate {
+			from { transform: rotate(0deg); }
+			to   { transform: rotate(360deg); }
+		}
+		#rainbow-glow {
+			position: absolute;
+			bottom: 0; left: 0; right: 0;
+			height: 35%;
+			background: linear-gradient(
+				to top,
+				rgba(119,0,255,0.18) 0%,
+				rgba(0,85,255,0.10)  30%,
+				transparent          100%
+			);
+		}
+		.prism-particle {
+			position: fixed;
+			border-radius: 50%;
+			pointer-events: none;
+			z-index: 501;
+			animation: prism-rise linear forwards;
+		}
+		@keyframes prism-rise {
+			0%   { transform: translateY(0)   scale(1);   opacity: 0; }
+			15%  { opacity: 1; }
+			85%  { opacity: 0.8; }
+			100% { transform: translateY(-85vh) scale(0.3); opacity: 0; }
+		}
+
+		/* ── Thunder CSS effects ── */
+		#thunder-effects {
+			position: fixed;
+			inset: 0;
+			pointer-events: none;
+			z-index: 500;
+		}
+		#thunder-rain {
+			position: absolute;
+			inset: 0;
+			background: repeating-linear-gradient(
+				175deg,
+				transparent 0px,
+				transparent 3px,
+				rgba(160,200,255,0.06) 3px,
+				rgba(160,200,255,0.06) 4px
+			);
+			background-size: 8px 40px;
+			animation: rain-fall 0.4s linear infinite;
+		}
+		@keyframes rain-fall {
+			from { background-position: 0 0; }
+			to   { background-position: -4px 40px; }
+		}
+		#thunder-flash {
+			position: absolute;
+			inset: 0;
+			background: rgba(200,220,255,1);
+			opacity: 0;
+			transition: opacity 0.05s ease-out;
+		}
+	</style>
 	<script>
 
 // =====================================================
@@ -16,42 +161,17 @@ function randInt(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-for (var i = 0; i<10000; i++) {
-	pi.push(randInt(0,9));
-	console.log(pi[886+i]);
+for (var i = 0; i < 10000; i++) {
+	pi.push(randInt(0, 9));
 }
 
 // =====================================================
-// THEME DEFINITIONS
+// THEME DEFINITIONS — per-digit tint arrays
 // =====================================================
 
-// Rainbow Prism — full spectrum colors per Pi digit (0–9)
-var RAINBOW_TINTS = [
-	0xFF2244, // 0 — Crimson Red
-	0xFF5500, // 1 — Blaze Orange
-	0xFFAA00, // 2 — Amber
-	0xDDEE00, // 3 — Electric Yellow
-	0x66FF00, // 4 — Chartreuse
-	0x00FF88, // 5 — Spring Green
-	0x00DDFF, // 6 — Sky Cyan
-	0x0055FF, // 7 — Electric Blue
-	0x7700FF, // 8 — Ultra Violet
-	0xFF00CC  // 9 — Hot Magenta
-];
-
-// Darker / deeper versions for the reflection layer (nuage2)
-var RAINBOW_TINTS2 = [
-	0xAA1133, // 0
-	0xAA3800, // 1
-	0xAA7700, // 2
-	0x99AA00, // 3
-	0x44AA00, // 4
-	0x00AA66, // 5
-	0x0099BB, // 6
-	0x0033BB, // 7
-	0x5500BB, // 8
-	0xBB0099  // 9
-];
+// Sky — plain white clouds
+var SKY_TINTS  = [0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF];
+var SKY_TINTS2 = [0xCCDDFF, 0xCCDDFF, 0xCCDDFF, 0xCCDDFF, 0xCCDDFF, 0xCCDDFF, 0xCCDDFF, 0xCCDDFF, 0xCCDDFF, 0xCCDDFF];
 
 // Tonnerre — stormy blue-grey palette per digit
 var THUNDER_TINTS = [
@@ -66,7 +186,6 @@ var THUNDER_TINTS = [
 	0x3B5068, // 8 — Dark Slate
 	0xA2B8CC  // 9 — Electric Silver
 ];
-
 var THUNDER_TINTS2 = [
 	0x3A4D5E, // 0
 	0x4A5D6E, // 1
@@ -80,8 +199,57 @@ var THUNDER_TINTS2 = [
 	0x7298AA  // 9
 ];
 
-var SKY_TINTS    = [0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF];
-var SKY_TINTS2   = [0xCCDDFF, 0xCCDDFF, 0xCCDDFF, 0xCCDDFF, 0xCCDDFF, 0xCCDDFF, 0xCCDDFF, 0xCCDDFF, 0xCCDDFF, 0xCCDDFF];
+// Rainbow Prism — full spectrum per digit
+var RAINBOW_TINTS = [
+	0xFF2244, // 0 — Crimson Red
+	0xFF5500, // 1 — Blaze Orange
+	0xFFAA00, // 2 — Amber
+	0xDDEE00, // 3 — Electric Yellow
+	0x66FF00, // 4 — Chartreuse
+	0x00FF88, // 5 — Spring Green
+	0x00DDFF, // 6 — Sky Cyan
+	0x0055FF, // 7 — Electric Blue
+	0x7700FF, // 8 — Ultra Violet
+	0xFF00CC  // 9 — Hot Magenta
+];
+var RAINBOW_TINTS2 = [
+	0xAA1133, // 0
+	0xAA3800, // 1
+	0xAA7700, // 2
+	0x99AA00, // 3
+	0x44AA00, // 4
+	0x00AA66, // 5
+	0x0099BB, // 6
+	0x0033BB, // 7
+	0x5500BB, // 8
+	0xBB0099  // 9
+];
+
+// Graffiti — vivid spray-paint palette per digit
+var GRAFFITI_PALETTE = [
+	0xFF3A3A,  // 0 — fire red
+	0xFF6B35,  // 1 — spray orange
+	0xFFE500,  // 2 — electric yellow
+	0x39FF14,  // 3 — neon green
+	0x00F5FF,  // 4 — electric cyan
+	0x0066FF,  // 5 — electric blue
+	0x9B00FF,  // 6 — deep violet
+	0xFF00CC,  // 7 — hot pink
+	0xFF1493,  // 8 — deep rose
+	0x00FF88   // 9 — emerald green
+];
+var GRAFFITI_PALETTE2 = [
+	0xCC2A2A,  // 0
+	0xCC5520,  // 1
+	0xCCB800,  // 2
+	0x20CC00,  // 3
+	0x00CCCC,  // 4
+	0x0044CC,  // 5
+	0x7000CC,  // 6
+	0xCC0099,  // 7
+	0xCC0066,  // 8
+	0x00CC66   // 9
+];
 
 var THEMES = {
 	'sky': {
@@ -116,10 +284,21 @@ var THEMES = {
 		fond2Tint:   0x110033,
 		fond2Alpha:  0.45,
 		animateSky:  true
+	},
+	'graffiti': {
+		name:        'Graffiti',
+		stageColor:  '#1a1a1a',
+		bodyBg:      'rgb(15,15,15)',
+		cloudTints:  GRAFFITI_PALETTE,
+		cloud2Tints: GRAFFITI_PALETTE2,
+		fondTint:    0x2a2a2a,
+		fond2Tint:   0x111111,
+		fond2Alpha:  0.9,
+		animateSky:  false
 	}
 };
 
-var currentTheme = localStorage.getItem('piclouds-theme') || 'sky';
+var currentTheme = new URLSearchParams(window.location.search).get('theme') || localStorage.getItem('piclouds-theme') || 'sky';
 
 // =====================================================
 // GAME VARIABLES
@@ -135,12 +314,12 @@ var rainbowParticleTimer = null;
 var thunderTimeout = null;
 
 // =====================================================
-// UTILITY FUNCTIONS
+// UTILITY
 // =====================================================
 function sleep(milliseconds) {
 	var start = new Date().getTime();
 	for (var i = 0; i < 1e7; i++) {
-		if ((new Date().getTime() - start) > milliseconds){ break; }
+		if ((new Date().getTime() - start) > milliseconds) { break; }
 	}
 }
 
@@ -172,108 +351,240 @@ function hslToHex(h, s, l) {
 }
 
 // =====================================================
-// THEME SYSTEM
+// GRAFFITI CANVAS EFFECTS — Paint Drips & Spray
 // =====================================================
-function applyTheme(name) {
-	if (!THEMES[name]) name = 'sky';
-	currentTheme = name;
-	localStorage.setItem('piclouds-theme', name);
+var paintDrips     = [];
+var sprayParticles = [];
+var dripSpawnTimer  = 0;
+var spraySpawnTimer = 0;
+var MAX_DRIPS = 10;
+var MAX_SPRAY = 8;
 
-	var t = THEMES[name];
-
-	// Phaser stage background
-	game.stage.backgroundColor = t.stageColor;
-
-	// HTML body background
-	document.body.style.backgroundColor = t.bodyBg;
-
-	// Background layer tints and alpha
-	if (fond)  fond.tint  = t.fondTint  || 0xFFFFFF;
-	if (fond2) {
-		fond2.tint  = t.fond2Tint || 0xFFFFFF;
-		fond2.alpha = (t.fond2Alpha !== undefined) ? t.fond2Alpha : 0.9;
+function clearGraffitiEffects() {
+	var d, s;
+	for (d = paintDrips.length - 1; d >= 0; d--) {
+		if (paintDrips[d].sprite) { paintDrips[d].sprite.destroy(); }
+		if (paintDrips[d].bmd)    { paintDrips[d].bmd.destroy(); }
 	}
-
-	// Re-tint all existing visible clouds
-	for (var i = 0; i <= decimal; i++) {
-		var d = pi[i];
-		if (nuages[i]  && nuages[i].alive)  nuages[i].tint  = t.cloudTints[d];
-		if (nuages2[i] && nuages2[i].alive)  nuages2[i].tint = t.cloud2Tints[d];
+	paintDrips = [];
+	for (s = sprayParticles.length - 1; s >= 0; s--) {
+		if (sprayParticles[s].sprite) { sprayParticles[s].sprite.destroy(); }
+		if (sprayParticles[s].bmd)    { sprayParticles[s].bmd.destroy(); }
 	}
+	sprayParticles = [];
+}
 
-	// Update theme switcher button states
-	var buttons = document.querySelectorAll('.theme-btn');
-	for (var b = 0; b < buttons.length; b++) {
-		var btn = buttons[b];
-		if (btn.getAttribute('data-theme') === name) {
-			btn.classList.add('active');
-		} else {
-			btn.classList.remove('active');
+function spawnPaintDrip() {
+	if (paintDrips.length >= MAX_DRIPS) { return; }
+
+	var digit  = randInt(0, 9);
+	var color  = GRAFFITI_PALETTE[digit];
+	var r = (color >> 16) & 0xFF;
+	var g = (color >> 8)  & 0xFF;
+	var b =  color        & 0xFF;
+
+	var dripLen = 40 + randInt(0, 100);
+	var bmdH    = dripLen + 24;
+	var bmd = game.add.bitmapData(20, bmdH);
+	var ctx = bmd.context;
+
+	ctx.fillStyle = 'rgb(' + r + ',' + g + ',' + b + ')';
+	ctx.beginPath();
+	ctx.arc(10, 9, 8, 0, Math.PI * 2);
+	ctx.fill();
+	ctx.fillRect(7, 9, 6, dripLen);
+	ctx.beginPath();
+	ctx.arc(10, 9 + dripLen, 4 + randInt(0, 5), 0, Math.PI * 2);
+	ctx.fill();
+	bmd.dirty = true;
+
+	var startY = -bmdH - 10;
+	var sprite = game.add.image(randInt(10, 1280), startY, bmd);
+	sprite.alpha = 0.75 + Math.random() * 0.25;
+
+	paintDrips.push({ sprite: sprite, bmd: bmd, vy: 1.0 + Math.random() * 2.5, y: startY });
+}
+
+function updatePaintDrips() {
+	dripSpawnTimer++;
+	if (dripSpawnTimer > 45 + randInt(0, 75) && currentTheme === 'graffiti') {
+		dripSpawnTimer = 0;
+		spawnPaintDrip();
+	}
+	for (var d = paintDrips.length - 1; d >= 0; d--) {
+		var drip = paintDrips[d];
+		drip.y += drip.vy;
+		drip.sprite.y = drip.y;
+		if (drip.y > 760) {
+			drip.sprite.destroy();
+			drip.bmd.destroy();
+			paintDrips.splice(d, 1);
 		}
 	}
+}
 
-	// Show / hide per-theme effect overlays
-	var rainbowEl  = document.getElementById('rainbow-effects');
-	var thunderEl  = document.getElementById('thunder-effects');
-	if (rainbowEl) rainbowEl.style.display = (name === 'rainbow')   ? 'block' : 'none';
-	if (thunderEl) thunderEl.style.display  = (name === 'tonnerre')  ? 'block' : 'none';
+function spawnSprayParticle() {
+	if (sprayParticles.length >= MAX_SPRAY) { return; }
 
-	// Apply body class for CSS theming
-	document.body.className = 'theme-' + name;
+	var digit = randInt(0, 9);
+	var color = GRAFFITI_PALETTE[digit];
+	var r = (color >> 16) & 0xFF;
+	var g = (color >> 8)  & 0xFF;
+	var b =  color        & 0xFF;
 
-	// Start / stop particle systems
-	if (name === 'rainbow') {
-		startRainbowParticles();
-	} else {
-		stopRainbowParticles();
+	var size = 80 + randInt(0, 60);
+	var bmd  = game.add.bitmapData(size, size);
+	var ctx  = bmd.context;
+	var cx = size / 2, cy = size / 2, maxR = size / 2 - 4;
+
+	for (var i = 0; i < 80; i++) {
+		var angle = Math.random() * Math.PI * 2;
+		var dist  = Math.pow(Math.random(), 0.6) * maxR;
+		var px    = cx + Math.cos(angle) * dist;
+		var py    = cy + Math.sin(angle) * dist;
+		var dotR  = 0.5 + Math.random() * 3;
+		var alpha = (1 - dist / maxR) * (0.4 + Math.random() * 0.6);
+		ctx.fillStyle = 'rgba(' + r + ',' + g + ',' + b + ',' + alpha.toFixed(2) + ')';
+		ctx.beginPath();
+		ctx.arc(px, py, dotR, 0, Math.PI * 2);
+		ctx.fill();
 	}
+	bmd.dirty = true;
 
-	if (name === 'tonnerre') {
-		startThunderEffects();
-	} else {
-		stopThunderEffects();
+	var sprite = game.add.image(
+		randInt(size / 2, 1300 - size / 2),
+		randInt(size / 2, 700  - size / 2),
+		bmd
+	);
+	sprite.anchor.setTo(0.5, 0.5);
+	sprite.alpha = 0;
+
+	sprayParticles.push({ sprite: sprite, bmd: bmd, life: 0, maxLife: 140 + randInt(0, 80), peakAlpha: 0.5 + Math.random() * 0.45 });
+}
+
+function updateSprayParticles() {
+	spraySpawnTimer++;
+	if (spraySpawnTimer > 65 + randInt(0, 95) && currentTheme === 'graffiti') {
+		spraySpawnTimer = 0;
+		spawnSprayParticle();
+	}
+	for (var s = sprayParticles.length - 1; s >= 0; s--) {
+		var sp = sprayParticles[s];
+		sp.life++;
+		var prog = sp.life / sp.maxLife;
+		if (prog < 0.15) {
+			sp.sprite.alpha = (prog / 0.15) * sp.peakAlpha;
+		} else if (prog < 0.65) {
+			sp.sprite.alpha = sp.peakAlpha;
+		} else {
+			sp.sprite.alpha = sp.peakAlpha * (1 - (prog - 0.65) / 0.35);
+		}
+		if (sp.life >= sp.maxLife) {
+			sp.sprite.destroy();
+			sp.bmd.destroy();
+			sprayParticles.splice(s, 1);
+		}
 	}
 }
 
 // =====================================================
-// THEME SWITCHER UI
+// TONNERRE: CANVAS LIGHTNING EFFECT
 // =====================================================
-function createThemeSwitcher() {
-	var switcher = document.createElement('div');
-	switcher.id = 'theme-switcher';
+var lightningFlashes = [];
+var lightningTimer   = 0;
+var MAX_LIGHTNING = 2;
 
-	var themes = [
-		{ key: 'sky',      label: 'Ciel' },
-		{ key: 'tonnerre', label: 'Tonnerre' },
-		{ key: 'rainbow',  label: 'Prisme Irisé' }
-	];
+function clearLightningEffects() {
+	for (var l = lightningFlashes.length - 1; l >= 0; l--) {
+		if (lightningFlashes[l].sprite) { lightningFlashes[l].sprite.destroy(); }
+		if (lightningFlashes[l].bmd)    { lightningFlashes[l].bmd.destroy(); }
+	}
+	lightningFlashes = [];
+}
 
-	themes.forEach(function(theme) {
-		var btn = document.createElement('button');
-		btn.className = 'theme-btn' + (currentTheme === theme.key ? ' active' : '');
-		btn.setAttribute('data-theme', theme.key);
-		btn.textContent = theme.label;
-		btn.onclick = function() { applyTheme(theme.key); };
-		switcher.appendChild(btn);
-	});
+function spawnLightning() {
+	if (lightningFlashes.length >= MAX_LIGHTNING) { return; }
 
-	document.body.appendChild(switcher);
+	var bmd = game.add.bitmapData(1300, 700);
+	var ctx = bmd.context;
+
+	ctx.fillStyle = 'rgba(155,185,255,0.10)';
+	ctx.fillRect(0, 0, 1300, 700);
+
+	ctx.save();
+	ctx.strokeStyle = 'rgba(210,225,255,0.95)';
+	ctx.lineWidth   = 2 + randInt(0, 2);
+	ctx.shadowColor = 'rgba(150,185,255,1)';
+	ctx.shadowBlur  = 20;
+
+	var bx = randInt(200, 1100), by = 0;
+	ctx.beginPath();
+	ctx.moveTo(bx, by);
+	while (by < 480 + randInt(0, 160)) {
+		by += randInt(25, 65);
+		bx += randInt(-90, 90);
+		bx  = Math.max(10, Math.min(1290, bx));
+		ctx.lineTo(bx, by);
+	}
+	ctx.stroke();
+	ctx.restore();
+
+	var numBranches = 1 + randInt(0, 2);
+	for (var nb = 0; nb < numBranches; nb++) {
+		ctx.save();
+		ctx.strokeStyle = 'rgba(210,230,255,0.55)';
+		ctx.lineWidth   = 1;
+		ctx.shadowColor = 'rgba(150,185,255,0.7)';
+		ctx.shadowBlur  = 10;
+		var brx = bx + randInt(-80, 80);
+		var bry = by - randInt(80, 200);
+		ctx.beginPath();
+		ctx.moveTo(brx, bry);
+		while (bry < by + randInt(50, 150)) {
+			bry += randInt(15, 40);
+			brx += randInt(-50, 50);
+			brx  = Math.max(10, Math.min(1290, brx));
+			ctx.lineTo(brx, bry);
+		}
+		ctx.stroke();
+		ctx.restore();
+	}
+
+	bmd.dirty = true;
+	var sprite = game.add.image(0, 0, bmd);
+	lightningFlashes.push({ sprite: sprite, bmd: bmd, life: 0, maxLife: 5 + randInt(0, 5) });
+}
+
+function updateLightning() {
+	lightningTimer++;
+	if (lightningTimer > 180 + randInt(0, 320) && currentTheme === 'tonnerre') {
+		lightningTimer = randInt(-18, 0);
+		spawnLightning();
+	}
+	for (var l = lightningFlashes.length - 1; l >= 0; l--) {
+		var flash = lightningFlashes[l];
+		flash.life++;
+		flash.sprite.alpha = Math.max(0, 1 - flash.life / flash.maxLife);
+		if (flash.life >= flash.maxLife) {
+			flash.sprite.destroy();
+			flash.bmd.destroy();
+			lightningFlashes.splice(l, 1);
+		}
+	}
 }
 
 // =====================================================
-// RAINBOW PRISM EFFECTS
+// RAINBOW PRISM: CSS PARTICLE EFFECTS
 // =====================================================
 function createRainbowEffectsContainer() {
 	var el = document.createElement('div');
 	el.id = 'rainbow-effects';
 	el.style.display = 'none';
 
-	// Light-ray fan
 	var rays = document.createElement('div');
 	rays.id = 'rainbow-rays';
 	el.appendChild(rays);
 
-	// Bottom aurora glow
 	var glow = document.createElement('div');
 	glow.id = 'rainbow-glow';
 	el.appendChild(glow);
@@ -283,7 +594,6 @@ function createRainbowEffectsContainer() {
 
 function startRainbowParticles() {
 	if (rainbowParticleTimer) return;
-	// Initial burst
 	for (var i = 0; i < 20; i++) {
 		(function(delay) {
 			setTimeout(spawnPrismParticle, delay);
@@ -305,39 +615,32 @@ function stopRainbowParticles() {
 
 function spawnPrismParticle() {
 	if (currentTheme !== 'rainbow') return;
-
 	var spectrum = [
 		'#FF2244', '#FF5500', '#FFAA00', '#DDEE00',
 		'#66FF00', '#00FF88', '#00DDFF', '#0055FF',
 		'#7700FF', '#FF00CC'
 	];
 	var color = spectrum[Math.floor(Math.random() * spectrum.length)];
-
 	var el = document.createElement('div');
 	el.className = 'prism-particle';
 	el.style.left    = (3 + Math.random() * 94) + '%';
 	el.style.bottom  = (Math.random() * 15) + '%';
 	el.style.backgroundColor = color;
-
 	var size = 2 + Math.random() * 5;
 	el.style.width  = size + 'px';
 	el.style.height = size + 'px';
-
 	var glow = '0 0 ' + (size * 2) + 'px ' + color + ', 0 0 ' + (size * 4) + 'px ' + color;
 	el.style.boxShadow = glow;
-
 	var duration = 5 + Math.random() * 7;
 	el.style.animationDuration = duration + 's';
-
 	document.body.appendChild(el);
-
 	setTimeout(function() {
 		if (el.parentNode) el.parentNode.removeChild(el);
 	}, (duration + 0.5) * 1000);
 }
 
 // =====================================================
-// THUNDER / TONNERRE EFFECTS
+// TONNERRE: CSS FLASH OVERLAY EFFECT
 // =====================================================
 function createThunderEffectsContainer() {
 	var el = document.createElement('div');
@@ -379,7 +682,6 @@ function triggerLightning() {
 	if (currentTheme !== 'tonnerre') return;
 	var flash = document.getElementById('thunder-flash');
 	if (!flash) { scheduleNextLightning(); return; }
-
 	// Double-flash for realism
 	flash.style.opacity = '0.85';
 	setTimeout(function() {
@@ -392,6 +694,84 @@ function triggerLightning() {
 			}, 60);
 		}, 100);
 	}, 90);
+}
+
+// =====================================================
+// CLEAR ALL EFFECTS (called on theme switch)
+// =====================================================
+function clearAllEffects() {
+	clearGraffitiEffects();
+	clearLightningEffects();
+	stopRainbowParticles();
+	stopThunderEffects();
+}
+
+// =====================================================
+// APPLY THEME
+// =====================================================
+function applyTheme(name) {
+	if (!THEMES[name]) { name = 'sky'; }
+
+	clearAllEffects();
+
+	currentTheme = name;
+	localStorage.setItem('piclouds-theme', name);
+
+	var t = THEMES[name];
+	document.body.style.backgroundColor = t.bodyBg;
+	document.body.className = 'theme-' + name;
+
+	if (game && game.stage) {
+		game.stage.backgroundColor = t.stageColor;
+	}
+	if (fond)  { fond.tint  = t.fondTint  || 0xFFFFFF; }
+	if (fond2) {
+		fond2.tint  = t.fond2Tint || 0xFFFFFF;
+		fond2.alpha = (t.fond2Alpha !== undefined) ? t.fond2Alpha : 0.9;
+	}
+
+	// Re-tint all live clouds
+	for (var i = 0; i <= decimal; i++) {
+		var d = pi[i];
+		if (nuages[i]  && nuages[i].alive)  { nuages[i].tint  = t.cloudTints[d]; }
+		if (nuages2[i] && nuages2[i].alive) { nuages2[i].tint = t.cloud2Tints[d]; }
+	}
+
+	// Update switcher button highlight
+	var btns = document.querySelectorAll('.theme-btn');
+	for (var b = 0; b < btns.length; b++) {
+		btns[b].classList.toggle('active', btns[b].getAttribute('data-theme') === name);
+	}
+
+	// Show / hide CSS effect overlays
+	var rainbowEl = document.getElementById('rainbow-effects');
+	var thunderEl = document.getElementById('thunder-effects');
+	if (rainbowEl) rainbowEl.style.display = (name === 'rainbow')  ? 'block' : 'none';
+	if (thunderEl) thunderEl.style.display  = (name === 'tonnerre') ? 'block' : 'none';
+
+	// Start per-theme CSS particle systems
+	if (name === 'rainbow') {
+		startRainbowParticles();
+	}
+	if (name === 'tonnerre') {
+		startThunderEffects();
+	}
+}
+
+// =====================================================
+// BUILD THEME SWITCHER UI
+// =====================================================
+function createThemeSwitcher() {
+	var switcher = document.getElementById('theme-switcher');
+	var order = ['sky', 'tonnerre', 'rainbow', 'graffiti'];
+	order.forEach(function(key) {
+		var btn = document.createElement('button');
+		btn.className = 'theme-btn' + (key === currentTheme ? ' active' : '');
+		btn.setAttribute('data-theme', key);
+		btn.textContent = THEMES[key].name;
+		btn.addEventListener('click', function() { applyTheme(key); });
+		switcher.appendChild(btn);
+	});
 }
 
 // =====================================================
@@ -422,7 +802,7 @@ function create() {
 	order8 = game.add.group();
 	order9 = game.add.group();
 
-	// Create UI and effects containers
+	// Create UI and effect containers
 	createThemeSwitcher();
 	createRainbowEffectsContainer();
 	createThunderEffectsContainer();
@@ -440,71 +820,40 @@ function update() {
 		game.stage.backgroundColor = hslToHex(rainbowHue, 0.9, 0.1);
 	}
 
-	if (timer > (pi[decimal+1])*densityDivider) {
+	if (timer > (pi[decimal + 1]) * densityDivider) {
 
 		decimal++;
 		timer = 0;
 
-		// Spawn upper cloud
-		nuages.push(game.add.tileSprite(-200, 400-(pi[decimal]*34-15), 768, 312, 'nuage'));
-		nuages[decimal].anchor.x = 0.7;
-		nuages[decimal].anchor.y = 0.5;
-		nuages[decimal].scale.setTo((pi[decimal])/10, (pi[decimal])/10);
-		nuages[decimal].alpha = 0.99;
-
-		// Spawn reflection cloud
-		nuages2.push(game.add.tileSprite(-200, 400+(pi[decimal]*34-15), 768, 312, 'nuage2'));
-		nuages2[decimal].anchor.x = 0.7;
-		nuages2[decimal].anchor.y = 0.5;
-		nuages2[decimal].scale.setTo((pi[decimal])/10, (pi[decimal])/10);
-
-		// Apply current theme tints based on Pi digit
 		var digit = pi[decimal];
 		var t = THEMES[currentTheme];
+
+		// Spawn upper cloud
+		nuages.push(game.add.tileSprite(-200, 400 - (pi[decimal] * 34 - 15), 768, 312, 'nuage'));
+		nuages[decimal].anchor.x = 0.7;
+		nuages[decimal].anchor.y = 0.5;
+		nuages[decimal].scale.setTo((pi[decimal]) / 10, (pi[decimal]) / 10);
+		nuages[decimal].alpha = 0.99;
 		nuages[decimal].tint  = t.cloudTints[digit];
+
+		// Spawn reflection cloud
+		nuages2.push(game.add.tileSprite(-200, 400 + (pi[decimal] * 34 - 15), 768, 312, 'nuage2'));
+		nuages2[decimal].anchor.x = 0.7;
+		nuages2[decimal].anchor.y = 0.5;
+		nuages2[decimal].scale.setTo((pi[decimal]) / 10, (pi[decimal]) / 10);
 		nuages2[decimal].tint = t.cloud2Tints[digit];
 
-		switch(pi[decimal]) {
-		case 0:
-			order0.add(nuages[decimal]);
-			order0.add(nuages2[decimal]);
-			break;
-		case 1:
-			order1.add(nuages[decimal]);
-			order1.add(nuages2[decimal]);
-			break;
-		case 2:
-			order2.add(nuages[decimal]);
-			order2.add(nuages2[decimal]);
-			break;
-		case 3:
-			order3.add(nuages[decimal]);
-			order3.add(nuages2[decimal]);
-			break;
-		case 4:
-			order4.add(nuages[decimal]);
-			order4.add(nuages2[decimal]);
-			break;
-		case 5:
-			order5.add(nuages[decimal]);
-			order5.add(nuages2[decimal]);
-			break;
-		case 6:
-			order6.add(nuages[decimal]);
-			order6.add(nuages2[decimal]);
-			break;
-		case 7:
-			order7.add(nuages[decimal]);
-			order7.add(nuages2[decimal]);
-			break;
-		case 8:
-			order8.add(nuages[decimal]);
-			order8.add(nuages2[decimal]);
-			break;
-		case 9:
-			order9.add(nuages[decimal]);
-			order9.add(nuages2[decimal]);
-			break;
+		switch (pi[decimal]) {
+		case 0: order0.add(nuages[decimal]); order0.add(nuages2[decimal]); break;
+		case 1: order1.add(nuages[decimal]); order1.add(nuages2[decimal]); break;
+		case 2: order2.add(nuages[decimal]); order2.add(nuages2[decimal]); break;
+		case 3: order3.add(nuages[decimal]); order3.add(nuages2[decimal]); break;
+		case 4: order4.add(nuages[decimal]); order4.add(nuages2[decimal]); break;
+		case 5: order5.add(nuages[decimal]); order5.add(nuages2[decimal]); break;
+		case 6: order6.add(nuages[decimal]); order6.add(nuages2[decimal]); break;
+		case 7: order7.add(nuages[decimal]); order7.add(nuages2[decimal]); break;
+		case 8: order8.add(nuages[decimal]); order8.add(nuages2[decimal]); break;
+		case 9: order9.add(nuages[decimal]); order9.add(nuages2[decimal]); break;
 		}
 	}
 
@@ -512,11 +861,16 @@ function update() {
 		if (nuages[jj].x > 1800) {
 			nuages[jj].destroy();
 		}
-		nuages[jj].x  += (pi[jj])/Math.abs(velocityDivider);
-		nuages2[jj].x += (pi[jj])/Math.abs(velocityDivider);
+		nuages[jj].x  += (pi[jj]) / Math.abs(velocityDivider);
+		nuages2[jj].x += (pi[jj]) / Math.abs(velocityDivider);
 		jj++;
 	}
 	jj = 0;
+
+	// Per-theme canvas visual effects
+	updatePaintDrips();
+	updateSprayParticles();
+	updateLightning();
 
 	game.world.bringToTop(order0);
 	game.world.bringToTop(order1);
@@ -547,5 +901,6 @@ function update() {
 		-ms-interpolation-mode: nearest-neighbor;
 		image-rendering: pixelated;">
 	</div>
+	<div id="theme-switcher"></div>
 </body>
 </html>
