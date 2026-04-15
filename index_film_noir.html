@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Nuages de Pi — Film Noir</title>
+	<link href="stylesheet.css" rel="stylesheet">
+	<meta charset="utf-8"/>
+	<style>
+	body {
+		background-color: #050505;
+		overflow: hidden;
+		margin: 0;
+		padding: 0;
+	}
+	canvas { display: block; }
+
+	/* Cinematic vignette — darkens the edges like a film projection */
+	#vignette {
+		position: fixed;
+		top: 0; left: 0;
+		width: 100%; height: 100%;
+		pointer-events: none;
+		background: radial-gradient(
+			ellipse at center,
+			transparent 38%,
+			rgba(0,0,0,0.50) 68%,
+			rgba(0,0,0,0.88) 100%
+		);
+		z-index: 10;
+	}
+
+	/* Film grain — SVG turbulence noise, animated to jitter */
+	@keyframes grain {
+		0%, 100% { transform: translate(0,    0); }
+		10%      { transform: translate(-2px,  1px); }
+		20%      { transform: translate( 2px, -1px); }
+		30%      { transform: translate(-1px, -2px); }
+		40%      { transform: translate( 1px,  2px); }
+		50%      { transform: translate( 0px,  1px); }
+		60%      { transform: translate(-1px,  0px); }
+		70%      { transform: translate( 2px,  1px); }
+		80%      { transform: translate( 0px, -1px); }
+		90%      { transform: translate( 1px, -2px); }
+	}
+	#film-grain {
+		position: fixed;
+		top: -50%; left: -50%;
+		width: 200%; height: 200%;
+		pointer-events: none;
+		opacity: 0.055;
+		z-index: 11;
+		animation: grain 0.10s steps(1) infinite;
+		background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+		background-size: 256px 256px;
+	}
+
+	/* Subtle projector flicker + grayscale conversion of the whole canvas */
+	@keyframes noirFlicker {
+		0%   { opacity: 1.00; }
+		3%   { opacity: 0.97; }
+		6%   { opacity: 1.00; }
+		52%  { opacity: 1.00; }
+		54%  { opacity: 0.95; }
+		56%  { opacity: 1.00; }
+		100% { opacity: 1.00; }
+	}
+	#PIclouds canvas, canvas {
+		filter: grayscale(1) contrast(1.25) brightness(0.92);
+		animation: noirFlicker 9s ease-in-out infinite;
+		box-shadow: 0 0 40px 12px rgba(255, 255, 255, 0.05);
+	}
+	</style>
+	<script type="text/javascript" src="phaser.min.js"></script>
+	<script>
+// =============================================================
+// Nuages de Pi — Film Noir
+// High-contrast black and white, dramatic shadows, venetian
+// blind streaks, rising smoke wisps, fine rain drizzle, and
+// full CSS grayscale + film-grain overlay for that classic
+// 1940s detective-film look.
+// =============================================================
+
+var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds',
+	{ preload: preload, create: create, update: update }, false, false);
+
+// Slightly denser and moodier than default
+var nuages = []; var densityDivider = 3.2; var velocityDivider = 0.55;
+var nuages2 = []; var field; var fond; var fond2;
+var nn = 0; var jj = 0; var sum = 0; var lock = 0;
+var decimal = -1;
+var pi = [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,8,4,1,9,7,1,6,9,3,9,9,3,7,5,1,0,5,8,2,0,9,7,4,9,4,4,5,9,2,3,0,7,8,1,6,4,0,6,2,8,6,2,0,8,9,9,8,6,2,8,0,3,4,8,2,5,3,4,2,1,1,7,0,6,7,9,8,2,1,4,8,0,8,6,5,1,3,2,8,2,3,0,6,6,4,7,0,9,3,8,4,4,6,0,9,5,5,0,5,8,2,2,3,1,7,2,5,3,5,9,4,0,8,1,2,8,4,8,1,1,1,7,4,5,0,2,8,4,1,0,2,7,0,1,9,3,8,5,2,1,1,0,5,5,5,9,6,4,4,6,2,2,9,4,8,9,5,4,9,3,0,3,8,1,9,6,4,4,2,8,8,1,0,9,7,5,6,6,5,9,3,3,4,4,6,1,2,8,4,7,5,6,4,8,2,3,3,7,8,6,7,8,3,1,6,5,2,7,1,2,0,1,9,0,9,1,4,5,6,4,8,5,6,6,9,2,3,4,6,0,3,4,8,6,1,0,4,5,4,3,2,6,6,4,8,2,1,3,3,9,3,6,0,7,2,6,0,2,4,9,1,4,1,2,7,3,7,2,4,5,8,7,0,0,6,6,0,6,3,1,5,5,8,8,1,7,4,8,8,1,5,2,0,9,2,0,9,6,2,8,2,9,2,5,4,0,9,1,7,1,5,3,6,4,3,6,7,8,9,2,5,9,0,3,6,0,0,1,1,3,3,0,5,3,0,5,4,8,8,2,0,4,6,6,5,2,1,3,8,4,1,4,6,9,5,1,9,4,1,5,1,1,6,0,9,4,3,3,0,5,7,2,7,0,3,6,5,7,5,9,5,9,1,9,5,3,0,9,2,1,8,6,1,1,7,3,8,1,9,3,2,6,1,1,7,9,3,1,0,5,1,1,8,5,4,8,0,7,4,4,6,2,3,7,9,9,6,2,7,4,9,5,6,7,3,5,1,8,8,5,7,5,2,7,2,4,8,9,1,2,2,7,9,3,8,1,8,3,0,1,1,9,4,9,1,2,9,8,3,3,6,7,3,3,6,2,4,4,0,6,5,6,6,4,3,0,8,6,0,2,1,3,9,4,9,4,6,3,9,5,2,2,4,7,3,7,1,9,0,7,0,2,1,7,9,8,6,0,9,4,3,7,0,2,7,7,0,5,3,9,2,1,7,1,7,6,2,9,3,1,7,6,7,5,2,3,8,4,6,7,4,8,1,8,4,6,7,6,6,9,4,0,5,1,3,2,0,0,0,5,6,8,1,2,7,1,4,5,2,6,3,5,6,0,8,2,7,7,8,5,7,7,1,3,4,2,7,5,7,7,8,9,6,0,9,1,7,3,6,3,7,1,7,8,7,2,1,4,6,8,4,4,0,9,0,1,2,2,4,9,5,3,4,3,0,1,4,6,5,4,9,5,8,5,3,7,1,0,5,0,7,9,2,2,7,9,6,8,9,2,5,8,9,2,3,5,4,2,0,1,9,9,5,6,1,1,2,1,2,9,0,2,1,9,6,0,8,6,4,0,3,4,4,1,8,1,5,9,8,1,3,6,2,9,7,7,4,7,7,1,3,0,9,9,6,0,5,1,8,7,0,7,2,1,1,3,4,9,9,9,9,9,9,8,3,7,2,9,7,8,0,4,9,9,5,1,0,5,9,7,3,1,7,3,2,8,1,6,0,9,6,3,1,8,5,9,5,0,2,4,4,5,9,4,5,5,3,4,6,9,0,8,3,0,2,6,4,2,5,2,2,3,0,8,2,5,3,3,4,4,6,8,5,0,3,5,2,6,1,9,3,1,1,8,8,1,7,1,0,1,0,0,0,3,1,3,7,8,3,8,7,5,2,8,8,6,5,8,7,5,3,3,2,0,8,3,8,1,4,2,0];
+
+function randInt(min, max) {
+	return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+for (var i = 0; i < 10000; i++) {
+	pi.push(randInt(0, 9));
+}
+
+var timer = 0;
+
+// ------------------------------------------------------------------
+// Rain — fine noir drizzle on a single Graphics redrawn each frame
+// ------------------------------------------------------------------
+var rainDrops = [];
+var rainGfx;
+var RAIN_COUNT = 80;
+
+// ------------------------------------------------------------------
+// Smoke — rising wisps of gray, like cigarette smoke in a dim office
+// ------------------------------------------------------------------
+var smokeParticles = [];
+var smokeGfx;
+var SMOKE_COUNT = 28;
+
+// ------------------------------------------------------------------
+// Venetian blinds — diagonal shadow bands drifting slowly across
+// the canvas, simulating lamplight filtered through window slats
+// ------------------------------------------------------------------
+var blindGfx;
+var blindOffset = 0;
+
+// Band geometry
+var BAND_WIDTH   = 68;   // px — width of each shadow bar
+var BAND_PERIOD  = 165;  // px — distance between band starts (gap + band)
+var BAND_COUNT   = 10;   // how many to draw (a few extra to cover edges)
+var BAND_LEAN    = 0.22; // horizontal lean per vertical pixel (tan ~12.4°)
+
+function preload() {
+	game.load.image('nuage',  'nuage.png');
+	game.load.image('nuage2', 'nuage2.png');
+	game.load.image('field',  'field.png');
+	game.load.image('fond',   'fond.png');
+	game.load.image('fond2',  'fond2.png');
+}
+
+function create() {
+	game.time.desiredFps = 30;
+
+	// Near-absolute-black sky — classic noir night
+	game.stage.backgroundColor = '#0C0C0C';
+
+	// Sky layer — barely visible texture, very dark
+	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
+	fond.tint  = 0x080808;
+	fond.alpha = 0.55;
+
+	// Reflection layer — slightly lighter dark gray
+	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
+	fond2.tint  = 0x141414;
+	fond2.alpha = 0.65;
+
+	order0 = game.add.group(); order1 = game.add.group();
+	order2 = game.add.group(); order3 = game.add.group();
+	order4 = game.add.group(); order5 = game.add.group();
+	order6 = game.add.group(); order7 = game.add.group();
+	order8 = game.add.group(); order9 = game.add.group();
+
+	// Venetian blind shadow layer
+	blindGfx = game.add.graphics(0, 0);
+
+	// Smoke particles — pre-scattered through the lower half
+	smokeGfx = game.add.graphics(0, 0);
+	for (var s = 0; s < SMOKE_COUNT; s++) {
+		smokeParticles.push({
+			x:    randInt(80, 1220),
+			y:    400 + Math.random() * 300,
+			vx:   (Math.random() - 0.5) * 0.35,
+			vy:   -(0.25 + Math.random() * 0.55),
+			r:    6 + Math.random() * 20,
+			a:    0.03 + Math.random() * 0.08,
+			da:   0.00015 + Math.random() * 0.00025
+		});
+	}
+
+	// Rain drops — pre-scattered vertically so the scene starts wet
+	rainGfx = game.add.graphics(0, 0);
+	for (var r = 0; r < RAIN_COUNT; r++) {
+		rainDrops.push({
+			x:   Math.random() * 1500,
+			y:   Math.random() * 720,
+			vy:  5 + Math.random() * 4,
+			len: 4 + Math.random() * 7
+		});
+	}
+
+	// Subtle white edge glow — single cinema spotlight spill
+	if (game.canvas) {
+		game.canvas.style.boxShadow = '0 0 35px 10px rgba(255,255,255,0.05)';
+	}
+}
+
+function update() {
+
+	timer++;
+
+	// ---- Venetian blind shadows -----------------------------------
+	// Parallelogram bands drift slowly to the right (wind/camera pan feel)
+	blindOffset = (blindOffset + 0.08) % BAND_PERIOD;
+
+	blindGfx.clear();
+	var yLean = 700 * BAND_LEAN; // how much each band leans across the full height
+	for (var b = 0; b < BAND_COUNT + 2; b++) {
+		var bx = b * BAND_PERIOD + blindOffset - BAND_PERIOD;
+		// Parallelogram: leans to the right as y increases
+		blindGfx.beginFill(0x000000, 0.44);
+		blindGfx.moveTo(bx,            0);
+		blindGfx.lineTo(bx + BAND_WIDTH, 0);
+		blindGfx.lineTo(bx + BAND_WIDTH + yLean, 700);
+		blindGfx.lineTo(bx + yLean,              700);
+		blindGfx.endFill();
+	}
+
+	// ---- Smoke wisps ----------------------------------------------
+	smokeGfx.clear();
+	for (var s = 0; s < smokeParticles.length; s++) {
+		var p = smokeParticles[s];
+		p.x += p.vx;
+		p.y += p.vy;
+		p.r  += 0.07;
+		p.a  -= p.da;
+		if (p.a <= 0 || p.y < -40) {
+			p.x  = randInt(80, 1220);
+			p.y  = 490 + Math.random() * 210;
+			p.vx = (Math.random() - 0.5) * 0.35;
+			p.vy = -(0.25 + Math.random() * 0.55);
+			p.r  = 6 + Math.random() * 18;
+			p.a  = 0.03 + Math.random() * 0.08;
+			p.da = 0.00015 + Math.random() * 0.00025;
+		}
+		smokeGfx.beginFill(0xBBBBBB, p.a);
+		smokeGfx.drawCircle(p.x, p.y, p.r * 2); // Phaser drawCircle takes diameter
+		smokeGfx.endFill();
+	}
+
+	// ---- Fine rain -----------------------------------------------
+	rainGfx.clear();
+	rainGfx.lineStyle(1, 0xAAAAAA, 0.13);
+	for (var r = 0; r < rainDrops.length; r++) {
+		var d = rainDrops[r];
+		d.x += 0.55;  // slight rightward wind drift
+		d.y += d.vy;
+		if (d.y > 720) { d.y = -10; d.x = Math.random() * 1500; }
+		if (d.x > 1310) { d.x -= 1310; }
+		rainGfx.moveTo(d.x, d.y);
+		rainGfx.lineTo(d.x + 0.7, d.y + d.len);
+	}
+
+	// ---- Cloud spawning ------------------------------------------
+	if (timer > (pi[decimal + 1]) * densityDivider) {
+		decimal++;
+		timer = 0;
+
+		// Upper cloud — bright light-gray silhouette against black sky
+		var cloud = game.add.tileSprite(-200, 400 - (pi[decimal] * 34 - 15), 768, 312, 'nuage');
+		cloud.anchor.x = 0.7;
+		cloud.anchor.y = 0.5;
+		cloud.scale.setTo(pi[decimal] / 10, pi[decimal] / 10);
+		cloud.alpha = 0.92;
+		cloud.tint = 0xD2D2D2; // light gray — high contrast against near-black sky
+		nuages.push(cloud);
+
+		// Lower reflection — deep charcoal shadow underside
+		var cloud2 = game.add.tileSprite(-200, 400 + (pi[decimal] * 34 - 15), 768, 312, 'nuage2');
+		cloud2.anchor.x = 0.7;
+		cloud2.anchor.y = 0.5;
+		cloud2.scale.setTo(pi[decimal] / 10, pi[decimal] / 10);
+		cloud2.tint = 0x1A1A1A; // very dark — shadowy mirror on wet pavement
+		nuages2.push(cloud2);
+
+		nuages[decimal].alpha = 0.99;
+
+		switch (pi[decimal]) {
+		case 0: order0.add(nuages[decimal]); order0.add(nuages2[decimal]); break;
+		case 1: order1.add(nuages[decimal]); order1.add(nuages2[decimal]); break;
+		case 2: order2.add(nuages[decimal]); order2.add(nuages2[decimal]); break;
+		case 3: order3.add(nuages[decimal]); order3.add(nuages2[decimal]); break;
+		case 4: order4.add(nuages[decimal]); order4.add(nuages2[decimal]); break;
+		case 5: order5.add(nuages[decimal]); order5.add(nuages2[decimal]); break;
+		case 6: order6.add(nuages[decimal]); order6.add(nuages2[decimal]); break;
+		case 7: order7.add(nuages[decimal]); order7.add(nuages2[decimal]); break;
+		case 8: order8.add(nuages[decimal]); order8.add(nuages2[decimal]); break;
+		case 9: order9.add(nuages[decimal]); order9.add(nuages2[decimal]); break;
+		}
+	}
+
+	// ---- Cloud movement ------------------------------------------
+	while (jj <= decimal) {
+		if (nuages[jj].x > 1800) {
+			nuages[jj].destroy();
+		}
+		nuages[jj].x  += pi[jj] / Math.abs(velocityDivider);
+		nuages2[jj].x += pi[jj] / Math.abs(velocityDivider);
+		jj++;
+	}
+	jj = 0;
+
+	// ---- Depth sort: clouds → fond2 → blinds → smoke → rain -----
+	game.world.bringToTop(order0); game.world.bringToTop(order1);
+	game.world.bringToTop(order2); game.world.bringToTop(order3);
+	game.world.bringToTop(order4); game.world.bringToTop(order5);
+	game.world.bringToTop(order6); game.world.bringToTop(order7);
+	game.world.bringToTop(order8); game.world.bringToTop(order9);
+	fond2.bringToTop();                        // reflection above clouds
+	game.world.bringToTop(blindGfx);           // venetian shadows above reflection
+	game.world.bringToTop(smokeGfx);           // smoke drifts above shadow bars
+	game.world.bringToTop(rainGfx);            // rain always on top of scene
+}
+
+	</script>
+</head>
+<body>
+	<div id="vignette"></div>
+	<div id="film-grain"></div>
+	<div id="game" style="
+		cursor: none;
+		position: absolute;
+		TOP: 0px;
+		LEFT: 0px;
+
+		image-rendering: optimizeSpeed;
+		image-rendering: -moz-crisp-edges;
+		image-rendering: -o-crisp-edges;
+		image-rendering: -webkit-optimize-contrast;
+		image-rendering: optimize-contrast;
+		-ms-interpolation-mode: nearest-neighbor;
+		image-rendering: pixelated;">
+	</div>
+</body>
+</html>
