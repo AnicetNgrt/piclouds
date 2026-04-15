@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Nuages de Pi — Haunted Halloween</title>
+	<link href="stylesheet.css" rel="stylesheet">
+	<meta charset="utf-8"/>
+	<style>
+	body {
+		background-color: #080010;
+		overflow: hidden;
+		margin: 0;
+		padding: 0;
+	}
+	canvas { display: block; }
+	@keyframes spookPulse {
+		0%   { box-shadow: 0 0 22px 6px rgba(200, 80,  0, 0.30); }
+		45%  { box-shadow: 0 0 42px 14px rgba(100, 20, 160, 0.22); }
+		100% { box-shadow: 0 0 22px 6px rgba(200, 80,  0, 0.30); }
+	}
+	#PIclouds canvas, canvas {
+		animation: spookPulse 5s ease-in-out infinite;
+	}
+	</style>
+	<script type="text/javascript" src="phaser.min.js"></script>
+	<script>
+// =============================================================
+// Nuages de Pi — Haunted Halloween Theme
+// Deep purple-black night sky; glowing full moon; flying bats
+// with sinusoidal wing-flap; pumpkin-orange clouds; rising
+// ember particles; CSS orange-purple canvas pulse.
+// =============================================================
+
+var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds',
+	{ preload: preload, create: create, update: update }, false, false);
+
+// Slightly denser/faster than default for a moody drifting feel
+var nuages = []; var densityDivider = 3.2; var velocityDivider = 0.52;
+var nuages2 = []; var field; var fond; var fond2;
+var nn = 0; var jj = 0; var sum = 0; var lock = 0;
+var decimal = -1;
+var pi = [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,8,4,1,9,7,1,6,9,3,9,9,3,7,5,1,0,5,8,2,0,9,7,4,9,4,4,5,9,2,3,0,7,8,1,6,4,0,6,2,8,6,2,0,8,9,9,8,6,2,8,0,3,4,8,2,5,3,4,2,1,1,7,0,6,7,9,8,2,1,4,8,0,8,6,5,1,3,2,8,2,3,0,6,6,4,7,0,9,3,8,4,4,6,0,9,5,5,0,5,8,2,2,3,1,7,2,5,3,5,9,4,0,8,1,2,8,4,8,1,1,1,7,4,5,0,2,8,4,1,0,2,7,0,1,9,3,8,5,2,1,1,0,5,5,5,9,6,4,4,6,2,2,9,4,8,9,5,4,9,3,0,3,8,1,9,6,4,4,2,8,8,1,0,9,7,5,6,6,5,9,3,3,4,4,6,1,2,8,4,7,5,6,4,8,2,3,3,7,8,6,7,8,3,1,6,5,2,7,1,2,0,1,9,0,9,1,4,5,6,4,8,5,6,6,9,2,3,4,6,0,3,4,8,6,1,0,4,5,4,3,2,6,6,4,8,2,1,3,3,9,3,6,0,7,2,6,0,2,4,9,1,4,1,2,7,3,7,2,4,5,8,7,0,0,6,6,0,6,3,1,5,5,8,8,1,7,4,8,8,1,5,2,0,9,2,0,9,6,2,8,2,9,2,5,4,0,9,1,7,1,5,3,6,4,3,6,7,8,9,2,5,9,0,3,6,0,0,1,1,3,3,0,5,3,0,5,4,8,8,2,0,4,6,6,5,2,1,3,8,4,1,4,6,9,5,1,9,4,1,5,1,1,6,0,9,4,3,3,0,5,7,2,7,0,3,6,5,7,5,9,5,9,1,9,5,3,0,9,2,1,8,6,1,1,7,3,8,1,9,3,2,6,1,1,7,9,3,1,0,5,1,1,8,5,4,8,0,7,4,4,6,2,3,7,9,9,6,2,7,4,9,5,6,7,3,5,1,8,8,5,7,5,2,7,2,4,8,9,1,2,2,7,9,3,8,1,8,3,0,1,1,9,4,9,1,2,9,8,3,3,6,7,3,3,6,2,4,4,0,6,5,6,6,4,3,0,8,6,0,2,1,3,9,4,9,4,6,3,9,5,2,2,4,7,3,7,1,9,0,7,0,2,1,7,9,8,6,0,9,4,3,7,0,2,7,7,0,5,3,9,2,1,7,1,7,6,2,9,3,1,7,6,7,5,2,3,8,4,6,7,4,8,1,8,4,6,7,6,6,9,4,0,5,1,3,2,0,0,0,5,6,8,1,2,7,1,4,5,2,6,3,5,6,0,8,2,7,7,8,5,7,7,1,3,4,2,7,5,7,7,8,9,6,0,9,1,7,3,6,3,7,1,7,8,7,2,1,4,6,8,4,4,0,9,0,1,2,2,4,9,5,3,4,3,0,1,4,6,5,4,9,5,8,5,3,7,1,0,5,0,7,9,2,2,7,9,6,8,9,2,5,8,9,2,3,5,4,2,0,1,9,9,5,6,1,1,2,1,2,9,0,2,1,9,6,0,8,6,4,0,3,4,4,1,8,1,5,9,8,1,3,6,2,9,7,7,4,7,7,1,3,0,9,9,6,0,5,1,8,7,0,7,2,1,1,3,4,9,9,9,9,9,9,8,3,7,2,9,7,8,0,4,9,9,5,1,0,5,9,7,3,1,7,3,2,8,1,6,0,9,6,3,1,8,5,9,5,0,2,4,4,5,9,4,5,5,3,4,6,9,0,8,3,0,2,6,4,2,5,2,2,3,0,8,2,5,3,3,4,4,6,8,5,0,3,5,2,6,1,9,3,1,1,8,8,1,7,1,0,1,0,0,0,3,1,3,7,8,3,8,7,5,2,8,8,6,5,8,7,5,3,3,2,0,8,3,8,1,4,2,0];
+
+function randInt(min, max) {
+	return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+for (var i = 0; i < 10000; i++) {
+	pi.push(randInt(0, 9));
+}
+
+var timer    = 0;
+var batTimer = 0;
+
+// ------------------------------------------------------------------
+// Bat system — sinusoidal flight paths, animated wing flap
+// ------------------------------------------------------------------
+var bats     = [];
+var BAT_COUNT = 10;
+var batGfx;
+
+function initBats() {
+	for (var i = 0; i < BAT_COUNT; i++) {
+		var baseY = 40 + Math.random() * 330;
+		bats.push({
+			x:          Math.random() * 1300,
+			baseY:      baseY,
+			y:          baseY,
+			vx:         0.7 + Math.random() * 1.6,
+			size:       14 + Math.random() * 18,
+			phase:      Math.random() * Math.PI * 2,   // wing-flap phase
+			phaseSpeed: 0.09 + Math.random() * 0.07,  // wing-flap speed
+			waveOff:    Math.random() * Math.PI * 2,   // y-wave offset
+			waveAmp:    12 + Math.random() * 22        // y-wave amplitude
+		});
+	}
+}
+
+// Draw one bat at (cx, cy). Wings flap based on phase.
+function renderBat(gfx, cx, cy, sz, phase) {
+	var flap    = Math.sin(phase) * sz * 0.38;
+	var darkCol = 0x0A0010;
+	var alpha   = 0.93;
+
+	// Left wing
+	gfx.beginFill(darkCol, alpha);
+	gfx.moveTo(cx, cy);
+	gfx.lineTo(cx - sz * 0.26, cy - flap);
+	gfx.lineTo(cx - sz * 0.62, cy + flap * 0.35);
+	gfx.lineTo(cx - sz * 0.48, cy + sz * 0.17);
+	gfx.lineTo(cx - sz * 0.14, cy + sz * 0.06);
+	gfx.lineTo(cx, cy + sz * 0.03);
+	gfx.lineTo(cx, cy);
+	gfx.endFill();
+
+	// Right wing
+	gfx.beginFill(darkCol, alpha);
+	gfx.moveTo(cx, cy);
+	gfx.lineTo(cx + sz * 0.26, cy - flap);
+	gfx.lineTo(cx + sz * 0.62, cy + flap * 0.35);
+	gfx.lineTo(cx + sz * 0.48, cy + sz * 0.17);
+	gfx.lineTo(cx + sz * 0.14, cy + sz * 0.06);
+	gfx.lineTo(cx, cy + sz * 0.03);
+	gfx.lineTo(cx, cy);
+	gfx.endFill();
+
+	// Body
+	gfx.beginFill(darkCol, alpha);
+	gfx.drawCircle(cx, cy, sz * 0.16);
+	gfx.endFill();
+}
+
+// ------------------------------------------------------------------
+// Ember particle system — rising orange sparks from the ground
+// ------------------------------------------------------------------
+var embers      = [];
+var EMBER_COUNT = 32;
+var emberGfx;
+var EMBER_COLORS = [0xFF6600, 0xFF7A00, 0xFF9900, 0xFFAA00, 0xFFCC33];
+
+function initEmbers() {
+	for (var i = 0; i < EMBER_COUNT; i++) {
+		embers.push(spawnEmber(true));
+	}
+}
+
+function spawnEmber(randomY) {
+	return {
+		x:       Math.random() * 1300,
+		y:       randomY ? 500 + Math.random() * 220 : 710 + Math.random() * 20,
+		vx:      (Math.random() - 0.5) * 0.55,
+		vy:      -(0.35 + Math.random() * 1.1),
+		life:    randomY ? Math.random() : 1.0,
+		maxLife: 0.45 + Math.random() * 0.65,
+		size:    1.4 + Math.random() * 2.8,
+		color:   EMBER_COLORS[Math.floor(Math.random() * EMBER_COLORS.length)]
+	};
+}
+
+// ------------------------------------------------------------------
+// Moon — glowing static graphic drawn once in create()
+// ------------------------------------------------------------------
+var moonGfx;
+
+// ------------------------------------------------------------------
+function preload() {
+	game.load.image('nuage',  'nuage.png');
+	game.load.image('nuage2', 'nuage2.png');
+	game.load.image('field',  'field.png');
+	game.load.image('fond',   'fond.png');
+	game.load.image('fond2',  'fond2.png');
+}
+
+function create() {
+	game.time.desiredFps = 30;
+
+	// Deep purple-black Halloween night sky
+	game.stage.backgroundColor = "#07000F";
+
+	// Upper sky tile — dark indigo-purple, lets stage color bleed through
+	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
+	fond.tint  = 0x18082A;
+	fond.alpha = 0.84;
+
+	// Moon — layered circles for soft glow: added after fond so it
+	// renders on top of the sky tile but below clouds.
+	moonGfx = game.add.graphics(0, 0);
+	// Outermost halo (very soft)
+	moonGfx.beginFill(0xFFD060, 0.06);
+	moonGfx.drawCircle(1080, 88, 200);
+	moonGfx.endFill();
+	// Second halo
+	moonGfx.beginFill(0xFFD060, 0.10);
+	moonGfx.drawCircle(1080, 88, 160);
+	moonGfx.endFill();
+	// Inner glow
+	moonGfx.beginFill(0xFFE080, 0.55);
+	moonGfx.drawCircle(1080, 88, 110);
+	moonGfx.endFill();
+	// Bright disc
+	moonGfx.beginFill(0xFFF4CC, 0.90);
+	moonGfx.drawCircle(1080, 88, 86);
+	moonGfx.endFill();
+
+	// Lower area tile — dark murky ground/fog
+	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
+	fond2.tint  = 0x240C10;
+	fond2.alpha = 0.80;
+
+	// Cloud depth groups (pi-digit ordered)
+	order0 = game.add.group(); order1 = game.add.group();
+	order2 = game.add.group(); order3 = game.add.group();
+	order4 = game.add.group(); order5 = game.add.group();
+	order6 = game.add.group(); order7 = game.add.group();
+	order8 = game.add.group(); order9 = game.add.group();
+
+	// Bat graphics object (redrawn each frame)
+	batGfx = game.add.graphics(0, 0);
+	initBats();
+
+	// Ember/particle graphics object (redrawn each frame)
+	emberGfx = game.add.graphics(0, 0);
+	initEmbers();
+
+	// Ambient orange-glow border around the canvas
+	if (game.canvas) {
+		game.canvas.style.boxShadow = '0 0 55px 16px rgba(160, 55, 0, 0.32)';
+	}
+}
+
+function update() {
+
+	timer++;
+	batTimer++;
+
+	// ---- Bats -------------------------------------------------------
+	batGfx.clear();
+	for (var b = 0; b < bats.length; b++) {
+		var bat = bats[b];
+		bat.x     += bat.vx;
+		bat.phase += bat.phaseSpeed;
+		// Eerie sinusoidal flight path
+		bat.y = bat.baseY + Math.sin(batTimer * 0.018 + bat.waveOff) * bat.waveAmp;
+
+		if (bat.x > 1420) {
+			bat.x     = -90;
+			bat.baseY = 40 + Math.random() * 330;
+		}
+		renderBat(batGfx, bat.x, bat.y, bat.size, bat.phase);
+	}
+
+	// ---- Embers (rising orange sparks) ------------------------------
+	emberGfx.clear();
+	for (var e = 0; e < embers.length; e++) {
+		var em = embers[e];
+		em.x    += em.vx;
+		em.y    += em.vy;
+		em.life -= 0.007;
+
+		if (em.life <= 0 || em.y < 280) {
+			embers[e] = spawnEmber(false);
+			continue;
+		}
+
+		// Fade in from 0→maxLife*0.25, then fade out the rest
+		var fadeIn  = Math.min(em.life / (em.maxLife * 0.25), 1.0);
+		var fadeOut = em.life / em.maxLife;
+		var alpha   = Math.min(fadeIn, fadeOut) * 0.78;
+
+		emberGfx.beginFill(em.color, alpha);
+		emberGfx.drawCircle(em.x, em.y, em.size);
+		emberGfx.endFill();
+	}
+
+	// ---- Cloud spawning ---------------------------------------------
+	if (timer > (pi[decimal + 1]) * densityDivider) {
+
+		decimal++;
+		timer = 0;
+
+		// Upper cloud — warm pumpkin-orange
+		var cloud = game.add.tileSprite(-200, 400 - (pi[decimal] * 34 - 15), 768, 312, 'nuage');
+		cloud.anchor.x = 0.7;
+		cloud.anchor.y = 0.5;
+		cloud.scale.setTo(pi[decimal] / 10, pi[decimal] / 10);
+		cloud.alpha = 0.92;
+		cloud.tint  = 0xCC5200;   // Pumpkin orange
+		nuages.push(cloud);
+
+		// Lower cloud — dark spectral purple (ghostly ground fog)
+		var cloud2 = game.add.tileSprite(-200, 400 + (pi[decimal] * 34 - 15), 768, 312, 'nuage2');
+		cloud2.anchor.x = 0.7;
+		cloud2.anchor.y = 0.5;
+		cloud2.scale.setTo(pi[decimal] / 10, pi[decimal] / 10);
+		cloud2.tint  = 0x6B1E8A;   // Deep spectral purple
+		nuages2.push(cloud2);
+
+		nuages[decimal].alpha = 0.99;
+
+		switch (pi[decimal]) {
+		case 0: order0.add(nuages[decimal]); order0.add(nuages2[decimal]); break;
+		case 1: order1.add(nuages[decimal]); order1.add(nuages2[decimal]); break;
+		case 2: order2.add(nuages[decimal]); order2.add(nuages2[decimal]); break;
+		case 3: order3.add(nuages[decimal]); order3.add(nuages2[decimal]); break;
+		case 4: order4.add(nuages[decimal]); order4.add(nuages2[decimal]); break;
+		case 5: order5.add(nuages[decimal]); order5.add(nuages2[decimal]); break;
+		case 6: order6.add(nuages[decimal]); order6.add(nuages2[decimal]); break;
+		case 7: order7.add(nuages[decimal]); order7.add(nuages2[decimal]); break;
+		case 8: order8.add(nuages[decimal]); order8.add(nuages2[decimal]); break;
+		case 9: order9.add(nuages[decimal]); order9.add(nuages2[decimal]); break;
+		}
+	}
+
+	// ---- Cloud movement ---------------------------------------------
+	while (jj <= decimal) {
+		if (nuages[jj].x > 1800) {
+			nuages[jj].destroy();
+		}
+		nuages[jj].x  += pi[jj] / Math.abs(velocityDivider);
+		nuages2[jj].x += pi[jj] / Math.abs(velocityDivider);
+		jj++;
+	}
+	jj = 0;
+
+	// ---- Depth sort -------------------------------------------------
+	// Render order (back→front):
+	//   fond (sky) → moonGfx (moon) → order0..9 (clouds) →
+	//   fond2 (ground fog) → batGfx (bats) → emberGfx (sparks)
+	game.world.bringToTop(order0); game.world.bringToTop(order1);
+	game.world.bringToTop(order2); game.world.bringToTop(order3);
+	game.world.bringToTop(order4); game.world.bringToTop(order5);
+	game.world.bringToTop(order6); game.world.bringToTop(order7);
+	game.world.bringToTop(order8); game.world.bringToTop(order9);
+	fond2.bringToTop();                     // ground fog over clouds
+	game.world.bringToTop(batGfx);          // bats in front — Graphics needs world.bringToTop()
+	game.world.bringToTop(emberGfx);        // embers always on top
+}
+
+	</script>
+</head>
+<body style="background-color: #07000F;">
+	<div id="game" style="
+		cursor: none;
+		position: absolute;
+		TOP: 0px;
+		LEFT: 0px;
+
+		image-rendering: optimizeSpeed;
+		image-rendering: -moz-crisp-edges;
+		image-rendering: -o-crisp-edges;
+		image-rendering: -webkit-optimize-contrast;
+		image-rendering: optimize-contrast;
+		-ms-interpolation-mode: nearest-neighbor;
+		image-rendering: pixelated;">
+	</div>
+</body>
+</html>
