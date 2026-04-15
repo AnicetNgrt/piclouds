@@ -94,7 +94,9 @@ body.theme-dark #PIclouds canvas {
 }
 
 body.theme-bioluminescence #PIclouds canvas {
-	filter: brightness(0.72) saturate(3.2) hue-rotate(148deg);
+	/* High saturation pulls the dark-teal sky into vivid deep-ocean hues;
+	   brightness lifted slightly so particle orbs and cloud edges glow */
+	filter: brightness(0.85) saturate(5.0);
 	animation: bioGlowPulse 5s ease-in-out infinite;
 }
 
