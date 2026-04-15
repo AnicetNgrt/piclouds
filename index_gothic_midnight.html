@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Nuages de Pi — Minuit Gothique</title>
+	<link href="stylesheet.css" rel="stylesheet">
+	<meta charset="utf-8"/>
+	<style>
+	body {
+		background-color: #0A0618;
+		overflow: hidden;
+		margin: 0;
+		padding: 0;
+	}
+	canvas { display: block; }
+	@keyframes gothicPulse {
+		0%   { box-shadow: 0 0 22px 6px rgba(90, 20, 140, 0.42); }
+		50%  { box-shadow: 0 0 48px 16px rgba(120, 40, 190, 0.22); }
+		100% { box-shadow: 0 0 22px 6px rgba(90, 20, 140, 0.42); }
+	}
+	#PIclouds canvas, canvas {
+		animation: gothicPulse 7s ease-in-out infinite;
+	}
+	</style>
+	<script type="text/javascript" src="phaser.min.js"></script>
+	<script>
+// ================================================================
+// Nuages de Pi — Minuit Gothique (Gothic Midnight) Theme
+// Deep purples and blacks with ornate dark cathedral atmosphere:
+//   - Purple-violet thunderclouds drifting with ominous slowness
+//   - Ember sparks rising like candle flames from below
+//   - Rolling low-lying mist in amber and violet hues
+//   - Moonbeam shafts — slow violet light piercing the darkness
+//   - CSS gothicPulse ambient glow on the canvas border
+// ================================================================
+
+var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds',
+	{ preload: preload, create: create, update: update }, false, false);
+
+// Slightly denser, slightly slower — ominous cathedral drift
+var nuages = []; var densityDivider = 3.2; var velocityDivider = 0.70;
+var nuages2 = []; var field; var fond; var fond2;
+var nn = 0; var jj = 0; var sum = 0; var lock = 0;
+var decimal = -1;
+var pi = [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,8,4,1,9,7,1,6,9,3,9,9,3,7,5,1,0,5,8,2,0,9,7,4,9,4,4,5,9,2,3,0,7,8,1,6,4,0,6,2,8,6,2,0,8,9,9,8,6,2,8,0,3,4,8,2,5,3,4,2,1,1,7,0,6,7,9,8,2,1,4,8,0,8,6,5,1,3,2,8,2,3,0,6,6,4,7,0,9,3,8,4,4,6,0,9,5,5,0,5,8,2,2,3,1,7,2,5,3,5,9,4,0,8,1,2,8,4,8,1,1,1,7,4,5,0,2,8,4,1,0,2,7,0,1,9,3,8,5,2,1,1,0,5,5,5,9,6,4,4,6,2,2,9,4,8,9,5,4,9,3,0,3,8,1,9,6,4,4,2,8,8,1,0,9,7,5,6,6,5,9,3,3,4,4,6,1,2,8,4,7,5,6,4,8,2,3,3,7,8,6,7,8,3,1,6,5,2,7,1,2,0,1,9,0,9,1,4,5,6,4,8,5,6,6,9,2,3,4,6,0,3,4,8,6,1,0,4,5,4,3,2,6,6,4,8,2,1,3,3,9,3,6,0,7,2,6,0,2,4,9,1,4,1,2,7,3,7,2,4,5,8,7,0,0,6,6,0,6,3,1,5,5,8,8,1,7,4,8,8,1,5,2,0,9,2,0,9,6,2,8,2,9,2,5,4,0,9,1,7,1,5,3,6,4,3,6,7,8,9,2,5,9,0,3,6,0,0,1,1,3,3,0,5,3,0,5,4,8,8,2,0,4,6,6,5,2,1,3,8,4,1,4,6,9,5,1,9,4,1,5,1,1,6,0,9,4,3,3,0,5,7,2,7,0,3,6,5,7,5,9,5,9,1,9,5,3,0,9,2,1,8,6,1,1,7,3,8,1,9,3,2,6,1,1,7,9,3,1,0,5,1,1,8,5,4,8,0,7,4,4,6,2,3,7,9,9,6,2,7,4,9,5,6,7,3,5,1,8,8,5,7,5,2,7,2,4,8,9,1,2,2,7,9,3,8,1,8,3,0,1,1,9,4,9,1,2,9,8,3,3,6,7,3,3,6,2,4,4,0,6,5,6,6,4,3,0,8,6,0,2,1,3,9,4,9,4,6,3,9,5,2,2,4,7,3,7,1,9,0,7,0,2,1,7,9,8,6,0,9,4,3,7,0,2,7,7,0,5,3,9,2,1,7,1,7,6,2,9,3,1,7,6,7,5,2,3,8,4,6,7,4,8,1,8,4,6,7,6,6,9,4,0,5,1,3,2,0,0,0,5,6,8,1,2,7,1,4,5,2,6,3,5,6,0,8,2,7,7,8,5,7,7,1,3,4,2,7,5,7,7,8,9,6,0,9,1,7,3,6,3,7,1,7,8,7,2,1,4,6,8,4,4,0,9,0,1,2,2,4,9,5,3,4,3,0,1,4,6,5,4,9,5,8,5,3,7,1,0,5,0,7,9,2,2,7,9,6,8,9,2,5,8,9,2,3,5,4,2,0,1,9,9,5,6,1,1,2,1,2,9,0,2,1,9,6,0,8,6,4,0,3,4,4,1,8,1,5,9,8,1,3,6,2,9,7,7,4,7,7,1,3,0,9,9,6,0,5,1,8,7,0,7,2,1,1,3,4,9,9,9,9,9,9,8,3,7,2,9,7,8,0,4,9,9,5,1,0,5,9,7,3,1,7,3,2,8,1,6,0,9,6,3,1,8,5,9,5,0,2,4,4,5,9,4,5,5,3,4,6,9,0,8,3,0,2,6,4,2,5,2,2,3,0,8,2,5,3,3,4,4,6,8,5,0,3,5,2,6,1,9,3,1,1,8,8,1,7,1,0,1,0,0,0,3,1,3,7,8,3,8,7,5,2,8,8,6,5,8,7,5,3,3,2,0,8,3,8,1,4,2,0];
+
+function randInt(min, max) {
+	return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+for (var i = 0; i < 10000; i++) {
+	pi.push(randInt(0, 9));
+}
+
+var timer = 0;
+
+// ---------------------------------------------------------------
+// Ember system — candlelight sparks rising from the shadowed deep
+// ---------------------------------------------------------------
+var EMBER_COUNT = 58;
+var embers = [];
+var emberGfx;
+var EMBER_COLORS = [0xFFAA33, 0xFF7722, 0xFFCC44, 0xFF5500, 0xFFDD66, 0xFF9933];
+
+// ---------------------------------------------------------------
+// Mist system — low-lying purple and amber wisps rolling at ground
+// ---------------------------------------------------------------
+var mistGfx;
+var mistStrips = [];
+
+// ---------------------------------------------------------------
+// Moonbeam system — slow shafts of violet light from the dark sky
+// ---------------------------------------------------------------
+var moonbeamGroup;
+var nextMoonbeam = 0;
+
+// A triangular violet beam fading slowly in then out — like moonlight
+// breaking through rose-window glass high in the cathedral vault.
+function triggerMoonbeam() {
+	var startX = randInt(200, 1100);
+	var leftX  = startX - randInt(80, 210);
+	var rightX = startX + randInt(80, 210);
+	var endY   = randInt(140, 430);
+
+	var beam = game.add.graphics(0, 0);
+	moonbeamGroup.add(beam);
+	beam.alpha = 0;
+	beam.beginFill(0x8833CC, 0.13);
+	beam.moveTo(startX, 0);
+	beam.lineTo(Math.max(0, leftX), endY);
+	beam.lineTo(Math.min(1300, rightX), endY);
+	beam.lineTo(startX, 0);
+	beam.endFill();
+
+	// Fade in over 2.2 s, then fade out over 3.5 s
+	game.add.tween(beam)
+		.to({ alpha: 1 }, 2200, Phaser.Easing.Quadratic.Out, true)
+		.onComplete.add(function() {
+			game.add.tween(beam)
+				.to({ alpha: 0 }, 3500, Phaser.Easing.Quadratic.In, true)
+				.onComplete.add(function() { beam.destroy(); });
+		});
+
+	nextMoonbeam = game.time.now + randInt(18000, 42000);
+}
+
+// ---------------------------------------------------------------
+function preload() {
+	game.load.image('nuage',  'nuage.png');
+	game.load.image('nuage2', 'nuage2.png');
+	game.load.image('field',  'field.png');
+	game.load.image('fond',   'fond.png');
+	game.load.image('fond2',  'fond2.png');
+}
+
+function create() {
+	game.time.desiredFps = 30;
+
+	// Deep purple-black cathedral sky — almost void, faintly violet
+	game.stage.backgroundColor = "#0A0818";
+
+	// Sky tile — dark violet tint, the colour of night beyond stained glass
+	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
+	fond.tint  = 0x180D2A;
+	fond.alpha = 0.92;
+
+	// Reflection / ground tile — near-black with purple undertone
+	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
+	fond2.tint  = 0x0E0A1C;
+	fond2.alpha = 0.88;
+
+	order0 = game.add.group(); order1 = game.add.group();
+	order2 = game.add.group(); order3 = game.add.group();
+	order4 = game.add.group(); order5 = game.add.group();
+	order6 = game.add.group(); order7 = game.add.group();
+	order8 = game.add.group(); order9 = game.add.group();
+
+	// Moonbeam group — sits in the sky layer, behind clouds
+	moonbeamGroup = game.add.group();
+
+	// ---- Mist init -----------------------------------------------
+	mistGfx = game.add.graphics(0, 0);
+	var mistPalette = [0x3A2055, 0x2E1848, 0x4A2E60, 0x241540, 0x381A50, 0x4A3020, 0x2A1A10];
+	for (var m = 0; m < 8; m++) {
+		mistStrips.push({
+			x:     Math.random() * 1300,
+			y:     475 + m * 22 + Math.random() * 18,
+			speed: 0.07 + Math.random() * 0.17,
+			w:     520 + Math.random() * 620,
+			h:     26 + Math.random() * 28,
+			alpha: 0.055 + Math.random() * 0.075,
+			color: mistPalette[m % mistPalette.length],
+			phase: Math.random() * Math.PI * 2
+		});
+	}
+
+	// ---- Ember init ----------------------------------------------
+	emberGfx = game.add.graphics(0, 0);
+	for (var e = 0; e < EMBER_COUNT; e++) {
+		embers.push({
+			x:     Math.random() * 1300,
+			y:     320 + Math.random() * 380,   // pre-spread across lower scene
+			vy:    -(0.35 + Math.random() * 0.75),
+			vx:    (Math.random() - 0.5) * 0.26,
+			size:  Math.max(1, 0.8 + Math.random() * 1.8),
+			alpha: 0.25 + Math.random() * 0.65,
+			phase: Math.random() * Math.PI * 2,
+			color: EMBER_COLORS[Math.floor(Math.random() * EMBER_COLORS.length)]
+		});
+	}
+
+	// Deepen the ambient glow to a violet hue
+	if (game.canvas) {
+		game.canvas.style.boxShadow = '0 0 50px 16px rgba(80, 15, 130, 0.42)';
+	}
+
+	// First moonbeam: 6–15 seconds after load
+	nextMoonbeam = game.time.now + randInt(6000, 15000);
+}
+
+function update() {
+
+	timer++;
+
+	// ---- Mist -------------------------------------------------------
+	// Redraw rolling mist wisps — slow, sinusoidally breathing alpha
+	mistGfx.clear();
+	for (var m = 0; m < mistStrips.length; m++) {
+		var ms = mistStrips[m];
+		ms.x += ms.speed;
+		if (ms.x > 1300) { ms.x = -ms.w; }
+		var breathAlpha = ms.alpha * (0.65 + 0.35 * Math.sin(timer / 85 + ms.phase));
+		mistGfx.beginFill(ms.color, breathAlpha);
+		mistGfx.drawRect(ms.x, ms.y, ms.w, ms.h);
+		mistGfx.endFill();
+	}
+
+	// ---- Embers -----------------------------------------------------
+	// Flicker and rise — single Graphics redrawn each frame
+	emberGfx.clear();
+	for (var e = 0; e < EMBER_COUNT; e++) {
+		var em = embers[e];
+		em.x += em.vx + Math.sin(timer / 28 + em.phase) * 0.20;
+		em.y += em.vy;
+
+		// Flicker brightness via sine on alpha
+		var flicker = Math.max(0.04, em.alpha * (0.50 + 0.50 * Math.sin(timer / 11 + em.phase)));
+
+		// Wrap vertically: respawn at bottom when exiting top
+		if (em.y < -15) {
+			em.y = 705 + Math.random() * 25;
+			em.x = Math.random() * 1300;
+		}
+		// Horizontal wrap
+		if (em.x < -10) { em.x += 1310; }
+		if (em.x > 1310) { em.x -= 1310; }
+
+		emberGfx.lineStyle(0);
+		emberGfx.beginFill(em.color, flicker);
+		emberGfx.drawCircle(em.x, em.y, em.size);
+		emberGfx.endFill();
+	}
+
+	// ---- Cloud spawning ---------------------------------------------
+	if (timer > (pi[decimal + 1]) * densityDivider) {
+
+		decimal++;
+		timer = 0;
+
+		// Upper cloud — deep purple-violet, like stone vaulting seen against the sky
+		var cloud = game.add.tileSprite(-200, 400 - (pi[decimal] * 34 - 15), 768, 312, 'nuage');
+		cloud.anchor.x = 0.7;
+		cloud.anchor.y = 0.5;
+		cloud.scale.setTo(pi[decimal] / 10, pi[decimal] / 10);
+		cloud.alpha = 0.88;
+		cloud.tint = 0x2C1848;  // deep purple-violet — cathedral cumulonimbus
+		nuages.push(cloud);
+
+		// Lower reflection — near-black purple underside
+		var cloud2 = game.add.tileSprite(-200, 400 + (pi[decimal] * 34 - 15), 768, 312, 'nuage2');
+		cloud2.anchor.x = 0.7;
+		cloud2.anchor.y = 0.5;
+		cloud2.scale.setTo(pi[decimal] / 10, pi[decimal] / 10);
+		cloud2.tint = 0x1C0F30;  // near-black purple — the shadow beneath the vault
+		nuages2.push(cloud2);
+
+		nuages[decimal].alpha = 0.92;
+
+		switch (pi[decimal]) {
+		case 0: order0.add(nuages[decimal]); order0.add(nuages2[decimal]); break;
+		case 1: order1.add(nuages[decimal]); order1.add(nuages2[decimal]); break;
+		case 2: order2.add(nuages[decimal]); order2.add(nuages2[decimal]); break;
+		case 3: order3.add(nuages[decimal]); order3.add(nuages2[decimal]); break;
+		case 4: order4.add(nuages[decimal]); order4.add(nuages2[decimal]); break;
+		case 5: order5.add(nuages[decimal]); order5.add(nuages2[decimal]); break;
+		case 6: order6.add(nuages[decimal]); order6.add(nuages2[decimal]); break;
+		case 7: order7.add(nuages[decimal]); order7.add(nuages2[decimal]); break;
+		case 8: order8.add(nuages[decimal]); order8.add(nuages2[decimal]); break;
+		case 9: order9.add(nuages[decimal]); order9.add(nuages2[decimal]); break;
+		}
+	}
+
+	// ---- Cloud movement ---------------------------------------------
+	while (jj <= decimal) {
+		if (nuages[jj].x > 1800) {
+			nuages[jj].destroy();
+		}
+		nuages[jj].x  += pi[jj] / Math.abs(velocityDivider);
+		nuages2[jj].x += pi[jj] / Math.abs(velocityDivider);
+		jj++;
+	}
+	jj = 0;
+
+	// ---- Depth order ------------------------------------------------
+	// moonbeams sit in sky behind clouds; mist and embers float in front
+	game.world.bringToTop(moonbeamGroup);
+	game.world.bringToTop(order0);
+	game.world.bringToTop(order1);
+	game.world.bringToTop(order2);
+	game.world.bringToTop(order3);
+	game.world.bringToTop(order4);
+	game.world.bringToTop(order5);
+	game.world.bringToTop(order6);
+	game.world.bringToTop(order7);
+	game.world.bringToTop(order8);
+	game.world.bringToTop(order9);
+	fond2.bringToTop();                       // reflection sits above clouds
+	game.world.bringToTop(mistGfx);           // mist in front of fond2
+	game.world.bringToTop(emberGfx);          // embers float above the mist
+
+	// ---- Moonbeam triggers ------------------------------------------
+	if (game.time.now >= nextMoonbeam) {
+		triggerMoonbeam();
+	}
+}
+
+	</script>
+</head>
+<body style="background-color: #0A0618;">
+	<div id="game" style="
+		cursor: none;
+		position: absolute;
+		TOP: 0px;
+		LEFT: 0px;
+
+		image-rendering: optimizeSpeed;
+		image-rendering: -moz-crisp-edges;
+		image-rendering: -o-crisp-edges;
+		image-rendering: -webkit-optimize-contrast;
+		image-rendering: optimize-contrast;
+		-ms-interpolation-mode: nearest-neighbor;
+		image-rendering: pixelated;">
+	</div>
+</body>
+</html>
