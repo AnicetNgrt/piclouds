@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Nuages de Pi — Tempête de Sable</title>
+	<link href="stylesheet.css" rel="stylesheet">
+	<meta charset="utf-8"/>
+	<style>
+		@keyframes sandstormGlow {
+			0%   { box-shadow: 0 0 24px 6px rgba(210, 150, 40, 0.45); }
+			35%  { box-shadow: 0 0 44px 12px rgba(240, 180, 60, 0.30); }
+			65%  { box-shadow: 0 0 28px 7px rgba(200, 130, 20, 0.50); }
+			100% { box-shadow: 0 0 24px 6px rgba(210, 150, 40, 0.45); }
+		}
+		#game canvas {
+			animation: sandstormGlow 5s ease-in-out infinite;
+		}
+	</style>
+	<script type="text/javascript" src="phaser.min.js"></script>
+	<script>
+var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds', { preload: preload, create: create, update: update }, false, false);
+var nuages = []; var densityDivider = 3.2; var velocityDivider = 0.50;
+var nuages2 = []; var field; var fond; var fond2;
+var nn = 0; var jj = 0; var sum = 0; var lock = 0;
+var decimal = -1;
+var pi = [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,8,4,1,9,7,1,6,9,3,9,9,3,7,5,1,0,5,8,2,0,9,7,4,9,4,4,5,9,2,3,0,7,8,1,6,4,0,6,2,8,6,2,0,8,9,9,8,6,2,8,0,3,4,8,2,5,3,4,2,1,1,7,0,6,7,9,8,2,1,4,8,0,8,6,5,1,3,2,8,2,3,0,6,6,4,7,0,9,3,8,4,4,6,0,9,5,5,0,5,8,2,2,3,1,7,2,5,3,5,9,4,0,8,1,2,8,4,8,1,1,1,7,4,5,0,2,8,4,1,0,2,7,0,1,9,3,8,5,2,1,1,0,5,5,5,9,6,4,4,6,2,2,9,4,8,9,5,4,9,3,0,3,8,1,9,6,4,4,2,8,8,1,0,9,7,5,6,6,5,9,3,3,4,4,6,1,2,8,4,7,5,6,4,8,2,3,3,7,8,6,7,8,3,1,6,5,2,7,1,2,0,1,9,0,9,1,4,5,6,4,8,5,6,6,9,2,3,4,6,0,3,4,8,6,1,0,4,5,4,3,2,6,6,4,8,2,1,3,3,9,3,6,0,7,2,6,0,2,4,9,1,4,1,2,7,3,7,2,4,5,8,7,0,0,6,6,0,6,3,1,5,5,8,8,1,7,4,8,8,1,5,2,0,9,2,0,9,6,2,8,2,9,2,5,4,0,9,1,7,1,5,3,6,4,3,6,7,8,9,2,5,9,0,3,6,0,0,1,1,3,3,0,5,3,0,5,4,8,8,2,0,4,6,6,5,2,1,3,8,4,1,4,6,9,5,1,9,4,1,5,1,1,6,0,9,4,3,3,0,5,7,2,7,0,3,6,5,7,5,9,5,9,1,9,5,3,0,9,2,1,8,6,1,1,7,3,8,1,9,3,2,6,1,1,7,9,3,1,0,5,1,1,8,5,4,8,0,7,4,4,6,2,3,7,9,9,6,2,7,4,9,5,6,7,3,5,1,8,8,5,7,5,2,7,2,4,8,9,1,2,2,7,9,3,8,1,8,3,0,1,1,9,4,9,1,2,9,8,3,3,6,7,3,3,6,2,4,4,0,6,5,6,6,4,3,0,8,6,0,2,1,3,9,4,9,4,6,3,9,5,2,2,4,7,3,7,1,9,0,7,0,2,1,7,9,8,6,0,9,4,3,7,0,2,7,7,0,5,3,9,2,1,7,1,7,6,2,9,3,1,7,6,7,5,2,3,8,4,6,7,4,8,1,8,4,6,7,6,6,9,4,0,5,1,3,2,0,0,0,5,6,8,1,2,7,1,4,5,2,6,3,5,6,0,8,2,7,7,8,5,7,7,1,3,4,2,7,5,7,7,8,9,6,0,9,1,7,3,6,3,7,1,7,8,7,2,1,4,6,8,4,4,0,9,0,1,2,2,4,9,5,3,4,3,0,1,4,6,5,4,9,5,8,5,3,7,1,0,5,0,7,9,2,2,7,9,6,8,9,2,5,8,9,2,3,5,4,2,0,1,9,9,5,6,1,1,2,1,2,9,0,2,1,9,6,0,8,6,4,0,3,4,4,1,8,1,5,9,8,1,3,6,2,9,7,7,4,7,7,1,3,0,9,9,6,0,5,1,8,7,0,7,2,1,1,3,4,9,9,9,9,9,9,8,3,7,2,9,7,8,0,4,9,9,5,1,0,5,9,7,3,1,7,3,2,8,1,6,0,9,6,3,1,8,5,9,5,0,2,4,4,5,9,4,5,5,3,4,6,9,0,8,3,0,2,6,4,2,5,2,2,3,0,8,2,5,3,3,4,4,6,8,5,0,3,5,2,6,1,9,3,1,1,8,8,1,7,1,0,1,0,0,0,3,1,3,7,8,3,8,7,5,2,8,8,6,5,8,7,5,3,3,2,0,8,3,8,1,4,2,0];
+
+function randInt(min, max) {
+	return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+for (var i = 0; i < 10000; i++) {
+	pi.push(randInt(0,9));
+}
+
+var timer = 0;
+
+// ── Desert Sandstorm effects ──────────────────────────────────────────────────
+
+// Dust particle system
+var dustParticles = [];   // array of particle objects
+var dustGfx;              // single Graphics redrawn each frame
+
+// Heat-haze pulse system
+var heatOverlay;          // full-screen tinted rect for shimmers
+var nextHeatPulse = 0;    // game.time.now when next pulse fires
+var heatPulsing = false;
+
+// Sand-streak system (horizontal streaks low on screen, like wind-blown sand)
+var sandStreaks = [];      // array of streak objects
+var streakGfx;            // single Graphics for streaks
+
+// Palette of dusty desert colours (sand, amber, ochre, tan)
+var DUST_COLORS = [
+	0xE8C87A, // pale gold
+	0xD4A84B, // warm amber
+	0xC09240, // ochre
+	0xBF9B6F, // tan
+	0xE2D0A0, // light sand
+	0xF0D878  // bright sunny gold
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+function preload() {
+	game.load.image('nuage',  'nuage.png');
+	game.load.image('nuage2', 'nuage2.png');
+	game.load.image('field',  'field.png');
+	game.load.image('fond',   'fond.png');
+	game.load.image('fond2',  'fond2.png');
+}
+
+function create() {
+	game.time.desiredFps = 30;
+
+	// Deep amber-brown sky base
+	game.stage.backgroundColor = "#6B3F0E";
+
+	// ── Gradient background (horizon glow) ───────────────────────────────────
+	var bgData = game.add.bitmapData(1300, 700);
+	var grad = bgData.context.createLinearGradient(0, 0, 0, 700);
+	grad.addColorStop(0.00, 'rgba(120,  65,  10, 1.0)');  // dark umber zenith
+	grad.addColorStop(0.30, 'rgba(180, 100,  20, 1.0)');  // burnt sienna
+	grad.addColorStop(0.55, 'rgba(220, 150,  40, 1.0)');  // golden amber horizon
+	grad.addColorStop(0.72, 'rgba(200, 120,  30, 1.0)');  // mid amber
+	grad.addColorStop(1.00, 'rgba(130,  70,  10, 1.0)');  // dark ground tone
+	bgData.context.fillStyle = grad;
+	bgData.context.fillRect(0, 0, 1300, 700);
+	game.add.image(0, 0, bgData);
+
+	// ── Sky texture overlays ──────────────────────────────────────────────────
+	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
+	fond.tint  = 0xC07820;   // burnt orange overlay
+	fond.alpha = 0.28;
+
+	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
+	fond2.tint  = 0x8B4A10;  // deep amber reflection
+	fond2.alpha = 0.35;
+
+	// ── Cloud depth layers ────────────────────────────────────────────────────
+	order0 = game.add.group();
+	order1 = game.add.group();
+	order2 = game.add.group();
+	order3 = game.add.group();
+	order4 = game.add.group();
+	order5 = game.add.group();
+	order6 = game.add.group();
+	order7 = game.add.group();
+	order8 = game.add.group();
+	order9 = game.add.group();
+
+	// ── Dust particle graphics object ─────────────────────────────────────────
+	dustGfx = game.add.graphics(0, 0);
+
+	// Seed initial dust particles spread across screen
+	for (var i = 0; i < 180; i++) {
+		spawnDust(Math.random() * 1300, Math.random() * 700, true);
+	}
+
+	// ── Horizontal sand-streak graphics ──────────────────────────────────────
+	streakGfx = game.add.graphics(0, 0);
+
+	for (var j = 0; j < 60; j++) {
+		spawnStreak(Math.random() * 1300, true);
+	}
+
+	// ── Heat-haze overlay (full-screen shimmer) ───────────────────────────────
+	heatOverlay = game.add.graphics(0, 0);
+	heatOverlay.beginFill(0xFFD080, 0);
+	heatOverlay.drawRect(0, 0, 1300, 700);
+	heatOverlay.endFill();
+	heatOverlay.alpha = 0;
+
+	nextHeatPulse = game.time.now + randInt(4000, 9000);
+}
+
+// ── Dust mote helper ──────────────────────────────────────────────────────────
+function spawnDust(startX, startY, anywhere) {
+	var particle = {
+		x:     anywhere ? startX : -10,
+		y:     startY !== undefined ? startY : Math.random() * 700,
+		vx:    1.2 + Math.random() * 3.0,   // wind rightward
+		vy:    (Math.random() - 0.5) * 0.8,  // gentle vertical drift
+		size:  0.8 + Math.random() * 3.2,    // varied grain size
+		color: DUST_COLORS[Math.floor(Math.random() * DUST_COLORS.length)],
+		alpha: 0.15 + Math.random() * 0.55,  // semi-transparent
+		osc:   Math.random() * Math.PI * 2,  // oscillation phase
+		oscAmp: 0.4 + Math.random() * 1.2,  // oscillation amplitude
+		oscSpd: 0.03 + Math.random() * 0.07  // oscillation speed
+	};
+	dustParticles.push(particle);
+}
+
+// ── Sand streak helper ────────────────────────────────────────────────────────
+function spawnStreak(startX, anywhere) {
+	// Streaks are horizontal lines in the lower 60% of the screen
+	var streak = {
+		x:     anywhere ? startX : -200,
+		y:     280 + Math.random() * 360,   // lower portion of screen
+		vx:    3.5 + Math.random() * 5.0,   // fast horizontal wind
+		length: 30 + Math.random() * 120,   // streak length
+		alpha: 0.08 + Math.random() * 0.22, // very faint
+		color: DUST_COLORS[Math.floor(Math.random() * 3)]  // warmer tones
+	};
+	sandStreaks.push(streak);
+}
+
+function update() {
+
+	timer++;
+
+	// ── Cloud spawning ────────────────────────────────────────────────────────
+	if (timer > (pi[decimal + 1]) * densityDivider) {
+
+		decimal++;
+		timer = 0;
+
+		nuages.push(game.add.tileSprite(-200, 400 - (pi[decimal] * 34 - 15), 768, 312, 'nuage'));
+		nuages[decimal].anchor.x = 0.7;
+		nuages[decimal].anchor.y = 0.5;
+		nuages[decimal].scale.setTo((pi[decimal]) / 10, (pi[decimal]) / 10);
+		nuages[decimal].alpha = 0.88;
+		nuages[decimal].tint = 0xC89048;   // warm sandy gold (upper clouds)
+
+		nuages2.push(game.add.tileSprite(-200, 400 + (pi[decimal] * 34 - 15), 768, 312, 'nuage2'));
+		nuages2[decimal].anchor.x = 0.7;
+		nuages2[decimal].anchor.y = 0.5;
+		nuages2[decimal].scale.setTo((pi[decimal]) / 10, (pi[decimal]) / 10);
+		nuages2[decimal].alpha = 0.70;
+		nuages2[decimal].tint = 0x9A6020;  // dark amber-brown (lower clouds / dunes)
+
+		switch (pi[decimal]) {
+			case 0: order0.add(nuages[decimal]); order0.add(nuages2[decimal]); break;
+			case 1: order1.add(nuages[decimal]); order1.add(nuages2[decimal]); break;
+			case 2: order2.add(nuages[decimal]); order2.add(nuages2[decimal]); break;
+			case 3: order3.add(nuages[decimal]); order3.add(nuages2[decimal]); break;
+			case 4: order4.add(nuages[decimal]); order4.add(nuages2[decimal]); break;
+			case 5: order5.add(nuages[decimal]); order5.add(nuages2[decimal]); break;
+			case 6: order6.add(nuages[decimal]); order6.add(nuages2[decimal]); break;
+			case 7: order7.add(nuages[decimal]); order7.add(nuages2[decimal]); break;
+			case 8: order8.add(nuages[decimal]); order8.add(nuages2[decimal]); break;
+			case 9: order9.add(nuages[decimal]); order9.add(nuages2[decimal]); break;
+		}
+	}
+
+	// ── Cloud movement ────────────────────────────────────────────────────────
+	while (jj <= decimal) {
+		if (nuages[jj].x > 1800) {
+			nuages[jj].destroy();
+		}
+		nuages[jj].x  += (pi[jj]) / Math.abs(velocityDivider);
+		nuages2[jj].x += (pi[jj]) / Math.abs(velocityDivider);
+		jj++;
+	}
+	jj = 0;
+
+	// ── Dust particle update ──────────────────────────────────────────────────
+	dustGfx.clear();
+
+	var alive = [];
+	for (var di = 0; di < dustParticles.length; di++) {
+		var p = dustParticles[di];
+
+		p.osc += p.oscSpd;
+		p.x += p.vx;
+		p.y += p.vy + Math.sin(p.osc) * p.oscAmp;
+
+		if (p.x < 1340) {
+			alive.push(p);
+			var r = (p.color >> 16) & 0xFF;
+			var g = (p.color >> 8)  & 0xFF;
+			var b =  p.color        & 0xFF;
+			dustGfx.beginFill(p.color, p.alpha);
+			dustGfx.drawCircle(p.x, p.y, p.size);
+			dustGfx.endFill();
+		} else {
+			// respawn from left
+			spawnDust(-10, Math.random() * 700, false);
+		}
+	}
+	dustParticles = alive;
+
+	// Maintain particle population (~200)
+	if (dustParticles.length < 200) {
+		spawnDust(-10, Math.random() * 700, false);
+	}
+
+	// ── Sand-streak update ────────────────────────────────────────────────────
+	streakGfx.clear();
+
+	var aliveStreaks = [];
+	for (var si = 0; si < sandStreaks.length; si++) {
+		var s = sandStreaks[si];
+		s.x += s.vx;
+
+		if (s.x < 1400) {
+			aliveStreaks.push(s);
+			streakGfx.lineStyle(1.2, s.color, s.alpha);
+			streakGfx.moveTo(s.x, s.y);
+			streakGfx.lineTo(s.x + s.length, s.y);
+		} else {
+			spawnStreak(-200, false);
+		}
+	}
+	sandStreaks = aliveStreaks;
+
+	// Maintain streak population (~60)
+	if (sandStreaks.length < 60) {
+		spawnStreak(-200, false);
+	}
+
+	// ── Heat-haze pulse ───────────────────────────────────────────────────────
+	if (!heatPulsing && game.time.now >= nextHeatPulse) {
+		heatPulsing = true;
+		var maxAlpha = 0.06 + Math.random() * 0.10;  // very subtle shimmer
+		// Tween the overlay in quickly…
+		game.add.tween(heatOverlay).to({ alpha: maxAlpha }, 120, Phaser.Easing.Quadratic.In, true)
+			.onComplete.add(function () {
+				// …then fade out slowly (heat lingering)
+				game.add.tween(heatOverlay).to({ alpha: 0 }, 500, Phaser.Easing.Quadratic.Out, true)
+					.onComplete.add(function () {
+						heatPulsing = false;
+						nextHeatPulse = game.time.now + randInt(3500, 10000);
+					});
+			});
+	}
+
+	// ── Depth sorting ─────────────────────────────────────────────────────────
+	game.world.bringToTop(order0);
+	game.world.bringToTop(order1);
+	game.world.bringToTop(order2);
+	game.world.bringToTop(order3);
+	game.world.bringToTop(order4);
+	game.world.bringToTop(order5);
+	game.world.bringToTop(order6);
+	game.world.bringToTop(order7);
+	game.world.bringToTop(order8);
+	game.world.bringToTop(order9);
+	fond2.bringToTop();
+	game.world.bringToTop(dustGfx);
+	game.world.bringToTop(streakGfx);
+	game.world.bringToTop(heatOverlay);
+}
+	</script>
+</head>
+<body style="background-color: rgb(100, 55, 10);">
+	<div id="game" style="
+		cursor: none;
+		position: absolute;
+		TOP: 0px;
+		LEFT: 0px;
+		image-rendering: optimizeSpeed;
+		image-rendering: -moz-crisp-edges;
+		image-rendering: -o-crisp-edges;
+		image-rendering: -webkit-optimize-contrast;
+		image-rendering: optimize-contrast;
+		-ms-interpolation-mode: nearest-neighbor;
+		image-rendering: pixelated;">
+	</div>
+</body>
+</html>
