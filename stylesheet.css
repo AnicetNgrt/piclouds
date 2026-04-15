@@ -1,0 +1,259 @@
+* {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	overflow: hidden;
+	transition: background-color 0.8s ease;
+}
+
+/* ── Theme Switcher ─────────────────────────────── */
+#theme-switcher {
+	position: fixed;
+	top: 12px;
+	right: 12px;
+	z-index: 1000;
+	display: flex;
+	gap: 6px;
+	align-items: center;
+}
+
+.theme-btn {
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	border: 3px solid rgba(255,255,255,0.8);
+	cursor: pointer;
+	transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+	box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+	outline: none;
+}
+
+.theme-btn:hover {
+	transform: scale(1.15);
+	border-color: #fff;
+	box-shadow: 0 3px 10px rgba(0,0,0,0.45);
+}
+
+.theme-btn.active {
+	border-color: #fff;
+	box-shadow: 0 0 0 2px rgba(255,255,255,0.5), 0 3px 10px rgba(0,0,0,0.4);
+	transform: scale(1.1);
+}
+
+/* ── Colour swatches ─────────────────────────────── */
+.theme-btn[data-theme="default"]    { background: linear-gradient(135deg, #4488aa 0%, #43a9df 100%); }
+.theme-btn[data-theme="dark"]       { background: linear-gradient(135deg, #0a0e1a 0%, #1a2a4a 100%); }
+.theme-btn[data-theme="sunset"]     { background: linear-gradient(135deg, #c0392b 0%, #f39c12 100%); }
+.theme-btn[data-theme="storm"]      { background: linear-gradient(135deg, #2c3e50 0%, #4a5568 100%); }
+.theme-btn[data-theme="dawn"]       { background: linear-gradient(135deg, #6a3093 0%, #a044ff 50%, #ff7b54 100%); }
+.theme-btn[data-theme="golden"]     { background: linear-gradient(135deg, #b8860b 0%, #ffd700 100%); }
+.theme-btn[data-theme="arctic"]     { background: linear-gradient(135deg, #b8d4e8 0%, #eef6ff 100%); }
+.theme-btn[data-theme="dreamscape"] { background: linear-gradient(135deg, #1a0e3e 0%, #c084fc 45%, #a8f0e4 100%); }
+
+/* ── Theme Label ───────────────────────────────── */
+#theme-label {
+	position: fixed;
+	bottom: 12px;
+	right: 12px;
+	padding: 3px 10px;
+	border-radius: 4px;
+	font-family: sans-serif;
+	font-size: 12px;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	border: 1px solid;
+	opacity: 0.85;
+	z-index: 1000;
+	pointer-events: none;
+	transition: background 0.3s, color 0.3s;
+}
+
+/* ── Dark theme canvas filter ──────────────────── */
+body.theme-dark #PIclouds canvas {
+	filter: brightness(0.82) saturate(0.6) hue-rotate(200deg);
+}
+
+/* ── Arctic theme canvas filter ─────────────────── */
+body.theme-arctic #PIclouds canvas {
+	filter: brightness(1.05) saturate(0.55) hue-rotate(185deg);
+}
+
+/* ════════════════════════════════════════════════════
+   DREAMSCAPE SURREAL THEME
+   Melting clocks · impossible geometry · pastel shifts
+   ════════════════════════════════════════════════════ */
+
+/* Canvas: slow surreal colour breathing — saturation + gentle hue drift */
+body.theme-dreamscape #PIclouds canvas {
+	animation: dream-hue-shift 10s ease-in-out infinite;
+}
+
+@keyframes dream-hue-shift {
+	0%   { filter: brightness(0.88) saturate(2.2) hue-rotate(0deg);   }
+	25%  { filter: brightness(0.93) saturate(2.0) hue-rotate(25deg);  }
+	50%  { filter: brightness(0.86) saturate(2.5) hue-rotate(-20deg); }
+	75%  { filter: brightness(0.91) saturate(2.1) hue-rotate(35deg);  }
+	100% { filter: brightness(0.88) saturate(2.2) hue-rotate(0deg);   }
+}
+
+/* Ambient body background pulse */
+body.theme-dreamscape {
+	animation: dream-bg-pulse 14s ease-in-out infinite;
+}
+
+@keyframes dream-bg-pulse {
+	0%,100% { background-color: #0e0820; }
+	30%     { background-color: #110a28; }
+	60%     { background-color: #0a1018; }
+}
+
+/* Surreal horizon shimmer — impossible iridescent edge */
+body.theme-dreamscape::after {
+	content: '';
+	position: fixed;
+	left: 0;
+	right: 0;
+	top: 57%;
+	height: 3px;
+	background: linear-gradient(
+		90deg,
+		transparent         0%,
+		rgba(168,240,228,0.25) 15%,
+		rgba(212,184,255,0.70) 35%,
+		rgba(255,192,210,0.80) 50%,
+		rgba(180,220,255,0.70) 65%,
+		rgba(168,240,228,0.25) 85%,
+		transparent         100%
+	);
+	animation: dream-shimmer 5s ease-in-out infinite;
+	pointer-events: none;
+	z-index: 500;
+	filter: blur(1px);
+}
+
+@keyframes dream-shimmer {
+	0%,100% { opacity: 0.5; transform: scaleX(1)    scaleY(1); }
+	50%     { opacity: 1.0; transform: scaleX(1.04) scaleY(2); }
+}
+
+/* Dreamscape ambient mist — colour nebulae beneath canvas */
+body.theme-dreamscape #PIclouds {
+	position: relative;
+}
+
+body.theme-dreamscape #PIclouds::before {
+	content: '';
+	position: fixed;
+	inset: 0;
+	background:
+		radial-gradient(ellipse at 18% 38%, rgba(140,80,220,0.14) 0%, transparent 48%),
+		radial-gradient(ellipse at 78% 28%, rgba(80,200,180,0.11) 0%, transparent 44%),
+		radial-gradient(ellipse at 52% 76%, rgba(230,150,255,0.09) 0%, transparent 42%),
+		radial-gradient(ellipse at 90% 65%, rgba(180,220,255,0.10) 0%, transparent 38%);
+	animation: dream-mist 11s ease-in-out infinite;
+	pointer-events: none;
+	z-index: 2;
+}
+
+@keyframes dream-mist {
+	0%,100% { opacity: 0.6; transform: scale(1.00); }
+	50%     { opacity: 1.0; transform: scale(1.04); }
+}
+
+/* ── Dreamscape particle layer ────────────────── */
+#dreamscape-layer {
+	position: fixed;
+	inset: 0;
+	pointer-events: none;
+	z-index: 600;
+	overflow: hidden;
+}
+
+/* All drifting geometrics */
+.dream-particle {
+	position: absolute;
+	background: var(--dc);
+	animation: dream-float ease-in-out infinite;
+	will-change: transform, opacity;
+}
+
+/* Circle — soft orb */
+.dream-circle {
+	border-radius: 50%;
+	box-shadow:
+		0 0 8px 2px var(--dc),
+		inset 0 0 4px rgba(255,255,255,0.3);
+}
+
+/* Diamond — rotated square (impossible geometry nod) */
+.dream-diamond {
+	clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+}
+
+/* Triangle — Penrose-flavoured ascent */
+.dream-triangle {
+	clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+@keyframes dream-float {
+	0%   {
+		transform: translateY(0px)   translateX(0px)  rotate(0deg)  scale(1.00);
+		opacity: 0;
+	}
+	7%   { opacity: 0.9; }
+	28%  {
+		transform: translateY(-28px) translateX(14px) rotate(72deg) scale(1.05);
+	}
+	55%  {
+		transform: translateY(-56px) translateX(-9px) rotate(160deg) scale(0.95);
+		opacity: 0.65;
+	}
+	80%  {
+		transform: translateY(-80px) translateX(18px) rotate(240deg) scale(1.02);
+		opacity: 0.4;
+	}
+	100% {
+		transform: translateY(-105px) translateX(6px) rotate(330deg) scale(0.8);
+		opacity: 0;
+	}
+}
+
+/* ── "Melting" horizon smear — stretched pastel gradient bar ── */
+#dream-smear {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 56%;
+	height: 6px;
+	background: linear-gradient(
+		90deg,
+		rgba(212,184,255,0.00) 0%,
+		rgba(212,184,255,0.40) 12%,
+		rgba(168,240,228,0.55) 28%,
+		rgba(255,192,210,0.60) 45%,
+		rgba(180,220,255,0.55) 62%,
+		rgba(255,236,180,0.40) 80%,
+		rgba(220,180,255,0.00) 100%
+	);
+	animation: smear-melt 7s ease-in-out infinite;
+	filter: blur(2px);
+	border-radius: 3px;
+}
+
+@keyframes smear-melt {
+	0%,100% {
+		transform: scaleX(1.00) scaleY(1);
+		opacity: 0.6;
+	}
+	30% {
+		transform: scaleX(1.08) scaleY(3);
+		opacity: 1.0;
+	}
+	60% {
+		transform: scaleX(0.95) scaleY(0.5);
+		opacity: 0.4;
+	}
+}
