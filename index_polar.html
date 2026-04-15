@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Nuages de Pi — Antarctique Polaire</title>
+	<link href="stylesheet.css" rel="stylesheet">
+	<meta charset="utf-8"/>
+	<style>
+	body {
+		background-color: #0E1C2A;
+		overflow: hidden;
+		margin: 0;
+		padding: 0;
+	}
+	canvas { display: block; }
+
+	/* Slow aurora shimmer on canvas border */
+	@keyframes auroraGlow {
+		0%   { box-shadow: 0 0 24px 6px rgba(100, 200, 255, 0.25); }
+		30%  { box-shadow: 0 0 40px 12px rgba(80, 220, 200, 0.18); }
+		60%  { box-shadow: 0 0 28px 8px rgba(140, 180, 255, 0.22); }
+		100% { box-shadow: 0 0 24px 6px rgba(100, 200, 255, 0.25); }
+	}
+	#PIclouds canvas, canvas {
+		animation: auroraGlow 8s ease-in-out infinite;
+	}
+
+	/* ---- Penguin silhouettes ---- */
+	.penguin-wrap {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		width: 1300px;
+		height: 700px;
+		pointer-events: none;
+		overflow: hidden;
+	}
+	.penguin {
+		position: absolute;
+		bottom: 20px;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		animation: waddle var(--waddle-dur) ease-in-out infinite alternate;
+		animation-delay: var(--waddle-delay);
+	}
+	@keyframes waddle {
+		0%   { transform: translateX(0px) rotate(-3deg); }
+		100% { transform: translateX(var(--waddle-x)) rotate(3deg); }
+	}
+	/* SVG penguin rendered via inline style */
+	.penguin svg {
+		width: var(--size);
+		height: var(--size);
+		fill: #0D1520;
+		opacity: 0.82;
+		filter: drop-shadow(0 2px 4px rgba(0,0,80,0.5));
+	}
+
+	/* ---- Cold mist layers ---- */
+	.mist-layer {
+		position: absolute;
+		left: -200px;
+		width: 1800px;
+		background: linear-gradient(to right,
+			rgba(200, 230, 255, 0) 0%,
+			rgba(200, 230, 255, var(--mist-alpha)) 20%,
+			rgba(220, 240, 255, var(--mist-alpha)) 50%,
+			rgba(200, 230, 255, var(--mist-alpha)) 80%,
+			rgba(200, 230, 255, 0) 100%
+		);
+		animation: mistDrift var(--mist-dur) ease-in-out infinite alternate;
+		animation-delay: var(--mist-delay);
+		border-radius: 50%;
+		pointer-events: none;
+	}
+	@keyframes mistDrift {
+		0%   { transform: translateX(0px);    opacity: var(--mist-opacity-lo); }
+		50%  { opacity: var(--mist-opacity-hi); }
+		100% { transform: translateX(120px);  opacity: var(--mist-opacity-lo); }
+	}
+
+	/* ---- Ice particle overlay ---- */
+	.ice-particle {
+		position: absolute;
+		border-radius: 50%;
+		background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(180,220,255,0.4) 60%, transparent 100%);
+		pointer-events: none;
+		animation: iceDrift var(--drift-dur) ease-in-out infinite;
+		animation-delay: var(--drift-delay);
+	}
+	@keyframes iceDrift {
+		0%   { transform: translate(0, 0) scale(1);      opacity: var(--ice-alpha); }
+		30%  { transform: translate(var(--ix), -20px) scale(1.1); opacity: calc(var(--ice-alpha) * 1.3); }
+		70%  { transform: translate(calc(var(--ix) * 2), -8px) scale(0.9); }
+		100% { transform: translate(calc(var(--ix) * 3), 0)  scale(1);      opacity: 0; }
+	}
+
+	/* ---- Aurora borealis ---- */
+	.aurora {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 1300px;
+		pointer-events: none;
+		border-radius: 0 0 80% 80%;
+		animation: auroraWave var(--aurora-dur) ease-in-out infinite alternate;
+		animation-delay: var(--aurora-delay);
+		opacity: 0;
+	}
+	@keyframes auroraWave {
+		0%   { opacity: 0;    transform: scaleX(1)    translateY(0px);   }
+		20%  { opacity: var(--aurora-peak); }
+		50%  { transform: scaleX(1.04) translateY(8px);  }
+		80%  { opacity: var(--aurora-peak); }
+		100% { opacity: 0;    transform: scaleX(0.97) translateY(-4px);  }
+	}
+	</style>
+	<script type="text/javascript" src="phaser.min.js"></script>
+	<script>
+// =============================================================
+// Nuages de Pi — Antarctique Polaire (Polar Antarctic) Theme
+// Blue-white ice sheets with penguin silhouettes and cold mist.
+// Slow-drifting ice clouds; aurora shimmer; floating ice particles;
+// procedural frost crystal bursts; cold wind gusts.
+// =============================================================
+
+var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds',
+	{ preload: preload, create: create, update: update }, false, false);
+
+// Slower than default — ice clouds drift gently on polar winds
+var nuages = []; var densityDivider = 4.5; var velocityDivider = 0.70;
+var nuages2 = []; var field; var fond; var fond2;
+var nn = 0; var jj = 0; var sum = 0; var lock = 0;
+var decimal = -1;
+var pi = [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,8,4,1,9,7,1,6,9,3,9,9,3,7,5,1,0,5,8,2,0,9,7,4,9,4,4,5,9,2,3,0,7,8,1,6,4,0,6,2,8,6,2,0,8,9,9,8,6,2,8,0,3,4,8,2,5,3,4,2,1,1,7,0,6,7,9,8,2,1,4,8,0,8,6,5,1,3,2,8,2,3,0,6,6,4,7,0,9,3,8,4,4,6,0,9,5,5,0,5,8,2,2,3,1,7,2,5,3,5,9,4,0,8,1,2,8,4,8,1,1,1,7,4,5,0,2,8,4,1,0,2,7,0,1,9,3,8,5,2,1,1,0,5,5,5,9,6,4,4,6,2,2,9,4,8,9,5,4,9,3,0,3,8,1,9,6,4,4,2,8,8,1,0,9,7,5,6,6,5,9,3,3,4,4,6,1,2,8,4,7,5,6,4,8,2,3,3,7,8,6,7,8,3,1,6,5,2,7,1,2,0,1,9,0,9,1,4,5,6,4,8,5,6,6,9,2,3,4,6,0,3,4,8,6,1,0,4,5,4,3,2,6,6,4,8,2,1,3,3,9,3,6,0,7,2,6,0,2,4,9,1,4,1,2,7,3,7,2,4,5,8,7,0,0,6,6,0,6,3,1,5,5,8,8,1,7,4,8,8,1,5,2,0,9,2,0,9,6,2,8,2,9,2,5,4,0,9,1,7,1,5,3,6,4,3,6,7,8,9,2,5,9,0,3,6,0,0,1,1,3,3,0,5,3,0,5,4,8,8,2,0,4,6,6,5,2,1,3,8,4,1,4,6,9,5,1,9,4,1,5,1,1,6,0,9,4,3,3,0,5,7,2,7,0,3,6,5,7,5,9,5,9,1,9,5,3,0,9,2,1,8,6,1,1,7,3,8,1,9,3,2,6,1,1,7,9,3,1,0,5,1,1,8,5,4,8,0,7,4,4,6,2,3,7,9,9,6,2,7,4,9,5,6,7,3,5,1,8,8,5,7,5,2,7,2,4,8,9,1,2,2,7,9,3,8,1,8,3,0,1,1,9,4,9,1,2,9,8,3,3,6,7,3,3,6,2,4,4,0,6,5,6,6,4,3,0,8,6,0,2,1,3,9,4,9,4,6,3,9,5,2,2,4,7,3,7,1,9,0,7,0,2,1,7,9,8,6,0,9,4,3,7,0,2,7,7,0,5,3,9,2,1,7,1,7,6,2,9,3,1,7,6,7,5,2,3,8,4,6,7,4,8,1,8,4,6,7,6,6,9,4,0,5,1,3,2,0,0,0,5,6,8,1,2,7,1,4,5,2,6,3,5,6,0,8,2,7,7,8,5,7,7,1,3,4,2,7,5,7,7,8,9,6,0,9,1,7,3,6,3,7,1,7,8,7,2,1,4,6,8,4,4,0,9,0,1,2,2,4,9,5,3,4,3,0,1,4,6,5,4,9,5,8,5,3,7,1,0,5,0,7,9,2,2,7,9,6,8,9,2,5,8,9,2,3,5,4,2,0,1,9,9,5,6,1,1,2,1,2,9,0,2,1,9,6,0,8,6,4,0,3,4,4,1,8,1,5,9,8,1,3,6,2,9,7,7,4,7,7,1,3,0,9,9,6,0,5,1,8,7,0,7,2,1,1,3,4,9,9,9,9,9,9,8,3,7,2,9,7,8,0,4,9,9,5,1,0,5,9,7,3,1,7,3,2,8,1,6,0,9,6,3,1,8,5,9,5,0,2,4,4,5,9,4,5,5,3,4,6,9,0,8,3,0,2,6,4,2,5,2,2,3,0,8,2,5,3,3,4,4,6,8,5,0,3,5,2,6,1,9,3,1,1,8,8,1,7,1,0,1,0,0,0,3,1,3,7,8,3,8,7,5,2,8,8,6,5,8,7,5,3,3,2,0,8,3,8,1,4,2,0];
+
+function randInt(min, max) {
+	return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+for (var i = 0; i < 10000; i++) {
+	pi.push(randInt(0, 9));
+}
+
+var timer = 0;
+
+// ------------------------------------------------------------------
+// Frost particle system — small ice crystals drift on polar wind
+// ------------------------------------------------------------------
+var frostParticles = [];
+var frostGfx;
+var FROST_COUNT = 60;
+
+// Ice crystal shape: draw a 6-pointed asterisk at (cx, cy) with radius r
+function drawCrystal(gfx, cx, cy, r, alpha) {
+	gfx.lineStyle(1, 0xC8E8FF, alpha);
+	for (var arm = 0; arm < 6; arm++) {
+		var angle = (arm / 6) * Math.PI * 2;
+		gfx.moveTo(cx, cy);
+		gfx.lineTo(cx + Math.cos(angle) * r, cy + Math.sin(angle) * r);
+		// Small side branches
+		var branchAngle1 = angle + Math.PI / 6;
+		var branchAngle2 = angle - Math.PI / 6;
+		var mid = r * 0.55;
+		gfx.moveTo(cx + Math.cos(angle) * mid, cy + Math.sin(angle) * mid);
+		gfx.lineTo(cx + Math.cos(angle) * mid + Math.cos(branchAngle1) * (r * 0.28),
+		           cy + Math.sin(angle) * mid + Math.sin(branchAngle1) * (r * 0.28));
+		gfx.moveTo(cx + Math.cos(angle) * mid, cy + Math.sin(angle) * mid);
+		gfx.lineTo(cx + Math.cos(angle) * mid + Math.cos(branchAngle2) * (r * 0.28),
+		           cy + Math.sin(angle) * mid + Math.sin(branchAngle2) * (r * 0.28));
+	}
+}
+
+// ------------------------------------------------------------------
+// Cold wind gust system — horizontal streaks of mist
+// ------------------------------------------------------------------
+var gustGfx;
+var gustParticles = [];
+var GUST_COUNT = 30;
+var nextGust = 0;
+var gustActive = false;
+var gustTimer = 0;
+var GUST_DURATION = 90; // frames
+
+// ------------------------------------------------------------------
+// Frost burst event — periodic crystalline explosion
+// ------------------------------------------------------------------
+var nextBurst = 0;
+
+function doBurst() {
+	var bx = randInt(100, 1200);
+	var by = randInt(100, 500);
+	var burstGfx = game.add.graphics(0, 0);
+	game.world.bringToTop(burstGfx);
+
+	// Draw a starburst of crystal arms
+	burstGfx.lineStyle(1, 0xE8F8FF, 0.9);
+	var numArms = 12;
+	for (var a = 0; a < numArms; a++) {
+		var angle = (a / numArms) * Math.PI * 2;
+		var armLen = 18 + randInt(0, 14);
+		burstGfx.moveTo(bx, by);
+		burstGfx.lineTo(bx + Math.cos(angle) * armLen, by + Math.sin(angle) * armLen);
+	}
+	// Bright center dot
+	burstGfx.lineStyle(0);
+	burstGfx.beginFill(0xFFFFFF, 0.85);
+	burstGfx.drawCircle(bx, by, 3);
+	burstGfx.endFill();
+
+	// Fade out
+	game.add.tween(burstGfx)
+		.to({ alpha: 0 }, 1200 + randInt(0, 400), Phaser.Easing.Quadratic.Out, true)
+		.onComplete.add(function() { burstGfx.destroy(); });
+}
+
+// ------------------------------------------------------------------
+function preload() {
+	game.load.image('nuage',  'nuage.png');
+	game.load.image('nuage2', 'nuage2.png');
+	game.load.image('field',  'field.png');
+	game.load.image('fond',   'fond.png');
+	game.load.image('fond2',  'fond2.png');
+}
+
+function create() {
+	game.time.desiredFps = 30;
+
+	// Pale polar sky — light blue-grey like an overcast Antarctic afternoon
+	game.stage.backgroundColor = '#B8D8EA';
+
+	// Sky tile — icy blue-white, slightly tinted
+	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
+	fond.tint  = 0xD4EBF8;
+	fond.alpha = 0.88;
+
+	// Reflection tile — pale ice-blue, the ice sheet below
+	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
+	fond2.tint  = 0xC0DDF0;
+	fond2.alpha = 0.82;
+
+	order0 = game.add.group(); order1 = game.add.group();
+	order2 = game.add.group(); order3 = game.add.group();
+	order4 = game.add.group(); order5 = game.add.group();
+	order6 = game.add.group(); order7 = game.add.group();
+	order8 = game.add.group(); order9 = game.add.group();
+
+	// Frost particles — small drifting ice crystals
+	frostGfx = game.add.graphics(0, 0);
+	for (var f = 0; f < FROST_COUNT; f++) {
+		frostParticles.push({
+			x:     Math.random() * 1300,
+			y:     Math.random() * 700,
+			vx:    0.3 + Math.random() * 0.8,   // drift rightward on polar wind
+			vy:    (Math.random() - 0.5) * 0.3,
+			r:     2 + Math.random() * 3,         // crystal arm radius
+			alpha: 0.15 + Math.random() * 0.35,
+			phase: Math.random() * Math.PI * 2   // for gentle bob
+		});
+	}
+
+	// Gust particle system — horizontal mist streaks
+	gustGfx = game.add.graphics(0, 0);
+	for (var g = 0; g < GUST_COUNT; g++) {
+		gustParticles.push({
+			x:    -200 + Math.random() * 1500,
+			y:    100 + Math.random() * 500,
+			vx:   4 + Math.random() * 8,
+			len:  20 + Math.random() * 60,
+			alpha: 0
+		});
+	}
+
+	// Ambient glow — cool polar shimmer
+	if (game.canvas) {
+		game.canvas.style.boxShadow = '0 0 30px 8px rgba(100, 190, 255, 0.28)';
+	}
+
+	// First frost burst in 3–7 seconds
+	nextBurst = game.time.now + randInt(3000, 7000);
+	// First gust in 6–15 seconds
+	nextGust = game.time.now + randInt(6000, 15000);
+}
+
+function update() {
+
+	timer++;
+	var frame = timer;
+
+	// ---- Frost particles (drifting ice crystals) --------------------
+	frostGfx.clear();
+	for (var f = 0; f < frostParticles.length; f++) {
+		var fp = frostParticles[f];
+		fp.x += fp.vx;
+		fp.y += fp.vy + Math.sin(frame * 0.04 + fp.phase) * 0.15;
+		if (fp.x > 1320) { fp.x = -20; fp.y = Math.random() * 700; }
+		// Flicker gently
+		var flickerAlpha = fp.alpha * (0.7 + 0.3 * Math.sin(frame * 0.08 + fp.phase));
+		drawCrystal(frostGfx, fp.x, fp.y, fp.r, flickerAlpha);
+	}
+
+	// ---- Cold wind gusts -------------------------------------------
+	if (gustActive) {
+		gustTimer++;
+		gustGfx.clear();
+		var gustProgress = gustTimer / GUST_DURATION;
+		var gustFade = gustProgress < 0.2 ? (gustProgress / 0.2)
+		             : gustProgress > 0.7 ? (1 - (gustProgress - 0.7) / 0.3)
+		             : 1.0;
+		for (var g = 0; g < gustParticles.length; g++) {
+			var gp = gustParticles[g];
+			gp.x += gp.vx;
+			if (gp.x > 1400) { gp.x = -gp.len; }
+			var lineAlpha = (0.06 + Math.random() * 0.06) * gustFade;
+			gustGfx.lineStyle(1, 0xD8EEFF, lineAlpha);
+			gustGfx.moveTo(gp.x, gp.y);
+			gustGfx.lineTo(gp.x + gp.len, gp.y + 1);
+		}
+		if (gustTimer >= GUST_DURATION) {
+			gustActive = false;
+			gustTimer = 0;
+			gustGfx.clear();
+		}
+	} else if (game.time.now >= nextGust) {
+		gustActive = true;
+		gustTimer = 0;
+		// Randomize gust particle positions for this burst
+		for (var g = 0; g < gustParticles.length; g++) {
+			gustParticles[g].x  = -gustParticles[g].len + Math.random() * 400;
+			gustParticles[g].y  = 50 + Math.random() * 600;
+			gustParticles[g].vx = 5 + Math.random() * 10;
+			gustParticles[g].len = 25 + Math.random() * 65;
+		}
+		nextGust = game.time.now + randInt(8000, 20000);
+	}
+
+	// ---- Cloud spawning ---------------------------------------------
+	if (timer > (pi[decimal + 1]) * densityDivider) {
+
+		decimal++;
+		timer = 0;
+
+		// Upper ice cloud — pale blue-white, luminous
+		var cloud = game.add.tileSprite(-200, 400 - (pi[decimal] * 34 - 15), 768, 312, 'nuage');
+		cloud.anchor.x = 0.7;
+		cloud.anchor.y = 0.5;
+		cloud.scale.setTo(pi[decimal] / 10, pi[decimal] / 10);
+		cloud.alpha = 0.88;
+		cloud.tint = 0xD8EEFF; // icy blue-white cirrus
+		nuages.push(cloud);
+
+		// Lower reflection — cool ice surface reflection
+		var cloud2 = game.add.tileSprite(-200, 400 + (pi[decimal] * 34 - 15), 768, 312, 'nuage2');
+		cloud2.anchor.x = 0.7;
+		cloud2.anchor.y = 0.5;
+		cloud2.scale.setTo(pi[decimal] / 10, pi[decimal] / 10);
+		cloud2.alpha = 0.72;
+		cloud2.tint = 0xB0D0E8; // deeper ice blue reflection
+		nuages2.push(cloud2);
+
+		switch (pi[decimal]) {
+		case 0: order0.add(nuages[decimal]); order0.add(nuages2[decimal]); break;
+		case 1: order1.add(nuages[decimal]); order1.add(nuages2[decimal]); break;
+		case 2: order2.add(nuages[decimal]); order2.add(nuages2[decimal]); break;
+		case 3: order3.add(nuages[decimal]); order3.add(nuages2[decimal]); break;
+		case 4: order4.add(nuages[decimal]); order4.add(nuages2[decimal]); break;
+		case 5: order5.add(nuages[decimal]); order5.add(nuages2[decimal]); break;
+		case 6: order6.add(nuages[decimal]); order6.add(nuages2[decimal]); break;
+		case 7: order7.add(nuages[decimal]); order7.add(nuages2[decimal]); break;
+		case 8: order8.add(nuages[decimal]); order8.add(nuages2[decimal]); break;
+		case 9: order9.add(nuages[decimal]); order9.add(nuages2[decimal]); break;
+		}
+	}
+
+	// ---- Cloud movement ---------------------------------------------
+	while (jj <= decimal) {
+		if (nuages[jj].x > 1800) {
+			nuages[jj].destroy();
+		}
+		nuages[jj].x  += pi[jj] / Math.abs(velocityDivider);
+		nuages2[jj].x += pi[jj] / Math.abs(velocityDivider);
+		jj++;
+	}
+	jj = 0;
+
+	// ---- Depth sort — clouds, then fond2, then effects on top ------
+	game.world.bringToTop(order0); game.world.bringToTop(order1);
+	game.world.bringToTop(order2); game.world.bringToTop(order3);
+	game.world.bringToTop(order4); game.world.bringToTop(order5);
+	game.world.bringToTop(order6); game.world.bringToTop(order7);
+	game.world.bringToTop(order8); game.world.bringToTop(order9);
+	fond2.bringToTop();                   // ice sheet reflection sits above clouds
+	game.world.bringToTop(gustGfx);       // wind gusts over reflection
+	game.world.bringToTop(frostGfx);      // frost crystals on top
+
+	// ---- Frost burst events ----------------------------------------
+	if (game.time.now >= nextBurst) {
+		nextBurst = game.time.now + randInt(5000, 12000);
+		doBurst();
+		// Sometimes a double burst
+		if (Math.random() < 0.3) {
+			var delay = randInt(200, 600);
+			(function(d) {
+				setTimeout(function() { doBurst(); }, d);
+			})(delay);
+		}
+	}
+}
+	</script>
+</head>
+<body style="background-color: #9BBFD8;">
+	<div id="game" style="
+		cursor: none;
+		position: absolute;
+		TOP: 0px;
+		LEFT: 0px;
+
+		image-rendering: optimizeSpeed;
+		image-rendering: -moz-crisp-edges;
+		image-rendering: -o-crisp-edges;
+		image-rendering: -webkit-optimize-contrast;
+		image-rendering: optimize-contrast;
+		-ms-interpolation-mode: nearest-neighbor;
+		image-rendering: pixelated;">
+	</div>
+
+	<!-- ============================================================ -->
+	<!-- Penguin silhouettes — drawn as inline SVG positioned via CSS -->
+	<!-- ============================================================ -->
+	<div class="penguin-wrap" id="penguinWrap"></div>
+
+	<!-- Cold mist layers -->
+	<div id="mistContainer" style="position:absolute;top:0;left:0;width:1300px;height:700px;pointer-events:none;overflow:hidden;"></div>
+
+	<!-- Aurora borealis bands -->
+	<div id="auroraContainer" style="position:absolute;top:0;left:0;width:1300px;height:700px;pointer-events:none;overflow:hidden;"></div>
+
+	<!-- Ice particle overlay -->
+	<div id="iceContainer" style="position:absolute;top:0;left:0;width:1300px;height:700px;pointer-events:none;overflow:hidden;"></div>
+
+	<script>
+	// ----------------------------------------------------------------
+	// Penguin SVG path — a clean blocky silhouette
+	// Body (ellipse) + head (circle) + feet + flippers
+	// ----------------------------------------------------------------
+	var PENGUIN_SVG = '<svg viewBox="0 0 60 90" xmlns="http://www.w3.org/2000/svg">' +
+		// Body
+		'<ellipse cx="30" cy="58" rx="18" ry="26" fill="#0D1520"/>' +
+		// White belly
+		'<ellipse cx="30" cy="60" rx="10" ry="18" fill="#D0E8F8" opacity="0.85"/>' +
+		// Head
+		'<circle cx="30" cy="27" r="14" fill="#0D1520"/>' +
+		// Eyes (white dot + black pupil)
+		'<circle cx="24" cy="24" r="3.5" fill="white"/>' +
+		'<circle cx="25" cy="24" r="1.8" fill="#0D1520"/>' +
+		'<circle cx="36" cy="24" r="3.5" fill="white"/>' +
+		'<circle cx="37" cy="24" r="1.8" fill="#0D1520"/>' +
+		// Beak
+		'<polygon points="30,30 26,35 34,35" fill="#E8A830"/>' +
+		// Left flipper
+		'<ellipse cx="10" cy="58" rx="6" ry="16" fill="#0D1520" transform="rotate(-18 10 58)"/>' +
+		// Right flipper
+		'<ellipse cx="50" cy="58" rx="6" ry="16" fill="#0D1520" transform="rotate(18 50 58)"/>' +
+		// Left foot
+		'<ellipse cx="22" cy="84" rx="8" ry="4" fill="#E8A830" transform="rotate(-10 22 84)"/>' +
+		// Right foot
+		'<ellipse cx="38" cy="84" rx="8" ry="4" fill="#E8A830" transform="rotate(10 38 84)"/>' +
+		'</svg>';
+
+	// Penguin configuration: [left%, size-px, waddle-px, waddle-duration-s, waddle-delay-s]
+	var penguinConfigs = [
+		[6,  72, 6, 2.2, 0],
+		[14, 56, 5, 2.8, 0.4],
+		[22, 80, 7, 1.9, 0.8],
+		[31, 64, 5, 2.5, 1.2],
+		[42, 90, 8, 2.0, 0.3],
+		[52, 60, 5, 3.1, 0.7],
+		[61, 76, 7, 2.3, 1.5],
+		[70, 50, 4, 2.9, 0.1],
+		[79, 84, 7, 2.1, 0.9],
+		[88, 68, 6, 2.6, 0.5]
+	];
+
+	var wrap = document.getElementById('penguinWrap');
+	penguinConfigs.forEach(function(cfg) {
+		var left = cfg[0], size = cfg[1], wx = cfg[2], wd = cfg[3], wdel = cfg[4];
+		var div = document.createElement('div');
+		div.className = 'penguin';
+		div.style.cssText =
+			'left:' + left + '%;' +
+			'--size:' + size + 'px;' +
+			'--waddle-x:' + wx + 'px;' +
+			'--waddle-dur:' + wd + 's;' +
+			'--waddle-delay:' + wdel + 's;';
+		div.innerHTML = PENGUIN_SVG;
+		wrap.appendChild(div);
+	});
+
+	// ----------------------------------------------------------------
+	// Cold mist layers
+	// ----------------------------------------------------------------
+	var mistConfigs = [
+		{ top: 55, height: 60, alpha: 0.07, opLo: 0.3, opHi: 0.8, dur: 14, delay: 0 },
+		{ top: 65, height: 45, alpha: 0.05, opLo: 0.2, opHi: 0.7, dur: 18, delay: 3 },
+		{ top: 48, height: 80, alpha: 0.04, opLo: 0.1, opHi: 0.6, dur: 22, delay: 7 },
+		{ top: 72, height: 35, alpha: 0.06, opLo: 0.3, opHi: 0.9, dur: 12, delay: 5 }
+	];
+	var mistContainer = document.getElementById('mistContainer');
+	mistConfigs.forEach(function(cfg) {
+		var div = document.createElement('div');
+		div.className = 'mist-layer';
+		div.style.cssText =
+			'top:' + cfg.top + '%;' +
+			'height:' + cfg.height + 'px;' +
+			'--mist-alpha:' + cfg.alpha + ';' +
+			'--mist-opacity-lo:' + cfg.opLo + ';' +
+			'--mist-opacity-hi:' + cfg.opHi + ';' +
+			'--mist-dur:' + cfg.dur + 's;' +
+			'--mist-delay:' + cfg.delay + 's;';
+		mistContainer.appendChild(div);
+	});
+
+	// ----------------------------------------------------------------
+	// Aurora borealis bands
+	// ----------------------------------------------------------------
+	var auroraConfigs = [
+		{ top: 0,   height: 120, color1: 'rgba(80,220,180,0)', color2: 'rgba(80,220,180,0.12)', color3: 'rgba(60,200,160,0)', peak: 0.5, dur: 16, delay: 0 },
+		{ top: 20,  height: 80,  color1: 'rgba(100,160,255,0)',color2: 'rgba(100,160,255,0.09)', color3: 'rgba(80,140,240,0)',  peak: 0.4, dur: 20, delay: 6 },
+		{ top: 5,   height: 100, color1: 'rgba(140,220,255,0)',color2: 'rgba(140,220,255,0.07)', color3: 'rgba(120,200,240,0)', peak: 0.35,dur: 25, delay: 10 }
+	];
+	var auroraContainer = document.getElementById('auroraContainer');
+	auroraConfigs.forEach(function(cfg) {
+		var div = document.createElement('div');
+		div.className = 'aurora';
+		div.style.cssText =
+			'top:' + cfg.top + 'px;' +
+			'height:' + cfg.height + 'px;' +
+			'background: linear-gradient(to bottom, ' + cfg.color1 + ', ' + cfg.color2 + ', ' + cfg.color3 + ');' +
+			'--aurora-peak:' + cfg.peak + ';' +
+			'--aurora-dur:' + cfg.dur + 's;' +
+			'--aurora-delay:' + cfg.delay + 's;';
+		auroraContainer.appendChild(div);
+	});
+
+	// ----------------------------------------------------------------
+	// CSS ice particles
+	// ----------------------------------------------------------------
+	var iceContainer = document.getElementById('iceContainer');
+	for (var i = 0; i < 25; i++) {
+		var dot = document.createElement('div');
+		dot.className = 'ice-particle';
+		var sz = 2 + Math.random() * 5;
+		dot.style.cssText =
+			'left:' + (Math.random() * 100) + '%;' +
+			'top:' + (Math.random() * 80) + '%;' +
+			'width:' + sz + 'px;' +
+			'height:' + sz + 'px;' +
+			'--ice-alpha:' + (0.3 + Math.random() * 0.5) + ';' +
+			'--ix:' + (Math.random() * 40 - 20) + 'px;' +
+			'--drift-dur:' + (6 + Math.random() * 10) + 's;' +
+			'--drift-delay:' + (-Math.random() * 10) + 's;';
+		iceContainer.appendChild(dot);
+	}
+	</script>
+</body>
+</html>
