@@ -11,6 +11,43 @@ var nuages = []; var densityDivider = 4; var velocityDivider = 0.6;
 var nuages2 = []; var field; var fond; var fond2;
 var nn = 0; var jj = 0; var sum = 0; var lock = 0;
 var decimal = -1;
+
+// --- Theme handling ----------------------------------------------------
+// Resolve theme from URL (?theme=night) with a 'day' default.
+var THEME = (function () {
+	try {
+		var p = new URLSearchParams(window.location.search).get('theme');
+		if (p === 'night') return 'night';
+	} catch (e) {}
+	return 'day';
+})();
+// Expose theme to CSS via data-theme on <body> as soon as body exists.
+document.addEventListener('DOMContentLoaded', function () {
+	document.body.setAttribute('data-theme', THEME);
+});
+// Per-theme visual parameters.
+var THEMES = {
+	day: {
+		stageBg: '#4488AA',
+		bodyBg: 'rgb(67,169,223)',
+		fondTint: 0xffffff,   // no tint
+		fond2Tint: 0xffffff,
+		fond2Alpha: 0.9,
+		cloudTint: 0xffffff,
+		cloudAlphaTop: 0.9,
+		cloudAlphaBottom: 0.9
+	},
+	night: {
+		stageBg: '#0B1026',
+		bodyBg: 'rgb(11,16,38)',
+		fondTint: 0x3a3f6c,   // darken the sky backdrop
+		fond2Tint: 0x2a3358,  // muted field
+		fond2Alpha: 0.92,
+		cloudTint: 0x5a6a8a,  // dim, bluish clouds
+		cloudAlphaTop: 0.55,
+		cloudAlphaBottom: 0.5
+	}
+};
 var pi = [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,8,4,1,9,7,1,6,9,3,9,9,3,7,5,1,0,5,8,2,0,9,7,4,9,4,4,5,9,2,3,0,7,8,1,6,4,0,6,2,8,6,2,0,8,9,9,8,6,2,8,0,3,4,8,2,5,3,4,2,1,1,7,0,6,7,9,8,2,1,4,8,0,8,6,5,1,3,2,8,2,3,0,6,6,4,7,0,9,3,8,4,4,6,0,9,5,5,0,5,8,2,2,3,1,7,2,5,3,5,9,4,0,8,1,2,8,4,8,1,1,1,7,4,5,0,2,8,4,1,0,2,7,0,1,9,3,8,5,2,1,1,0,5,5,5,9,6,4,4,6,2,2,9,4,8,9,5,4,9,3,0,3,8,1,9,6,4,4,2,8,8,1,0,9,7,5,6,6,5,9,3,3,4,4,6,1,2,8,4,7,5,6,4,8,2,3,3,7,8,6,7,8,3,1,6,5,2,7,1,2,0,1,9,0,9,1,4,5,6,4,8,5,6,6,9,2,3,4,6,0,3,4,8,6,1,0,4,5,4,3,2,6,6,4,8,2,1,3,3,9,3,6,0,7,2,6,0,2,4,9,1,4,1,2,7,3,7,2,4,5,8,7,0,0,6,6,0,6,3,1,5,5,8,8,1,7,4,8,8,1,5,2,0,9,2,0,9,6,2,8,2,9,2,5,4,0,9,1,7,1,5,3,6,4,3,6,7,8,9,2,5,9,0,3,6,0,0,1,1,3,3,0,5,3,0,5,4,8,8,2,0,4,6,6,5,2,1,3,8,4,1,4,6,9,5,1,9,4,1,5,1,1,6,0,9,4,3,3,0,5,7,2,7,0,3,6,5,7,5,9,5,9,1,9,5,3,0,9,2,1,8,6,1,1,7,3,8,1,9,3,2,6,1,1,7,9,3,1,0,5,1,1,8,5,4,8,0,7,4,4,6,2,3,7,9,9,6,2,7,4,9,5,6,7,3,5,1,8,8,5,7,5,2,7,2,4,8,9,1,2,2,7,9,3,8,1,8,3,0,1,1,9,4,9,1,2,9,8,3,3,6,7,3,3,6,2,4,4,0,6,5,6,6,4,3,0,8,6,0,2,1,3,9,4,9,4,6,3,9,5,2,2,4,7,3,7,1,9,0,7,0,2,1,7,9,8,6,0,9,4,3,7,0,2,7,7,0,5,3,9,2,1,7,1,7,6,2,9,3,1,7,6,7,5,2,3,8,4,6,7,4,8,1,8,4,6,7,6,6,9,4,0,5,1,3,2,0,0,0,5,6,8,1,2,7,1,4,5,2,6,3,5,6,0,8,2,7,7,8,5,7,7,1,3,4,2,7,5,7,7,8,9,6,0,9,1,7,3,6,3,7,1,7,8,7,2,1,4,6,8,4,4,0,9,0,1,2,2,4,9,5,3,4,3,0,1,4,6,5,4,9,5,8,5,3,7,1,0,5,0,7,9,2,2,7,9,6,8,9,2,5,8,9,2,3,5,4,2,0,1,9,9,5,6,1,1,2,1,2,9,0,2,1,9,6,0,8,6,4,0,3,4,4,1,8,1,5,9,8,1,3,6,2,9,7,7,4,7,7,1,3,0,9,9,6,0,5,1,8,7,0,7,2,1,1,3,4,9,9,9,9,9,9,8,3,7,2,9,7,8,0,4,9,9,5,1,0,5,9,7,3,1,7,3,2,8,1,6,0,9,6,3,1,8,5,9,5,0,2,4,4,5,9,4,5,5,3,4,6,9,0,8,3,0,2,6,4,2,5,2,2,3,0,8,2,5,3,3,4,4,6,8,5,0,3,5,2,6,1,9,3,1,1,8,8,1,7,1,0,1,0,0,0,3,1,3,7,8,3,8,7,5,2,8,8,6,5,8,7,5,3,3,2,0,8,3,8,1,4,2,0];
 
 function randInt(min, max) {
@@ -41,9 +78,53 @@ function preload() {
 }
 function create() {
 	game.time.desiredFps = 30;
-	game.stage.backgroundColor = "#4488AA";
+	var tcfg = THEMES[THEME];
+	game.stage.backgroundColor = tcfg.stageBg;
 	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
 	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
+	fond.tint = tcfg.fondTint;
+	fond2.tint = tcfg.fond2Tint;
+
+	// Night-only celestial layer: stars + moon, drawn above the sky tile
+	// but below the cloud groups (added next), so clouds drift in front.
+	if (THEME === 'night') {
+		var stars = game.add.graphics(0, 0);
+		// Dense faint field of stars.
+		stars.beginFill(0xffffff, 0.7);
+		for (var s = 0; s < 160; s++) {
+			var sx = Math.random() * 1300;
+			var sy = Math.random() * 380;
+			var sr = Math.random() * 1.1 + 0.3;
+			stars.drawCircle(sx, sy, sr);
+		}
+		stars.endFill();
+		// A handful of brighter stars.
+		stars.beginFill(0xffffff, 1);
+		for (var b = 0; b < 25; b++) {
+			var bx = Math.random() * 1300;
+			var by = Math.random() * 340;
+			stars.drawCircle(bx, by, Math.random() * 1.2 + 1.2);
+		}
+		stars.endFill();
+		// Moon halo (soft concentric glow).
+		var moonX = 1080, moonY = 110;
+		var halo = game.add.graphics(0, 0);
+		halo.beginFill(0xf5e9c9, 0.08); halo.drawCircle(moonX, moonY, 180); halo.endFill();
+		halo.beginFill(0xf5e9c9, 0.12); halo.drawCircle(moonX, moonY, 140); halo.endFill();
+		halo.beginFill(0xf5e9c9, 0.18); halo.drawCircle(moonX, moonY, 110); halo.endFill();
+		// Moon body.
+		var moon = game.add.graphics(0, 0);
+		moon.beginFill(0xf6efd3, 1);
+		moon.drawCircle(moonX, moonY, 80);
+		moon.endFill();
+		// A couple of subtle craters.
+		moon.beginFill(0xdccfae, 0.6);
+		moon.drawCircle(moonX - 14, moonY - 10, 10);
+		moon.drawCircle(moonX + 18, moonY + 12, 7);
+		moon.drawCircle(moonX - 6, moonY + 20, 5);
+		moon.endFill();
+	}
+
 	order0 = game.add.group();
 	order1 = game.add.group();
 	order2 = game.add.group();
@@ -55,7 +136,7 @@ function create() {
 	order8 = game.add.group();
 	order9 = game.add.group();
 	//fond2.angle = 180;
-	fond2.alpha = 0.9;
+	fond2.alpha = tcfg.fond2Alpha;
 	//field = game.add.tileSprite(0, 465, 1300, 300, 'field');
 	//field.alpha = 0.2;
 
@@ -68,17 +149,20 @@ function update() {
 
 		decimal++;
 		timer = 0;
+		var tcfg = THEMES[THEME];
 		nuages.push(game.add.tileSprite(-200, 400-(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage'));
 		nuages[decimal].anchor.x = 0.7;
 		nuages[decimal].anchor.y = 0.5;
 		nuages[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
-		nuages[decimal].alpha = 0.9;
+		nuages[decimal].alpha = tcfg.cloudAlphaTop;
+		nuages[decimal].tint = tcfg.cloudTint;
 		//sum += pi[decimal];
 		nuages2.push(game.add.tileSprite(-200, 400+(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage2'));
 		nuages2[decimal].anchor.x = 0.7;
 		nuages2[decimal].anchor.y = 0.5;
 		nuages2[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
-		nuages[decimal].alpha = 0.99;
+		nuages2[decimal].alpha = tcfg.cloudAlphaBottom;
+		nuages2[decimal].tint = tcfg.cloudTint;
 
 		switch(pi[decimal]) {
 		case 0:
@@ -158,7 +242,11 @@ function update() {
 
 
 </head>
-<body style="background-color: rgb(67,169,223);">
+<body>
+	<nav class="theme-switch" aria-label="Theme selector">
+		<a href="?theme=day" class="theme-switch__btn theme-switch__btn--day">Day</a>
+		<a href="?theme=night" class="theme-switch__btn theme-switch__btn--night">Night</a>
+	</nav>
 	<div id="game" style="
 		cursor: none;
 		position: absolute;
