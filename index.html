@@ -6,6 +6,25 @@
 	<meta charset="utf-8"/>
 	<script type="text/javascript" src="phaser.min.js"></script>
 	<script>
+// --- Themes registry ------------------------------------------------
+// Each theme points at a folder containing fond.png, fond2.png,
+// nuage.png, nuage2.png (same sizes/format as the originals).
+// Select via query string: index.html?theme=storm
+// Default ('original') loads the classic images from the repo root.
+var THEMES = {
+	original: { path: '',               bodyBg: 'rgb(67,169,223)' },
+	storm:    { path: 'themes/storm/',  bodyBg: 'rgb(40,50,65)'   }
+};
+var themeName = 'original';
+try {
+	var q = (location.search || '').match(/[?&]theme=([^&]+)/);
+	if (q && THEMES[decodeURIComponent(q[1])]) themeName = decodeURIComponent(q[1]);
+} catch (e) {}
+var THEME = THEMES[themeName];
+document.addEventListener('DOMContentLoaded', function () {
+	document.body.style.backgroundColor = THEME.bodyBg;
+});
+
 var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds', { preload: preload, create: create, update: update }, false, false);
 var nuages = []; var densityDivider = 4; var velocityDivider = 0.6;
 var nuages2 = []; var field; var fond; var fond2;
@@ -33,11 +52,11 @@ function sleep(milliseconds) {
 	}
 }
 function preload() {
-	game.load.image('nuage','nuage.png');
-	game.load.image('nuage2','nuage2.png');
-	game.load.image('field','field.png');
-	game.load.image('fond','fond.png');
-	game.load.image('fond2','fond2.png');
+	game.load.image('nuage', THEME.path + 'nuage.png');
+	game.load.image('nuage2', THEME.path + 'nuage2.png');
+	game.load.image('field', 'field.png');
+	game.load.image('fond', THEME.path + 'fond.png');
+	game.load.image('fond2', THEME.path + 'fond2.png');
 }
 function create() {
 	game.time.desiredFps = 30;
