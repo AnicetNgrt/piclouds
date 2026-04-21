@@ -32,12 +32,27 @@ function sleep(milliseconds) {
 		}
 	}
 }
+function getThemeBase() {
+	var params = new URLSearchParams(window.location.search);
+	var theme = params.get('theme');
+	// Allow only simple alphanumerics/dashes to avoid path tricks
+	if (theme && /^[A-Za-z0-9_-]+$/.test(theme)) {
+		return 'themes/' + theme + '/';
+	}
+	return '';
+}
+var themeBase = getThemeBase();
+function themedAsset(name) {
+	// field.png has no themed variant yet; always fall back to root.
+	if (name === 'field.png') return name;
+	return themeBase ? themeBase + name : name;
+}
 function preload() {
-	game.load.image('nuage','nuage.png');
-	game.load.image('nuage2','nuage2.png');
-	game.load.image('field','field.png');
-	game.load.image('fond','fond.png');
-	game.load.image('fond2','fond2.png');
+	game.load.image('nuage', themedAsset('nuage.png'));
+	game.load.image('nuage2', themedAsset('nuage2.png'));
+	game.load.image('field', themedAsset('field.png'));
+	game.load.image('fond', themedAsset('fond.png'));
+	game.load.image('fond2', themedAsset('fond2.png'));
 }
 function create() {
 	game.time.desiredFps = 30;
