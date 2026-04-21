@@ -6,11 +6,25 @@
 	<meta charset="utf-8"/>
 	<script type="text/javascript" src="phaser.min.js"></script>
 	<script>
+// ---- theme selection --------------------------------------------------
+// Default is the original "day" theme. Opt in to other themes with
+// ?theme=sunset (or whatever future values are added).
+var THEME = (function () {
+	try {
+		var q = (window.location.search || '').toLowerCase();
+		var m = q.match(/[?&]theme=([a-z0-9_-]+)/);
+		return m ? m[1] : 'day';
+	} catch (e) { return 'day'; }
+})();
+// -----------------------------------------------------------------------
+
 var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds', { preload: preload, create: create, update: update }, false, false);
 var nuages = []; var densityDivider = 4; var velocityDivider = 0.6;
 var nuages2 = []; var field; var fond; var fond2;
 var nn = 0; var jj = 0; var sum = 0; var lock = 0;
 var decimal = -1;
+// Pre-baked warm-tinted cloud textures (populated by create() in sunset mode).
+var sunsetCloud1 = null, sunsetCloud2 = null;
 var pi = [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,8,4,1,9,7,1,6,9,3,9,9,3,7,5,1,0,5,8,2,0,9,7,4,9,4,4,5,9,2,3,0,7,8,1,6,4,0,6,2,8,6,2,0,8,9,9,8,6,2,8,0,3,4,8,2,5,3,4,2,1,1,7,0,6,7,9,8,2,1,4,8,0,8,6,5,1,3,2,8,2,3,0,6,6,4,7,0,9,3,8,4,4,6,0,9,5,5,0,5,8,2,2,3,1,7,2,5,3,5,9,4,0,8,1,2,8,4,8,1,1,1,7,4,5,0,2,8,4,1,0,2,7,0,1,9,3,8,5,2,1,1,0,5,5,5,9,6,4,4,6,2,2,9,4,8,9,5,4,9,3,0,3,8,1,9,6,4,4,2,8,8,1,0,9,7,5,6,6,5,9,3,3,4,4,6,1,2,8,4,7,5,6,4,8,2,3,3,7,8,6,7,8,3,1,6,5,2,7,1,2,0,1,9,0,9,1,4,5,6,4,8,5,6,6,9,2,3,4,6,0,3,4,8,6,1,0,4,5,4,3,2,6,6,4,8,2,1,3,3,9,3,6,0,7,2,6,0,2,4,9,1,4,1,2,7,3,7,2,4,5,8,7,0,0,6,6,0,6,3,1,5,5,8,8,1,7,4,8,8,1,5,2,0,9,2,0,9,6,2,8,2,9,2,5,4,0,9,1,7,1,5,3,6,4,3,6,7,8,9,2,5,9,0,3,6,0,0,1,1,3,3,0,5,3,0,5,4,8,8,2,0,4,6,6,5,2,1,3,8,4,1,4,6,9,5,1,9,4,1,5,1,1,6,0,9,4,3,3,0,5,7,2,7,0,3,6,5,7,5,9,5,9,1,9,5,3,0,9,2,1,8,6,1,1,7,3,8,1,9,3,2,6,1,1,7,9,3,1,0,5,1,1,8,5,4,8,0,7,4,4,6,2,3,7,9,9,6,2,7,4,9,5,6,7,3,5,1,8,8,5,7,5,2,7,2,4,8,9,1,2,2,7,9,3,8,1,8,3,0,1,1,9,4,9,1,2,9,8,3,3,6,7,3,3,6,2,4,4,0,6,5,6,6,4,3,0,8,6,0,2,1,3,9,4,9,4,6,3,9,5,2,2,4,7,3,7,1,9,0,7,0,2,1,7,9,8,6,0,9,4,3,7,0,2,7,7,0,5,3,9,2,1,7,1,7,6,2,9,3,1,7,6,7,5,2,3,8,4,6,7,4,8,1,8,4,6,7,6,6,9,4,0,5,1,3,2,0,0,0,5,6,8,1,2,7,1,4,5,2,6,3,5,6,0,8,2,7,7,8,5,7,7,1,3,4,2,7,5,7,7,8,9,6,0,9,1,7,3,6,3,7,1,7,8,7,2,1,4,6,8,4,4,0,9,0,1,2,2,4,9,5,3,4,3,0,1,4,6,5,4,9,5,8,5,3,7,1,0,5,0,7,9,2,2,7,9,6,8,9,2,5,8,9,2,3,5,4,2,0,1,9,9,5,6,1,1,2,1,2,9,0,2,1,9,6,0,8,6,4,0,3,4,4,1,8,1,5,9,8,1,3,6,2,9,7,7,4,7,7,1,3,0,9,9,6,0,5,1,8,7,0,7,2,1,1,3,4,9,9,9,9,9,9,8,3,7,2,9,7,8,0,4,9,9,5,1,0,5,9,7,3,1,7,3,2,8,1,6,0,9,6,3,1,8,5,9,5,0,2,4,4,5,9,4,5,5,3,4,6,9,0,8,3,0,2,6,4,2,5,2,2,3,0,8,2,5,3,3,4,4,6,8,5,0,3,5,2,6,1,9,3,1,1,8,8,1,7,1,0,1,0,0,0,3,1,3,7,8,3,8,7,5,2,8,8,6,5,8,7,5,3,3,2,0,8,3,8,1,4,2,0];
 
 function randInt(min, max) {
@@ -39,11 +53,114 @@ function preload() {
 	game.load.image('fond','fond.png');
 	game.load.image('fond2','fond2.png');
 }
+function buildSunsetSky() {
+	// Vertical gradient painted into a BitmapData, then added as a sprite
+	// covering the sky area (0..400). Mirrors the warm dusk palette.
+	var bmd = game.add.bitmapData(1300, 400);
+	var ctx = bmd.context;
+	var grd = ctx.createLinearGradient(0, 0, 0, 400);
+	grd.addColorStop(0.00, '#3a1e55');   // deep violet up high
+	grd.addColorStop(0.25, '#9b3560');   // magenta band
+	grd.addColorStop(0.55, '#e85a48');   // hot coral
+	grd.addColorStop(0.80, '#ffa463');   // warm orange
+	grd.addColorStop(1.00, '#ffd27a');   // pale gold near horizon
+	ctx.fillStyle = grd;
+	ctx.fillRect(0, 0, 1300, 400);
+	bmd.dirty = true;
+	return game.add.sprite(0, 0, bmd);
+}
+
+function bakeTintedCloud(srcKey, tintCss) {
+	// Pre-bake a warm-tinted copy of a cloud texture so the CANVAS renderer
+	// (which does not reliably tint TileSprites in Phaser 2.x) can display
+	// it directly. 'multiply' preserves the cloud's internal shading while
+	// shifting the overall colour; 'destination-in' then re-applies the
+	// original image's alpha so the transparent areas stay transparent.
+	// Returns the BitmapData — tileSprite accepts it directly as a texture.
+	var src = game.cache.getImage(srcKey);
+	if (!src) { return null; }
+	var bmd = game.make.bitmapData(src.width, src.height);
+	var ctx = bmd.context;
+	ctx.drawImage(src, 0, 0);
+	ctx.globalCompositeOperation = 'multiply';
+	ctx.fillStyle = tintCss;
+	ctx.fillRect(0, 0, src.width, src.height);
+	ctx.globalCompositeOperation = 'destination-in';
+	ctx.drawImage(src, 0, 0);
+	ctx.globalCompositeOperation = 'source-over';
+	bmd.dirty = true;
+	return bmd;
+}
+
+function buildSunsetField() {
+	// Warm dusk-lit ground: brighter near the horizon, deeper shadow below.
+	// Done as a BitmapData so we don't have to fight the cyan-only fond2.png
+	// with multiplicative tint.
+	var bmd = game.add.bitmapData(1300, 300);
+	var ctx = bmd.context;
+	var grd = ctx.createLinearGradient(0, 0, 0, 300);
+	grd.addColorStop(0.00, '#c46843');   // warm sunlit band at horizon
+	grd.addColorStop(0.25, '#8a3e3a');   // rusty dusk
+	grd.addColorStop(0.70, '#4a1f34');   // deep plum shadow
+	grd.addColorStop(1.00, '#2a1228');   // near-black foreground
+	ctx.fillStyle = grd;
+	ctx.fillRect(0, 0, 1300, 300);
+	bmd.dirty = true;
+	return game.add.sprite(0, 400, bmd);
+}
+
+function buildSunsetSun() {
+	// Soft-edged sun: radial-gradient disc in a BitmapData, anchored on the
+	// horizon so only a half-dome shows above the field.
+	var size = 240;
+	var bmd = game.add.bitmapData(size, size);
+	var ctx = bmd.context;
+	var cx = size / 2, cy = size / 2;
+	// Outer halo
+	var halo = ctx.createRadialGradient(cx, cy, size * 0.18, cx, cy, size * 0.5);
+	halo.addColorStop(0.00, 'rgba(255, 240, 200, 1.0)');
+	halo.addColorStop(0.35, 'rgba(255, 190, 120, 0.55)');
+	halo.addColorStop(0.70, 'rgba(255, 120,  90, 0.18)');
+	halo.addColorStop(1.00, 'rgba(255, 120,  90, 0.00)');
+	ctx.fillStyle = halo;
+	ctx.fillRect(0, 0, size, size);
+	// Bright core
+	var core = ctx.createRadialGradient(cx, cy, 0, cx, cy, size * 0.22);
+	core.addColorStop(0.00, 'rgba(255, 255, 230, 1.0)');
+	core.addColorStop(1.00, 'rgba(255, 220, 160, 0.0)');
+	ctx.fillStyle = core;
+	ctx.fillRect(0, 0, size, size);
+	bmd.dirty = true;
+	var sun = game.add.sprite(1300 * 0.68, 400, bmd);
+	sun.anchor.setTo(0.5, 0.5);
+	return sun;
+}
+
 function create() {
 	game.time.desiredFps = 30;
-	game.stage.backgroundColor = "#4488AA";
-	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
-	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
+
+	if (THEME === 'sunset') {
+		// Warm stage color peeks through anywhere the gradient sprite doesn't cover.
+		game.stage.backgroundColor = "#e85a48";
+		// Gradient sky (replaces the 'fond' tileSprite visually for this theme).
+		buildSunsetSky();
+		// Glowing sun, low on the horizon, behind the clouds.
+		buildSunsetSun();
+		// Dusk-lit ground — a warm gradient replaces the cyan fond2 image
+		// for this theme. We still assign fond2 so the bringToTop call at
+		// the bottom of update() keeps the field on top of the clouds.
+		fond2 = buildSunsetField();
+		// Pre-bake warm-tinted cloud textures for this theme so clouds pick up
+		// the low sun without relying on runtime TileSprite.tint (flaky on
+		// Phaser 2.x CANVAS renderer). Spawned clouds pass these BitmapData
+		// objects directly as their texture source.
+		sunsetCloud1 = bakeTintedCloud('nuage',  '#ffb680');  // sunlit peach
+		sunsetCloud2 = bakeTintedCloud('nuage2', '#8a5a7a');  // mauve shadow
+	} else {
+		game.stage.backgroundColor = "#4488AA";
+		fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
+		fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
+	}
 	order0 = game.add.group();
 	order1 = game.add.group();
 	order2 = game.add.group();
@@ -68,13 +185,15 @@ function update() {
 
 		decimal++;
 		timer = 0;
-		nuages.push(game.add.tileSprite(-200, 400-(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage'));
+		var cloudKey  = (THEME === 'sunset' && sunsetCloud1) ? sunsetCloud1 : 'nuage';
+		var cloud2Key = (THEME === 'sunset' && sunsetCloud2) ? sunsetCloud2 : 'nuage2';
+		nuages.push(game.add.tileSprite(-200, 400-(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, cloudKey));
 		nuages[decimal].anchor.x = 0.7;
 		nuages[decimal].anchor.y = 0.5;
 		nuages[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
 		nuages[decimal].alpha = 0.9;
 		//sum += pi[decimal];
-		nuages2.push(game.add.tileSprite(-200, 400+(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage2'));
+		nuages2.push(game.add.tileSprite(-200, 400+(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, cloud2Key));
 		nuages2[decimal].anchor.x = 0.7;
 		nuages2[decimal].anchor.y = 0.5;
 		nuages2[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
@@ -159,6 +278,23 @@ function update() {
 
 </head>
 <body style="background-color: rgb(67,169,223);">
+	<script>
+		// Apply data-theme to <body> + inject a tiny theme-toggle link.
+		// Done inline so there is no flash of the wrong backdrop on load.
+		(function () {
+			document.body.setAttribute('data-theme', THEME);
+			if (THEME === 'sunset') {
+				document.body.style.backgroundColor = '#2a1a4a';
+			}
+			var next = (THEME === 'sunset') ? 'day' : 'sunset';
+			var label = (THEME === 'sunset') ? '☀ day' : '🌅 sunset';
+			var a = document.createElement('a');
+			a.id = 'theme-picker';
+			a.href = (next === 'day') ? '?' : ('?theme=' + next);
+			a.textContent = label;
+			document.body.appendChild(a);
+		})();
+	</script>
 	<div id="game" style="
 		cursor: none;
 		position: absolute;

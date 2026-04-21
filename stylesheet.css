@@ -1,0 +1,42 @@
+/* Base body styles — per-theme background is set inline in index.html so the
+   default day look remains identical to before. The sunset gradient overrides
+   below only take effect when <body data-theme="sunset">. */
+body {
+	margin: 0;
+}
+
+/* Sunset backdrop behind the canvas (in case of transparency / letterboxing). */
+body[data-theme="sunset"] {
+	background: linear-gradient(
+		to bottom,
+		#2a1a4a 0%,
+		#7a2a5a 18%,
+		#d94a5a 42%,
+		#ff8050 65%,
+		#ffb870 82%,
+		#3a2238 100%
+	) !important;
+}
+
+/* Theme picker button — tiny, unobtrusive, top-right. */
+#theme-picker {
+	position: fixed;
+	top: 10px;
+	right: 10px;
+	z-index: 10;
+	font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+	font-size: 12px;
+	background: rgba(0, 0, 0, 0.35);
+	color: #fff;
+	border: 1px solid rgba(255, 255, 255, 0.4);
+	border-radius: 4px;
+	padding: 4px 8px;
+	cursor: pointer;
+	user-select: none;
+	text-decoration: none;
+	letter-spacing: 0.5px;
+}
+
+#theme-picker:hover {
+	background: rgba(0, 0, 0, 0.55);
+}
