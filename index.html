@@ -12,9 +12,10 @@
 // Select via query string: index.html?theme=pastel
 // Default ('original') loads the classic images from the repo root.
 var THEMES = {
-	original: { path: '',                bodyBg: 'rgb(67,169,223)'  },
-	pastel:   { path: 'themes/pastel/',  bodyBg: 'rgb(255,221,232)' },
-	storm:    { path: 'themes/storm/',   bodyBg: 'rgb(40,50,65)'    }
+	original: { path: '',                 bodyBg: 'rgb(67,169,223)'  },
+	pastel:   { path: 'themes/pastel/',   bodyBg: 'rgb(255,221,232)' },
+	storm:    { path: 'themes/storm/',    bodyBg: 'rgb(40,50,65)'    },
+	midnight: { path: 'themes/midnight/', bodyBg: 'rgb(7,10,28)',    stageBg: '#070a1c' }
 };
 var themeName = 'original';
 try {
@@ -61,7 +62,7 @@ function preload() {
 }
 function create() {
 	game.time.desiredFps = 30;
-	game.stage.backgroundColor = "#4488AA";
+	game.stage.backgroundColor = THEME.stageBg || "#4488AA";
 	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
 	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
 	order0 = game.add.group();
