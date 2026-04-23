@@ -118,6 +118,11 @@ h1 {
 	display: block;
 	width: 100%;
 	height: auto;
+	transition: filter 0.5s ease;
+}
+
+body.night #game canvas {
+	filter: brightness(0.78) saturate(0.6) hue-rotate(185deg);
 }
 
 @media (max-width: 900px) {
