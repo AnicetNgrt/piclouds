@@ -148,6 +148,13 @@ var shootingStars     = [];
 var shootingStarTimer = 0;
 var shootingStarPiIdx = 200;   // read Pi from offset 200 (independent of cloud range)
 
+// ── Night Theme ───────────────────────────────────────────────────────────
+var starData       = [];       // per-star twinkling data { x, y, size, baseAlpha, color, bright, twinklePhase, twinkleSpeed }
+var fireflyGfx;                // graphics layer for fireflies
+var fireflies      = [];       // active firefly particles
+var fireflyPiIdx   = 500;      // Pi offset for firefly seeding
+var nightGlowGfx;              // horizon glow & atmospheric layer
+
 // ── Pi Digit Sonification ─────────────────────────────────────────────────
 var audioCtx    = null;
 var soundEnabled = false;
@@ -228,7 +235,12 @@ var DIGIT_COLORS = [
 function digitTint(digit, nightFactor) {
 	var dc = DIGIT_COLORS[digit];
 	var f  = lerp(1.0, 0.22, nightFactor);
-	return rgbToPhaser(dc.r * f, dc.g * f, dc.b * f);
+	// At night, shift toward cool blue-silver moonlit tones
+	var moonShift = nightFactor * 0.35;
+	var r = dc.r * f * (1.0 - moonShift * 0.5);
+	var g = dc.g * f * (1.0 - moonShift * 0.15);
+	var b = Math.min(255, dc.b * f + moonShift * 35);
+	return rgbToPhaser(r, g, b);
 }
 
 // Live Pi digit index counter (added to uiGroup in create())
@@ -505,19 +517,30 @@ function create() {
 	game.stage.backgroundColor = "#4488AA";
 	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
 
-	// Stars layer – drawn once, positioned by Pi digits, revealed at night
+	// Stars layer – data stored for twinkling animation, redrawn each frame
 	starsLayer = game.add.graphics(0, 0);
-	for (var s = 0; s < 150; s++) {
+	for (var s = 0; s < 200; s++) {
 		var px       = s * 3;
 		var sx       = (pi[px] * 130 + pi[px+1] * 13 + pi[px+2] * 7) % 1300;
 		var sy       = (pi[px] * 33  + pi[px+1] * 4  + 5)             % 330;
-		var starSize = (pi[px] % 2) + 1;           // radius 1 or 2 px
-		var starAlpha = 0.35 + (pi[px+2] / 14.0); // 0.35 – 0.99
-		starsLayer.beginFill(0xFFFFFF, starAlpha);
-		starsLayer.drawCircle(sx, sy, starSize * 2);
-		starsLayer.endFill();
+		var isBright = (s < 25);   // first 25 are prominent "major" stars
+		var starSize  = isBright ? 2 + (pi[px] % 2) : (pi[px] % 2) + 1;
+		var starAlpha = isBright ? 0.7 + (pi[px+2] / 33.0) : 0.35 + (pi[px+2] / 14.0);
+		var starCol   = isBright
+			? (s % 3 === 0 ? 0xAABBFF : (s % 3 === 1 ? 0xFFDDCC : 0xFFFFFF))
+			: (s % 7 === 0 ? 0xCCDDFF : (s % 11 === 0 ? 0xFFEEDD : 0xFFFFFF));
+		starData.push({
+			x: sx, y: sy, size: starSize,
+			baseAlpha: Math.min(starAlpha, 1.0),
+			bright: isBright, color: starCol,
+			twinklePhase: (pi[(px + 3) % pi.length] / 9.0) * Math.PI * 2,
+			twinkleSpeed: 0.02 + (pi[(px + 4) % pi.length] / 120.0)
+		});
 	}
 	starsLayer.alpha = 0; // invisible during the day
+
+	// Night atmosphere glow (horizon + sky, above stars)
+	nightGlowGfx = game.add.graphics(0, 0);
 
 	// Shooting star trails sit above the star-dot layer
 	shootingStarGfx = game.add.graphics(0, 0);
@@ -527,6 +550,9 @@ function create() {
 
 	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
 	fond2.alpha = 0.9;
+
+	// Fireflies float above water surface during night
+	fireflyGfx = game.add.graphics(0, 0);
 
 	order0 = game.add.group();
 	order1 = game.add.group();
@@ -627,13 +653,50 @@ function update() {
 	if (phase > 0.25 && phase < 0.75) {
 		nightAlpha = Math.sin((phase - 0.25) / 0.5 * Math.PI);
 	}
-	starsLayer.alpha = nightAlpha;
+	// ── Star twinkling ──────────────────────────────────────────────────
+	if (nightAlpha > 0.01) {
+		starsLayer.clear();
+		starsLayer.alpha = 1;
+		for (var st = 0; st < starData.length; st++) {
+			var sd = starData[st];
+			var twinkle = 0.5 + 0.5 * Math.sin(dayNightTimer * sd.twinkleSpeed + sd.twinklePhase);
+			var finalAlpha = sd.baseAlpha * twinkle * nightAlpha;
+			starsLayer.beginFill(sd.color, finalAlpha);
+			starsLayer.drawCircle(sd.x, sd.y, sd.size * 2);
+			starsLayer.endFill();
+			// Bright stars get a soft glow halo
+			if (sd.bright) {
+				starsLayer.beginFill(sd.color, finalAlpha * 0.15);
+				starsLayer.drawCircle(sd.x, sd.y, sd.size * 7);
+				starsLayer.endFill();
+			}
+		}
+	} else {
+		starsLayer.clear();
+		starsLayer.alpha = 0;
+	}
+	// ────────────────────────────────────────────────────────────────────
 
 	// Darken the stage background at night
 	var bgR = Math.floor(lerp(67,  5,  nightAlpha));
 	var bgG = Math.floor(lerp(169, 5,  nightAlpha));
 	var bgB = Math.floor(lerp(223, 30, nightAlpha));
 	game.stage.backgroundColor = rgbToCSS(bgR, bgG, bgB);
+
+	// ── Night Horizon Atmosphere ────────────────────────────────────────
+	nightGlowGfx.clear();
+	if (nightAlpha > 0.05) {
+		// Layered glow bands near the horizon for depth
+		nightGlowGfx.beginFill(0x1a1a4e, 0.12 * nightAlpha);
+		nightGlowGfx.drawRect(0, 290, 1300, 110);
+		nightGlowGfx.endFill();
+		nightGlowGfx.beginFill(0x2a1a3e, 0.14 * nightAlpha);
+		nightGlowGfx.drawRect(0, 330, 1300, 70);
+		nightGlowGfx.endFill();
+		nightGlowGfx.beginFill(0x3a2a4e, 0.10 * nightAlpha);
+		nightGlowGfx.drawRect(0, 360, 1300, 40);
+		nightGlowGfx.endFill();
+	}
 	// ────────────────────────────────────────────────────────────────────
 
 	// ── Shooting Stars ───────────────────────────────────────────────────────
@@ -713,7 +776,20 @@ function update() {
 		var moonNorm = (phase - 0.25) / 0.5;
 		var moonX    = moonNorm * 1200 + 50;
 		var moonY    = 370 - Math.sin(moonNorm * Math.PI) * 290;
-		// Soft outer glow
+
+		// Outermost atmospheric halo
+		celestialLayer.beginFill(0x7788BB, nightAlpha * 0.04);
+		celestialLayer.drawCircle(moonX, moonY, 180);
+		celestialLayer.endFill();
+		// Wide diffuse glow
+		celestialLayer.beginFill(0x8899CC, nightAlpha * 0.06);
+		celestialLayer.drawCircle(moonX, moonY, 130);
+		celestialLayer.endFill();
+		// Medium glow ring
+		celestialLayer.beginFill(0xAABBEE, nightAlpha * 0.10);
+		celestialLayer.drawCircle(moonX, moonY, 95);
+		celestialLayer.endFill();
+		// Inner glow
 		celestialLayer.beginFill(0xCCDDFF, nightAlpha * 0.18);
 		celestialLayer.drawCircle(moonX, moonY, 62);
 		celestialLayer.endFill();
@@ -721,6 +797,24 @@ function update() {
 		celestialLayer.beginFill(0xF0F5FF, nightAlpha);
 		celestialLayer.drawCircle(moonX, moonY, 30);
 		celestialLayer.endFill();
+		// Crescent shadow (offset dark circle creates moon-phase look)
+		celestialLayer.beginFill(0x0a0a2e, nightAlpha * 0.55);
+		celestialLayer.drawCircle(moonX + 10, moonY - 6, 24);
+		celestialLayer.endFill();
+
+		// Slow-rotating moonbeam rays
+		var numRays = 8;
+		for (var mri = 0; mri < numRays; mri++) {
+			var rayAngle = (mri / numRays) * Math.PI * 2 + dayNightTimer * 0.002;
+			var rayInner = 36;
+			var rayOuter = 70 + (pi[(mri * 3 + 50) % pi.length] % 5) * 10;
+			celestialLayer.lineStyle(1.5, 0xDDEEFF, nightAlpha * 0.10);
+			celestialLayer.moveTo(moonX + Math.cos(rayAngle) * rayInner,
+			                     moonY + Math.sin(rayAngle) * rayInner);
+			celestialLayer.lineTo(moonX + Math.cos(rayAngle) * rayOuter,
+			                     moonY + Math.sin(rayAngle) * rayOuter);
+		}
+		celestialLayer.lineStyle(0);
 	}
 	// ─────────────────────────────────────────────────────────────────────────
 
@@ -851,6 +945,7 @@ function update() {
 	game.world.bringToTop(order9);
 	rainGraphics.bringToTop();   // rain in front of clouds
 	fond2.bringToTop();          // ground always on top of rain
+	fireflyGfx.bringToTop();     // fireflies above water surface
 
 	// ── Rain rendering ────────────────────────────────────────────────
 	rainGraphics.clear();
@@ -868,11 +963,63 @@ function update() {
 		if (drop.life > fadeStart) {
 			dropAlpha *= 1 - (drop.life - fadeStart) / (drop.maxLife - fadeStart);
 		}
-		rainGraphics.lineStyle(1.5, 0xAADDFF, dropAlpha);
+		// Silver-tinted rain at night, blue-white rain during day
+		var rainColor = nightAlpha > 0.1 ? 0xCCDDFF : 0xAADDFF;
+		var rainAlpha = dropAlpha * lerp(1.0, 0.65, nightAlpha);
+		rainGraphics.lineStyle(1.5, rainColor, rainAlpha);
 		rainGraphics.moveTo(drop.x, drop.y);
 		rainGraphics.lineTo(drop.x - drop.vx * drop.len * 0.4, drop.y - drop.len);
 	}
 	// ─────────────────────────────────────────────────────────────────
+
+	// ── Fireflies (night only, near water surface) ────────────────────
+	fireflyGfx.clear();
+	if (nightAlpha > 0.1) {
+		// Spawn new fireflies periodically
+		if (fireflies.length < 20 && dayNightTimer % 18 === 0) {
+			var fpi = fireflyPiIdx % (pi.length - 8);
+			fireflies.push({
+				x: (pi[fpi] * 130 + pi[fpi+1] * 13) % 1300,
+				y: 350 + pi[fpi+2] * 5,
+				dx: (pi[fpi+3] - 4.5) * 0.12,
+				dy: (pi[fpi+4] - 5) * 0.06,
+				phase: pi[fpi+5] * 0.7,
+				life: 0,
+				maxLife: 140 + pi[fpi+6] * 18
+			});
+			fireflyPiIdx += 7;
+		}
+
+		for (var ffi = fireflies.length - 1; ffi >= 0; ffi--) {
+			var ff = fireflies[ffi];
+			ff.x += ff.dx + Math.sin(dayNightTimer * 0.04 + ff.phase) * 0.3;
+			ff.y += ff.dy + Math.cos(dayNightTimer * 0.03 + ff.phase) * 0.2;
+			ff.life++;
+
+			if (ff.life >= ff.maxLife || ff.x < -10 || ff.x > 1310 ||
+			    ff.y < 300 || ff.y > 420) {
+				fireflies.splice(ffi, 1);
+				continue;
+			}
+
+			var ffFade  = Math.sin(ff.life / ff.maxLife * Math.PI);
+			var ffPulse = 0.4 + 0.6 * Math.sin(dayNightTimer * 0.15 + ff.phase * 3);
+			var ffAlpha = ffFade * ffPulse * nightAlpha;
+
+			// Outer glow
+			fireflyGfx.beginFill(0xAAFF66, ffAlpha * 0.12);
+			fireflyGfx.drawCircle(ff.x, ff.y, 16);
+			fireflyGfx.endFill();
+			// Bright core
+			fireflyGfx.beginFill(0xEEFFAA, ffAlpha * 0.75);
+			fireflyGfx.drawCircle(ff.x, ff.y, 3);
+			fireflyGfx.endFill();
+		}
+	} else if (fireflies.length > 0) {
+		fireflies.length = 0;
+	}
+	// ─────────────────────────────────────────────────────────────────
+
 	// Ticker band sits above the water layer
 	tickerBgGfx.bringToTop();
 	tickerGroup.bringToTop();
