@@ -259,6 +259,37 @@ function spawnShootingStar() {
 	};
 }
 
+// =====================================================================
+// RAIN SYSTEM — triggered whenever a Pi digit is 0
+// A digit of 0 produces an invisible, stationary cloud (scale=0, v=0).
+// Instead of nothing, that moment spawns a shower of falling raindrops.
+// Each drop is a short angled streak drawn by a single Phaser.Graphics
+// object that is cleared and redrawn every frame.
+// Drops vanish at the horizon (y ≈ 393) so they never overlap fond2.
+// =====================================================================
+var rainDrops    = [];
+var rainGraphics;
+
+function spawnRain() {
+	var NUM_DROPS = 28;
+	var centreX   = 60 + Math.random() * 1180;
+	var centreY   = 10 + Math.random() * 120;
+	for (var d = 0; d < NUM_DROPS; d++) {
+		var vy = 5 + Math.random() * 5;
+		rainDrops.push({
+			x:       centreX + (Math.random() - 0.5) * 420,
+			y:       centreY + Math.random() * 80,
+			vx:      -0.6 + Math.random() * 0.4,
+			vy:      vy,
+			alpha:   0.45 + Math.random() * 0.45,
+			len:     6 + Math.random() * 10,
+			life:    0,
+			maxLife: Math.floor((393 - centreY) / vy) + 10
+		});
+	}
+}
+// =====================================================================
+
 function preload() {
 	game.load.image('nuage','nuage.png');
 	game.load.image('nuage2','nuage2.png');
@@ -326,6 +357,7 @@ function create() {
 
 	game.input.onDown.add(initAudio);
 	drawKeyboard();
+	rainGraphics = game.add.graphics(0, 0);
 	// ──────────────────────────────────────────────────────────
 }
 
@@ -430,6 +462,7 @@ function update() {
 		case 0:
 			order0.add(nuages[decimal]);
 			order0.add(nuages2[decimal]);
+			spawnRain();   // digit 0 → invisible cloud → rain shower
 			break;
 		case 1:
 			order1.add(nuages[decimal]);
@@ -496,7 +529,30 @@ function update() {
 	game.world.bringToTop(order7);
 	game.world.bringToTop(order8);
 	game.world.bringToTop(order9);
-	fond2.bringToTop();
+	rainGraphics.bringToTop();   // rain in front of clouds
+	fond2.bringToTop();          // ground always on top of rain
+
+	// ── Rain rendering ────────────────────────────────────────────────
+	rainGraphics.clear();
+	for (var ri = rainDrops.length - 1; ri >= 0; ri--) {
+		var drop = rainDrops[ri];
+		drop.x  += drop.vx;
+		drop.y  += drop.vy;
+		drop.life++;
+		if (drop.life >= drop.maxLife || drop.y > 393) {
+			rainDrops.splice(ri, 1);
+			continue;
+		}
+		var fadeStart = drop.maxLife * 0.75;
+		var dropAlpha = drop.alpha;
+		if (drop.life > fadeStart) {
+			dropAlpha *= 1 - (drop.life - fadeStart) / (drop.maxLife - fadeStart);
+		}
+		rainGraphics.lineStyle(1.5, 0xAADDFF, dropAlpha);
+		rainGraphics.moveTo(drop.x, drop.y);
+		rainGraphics.lineTo(drop.x - drop.vx * drop.len * 0.4, drop.y - drop.len);
+	}
+	// ─────────────────────────────────────────────────────────────────
 
 	// Redraw keyboard and keep it on top of everything
 	drawKeyboard();
