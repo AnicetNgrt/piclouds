@@ -285,6 +285,66 @@ var tickerBgGfx;         // dark band at the top behind the ticker
 var hudText;             // left-corner "π[N] = D" counter
 var TICKER_Y = 14;       // vertical centre of the top ticker strip
 
+// ── Digit Frequency Histogram ──────────────────────────────────────────────
+// Tracks how often each Pi digit (0-9) has appeared and renders a live
+// bar chart in the bottom-right corner. Over time, all bars should converge
+// toward equal height — visualising Pi's conjectured normality.
+var digitCounts = [0,0,0,0,0,0,0,0,0,0];
+var histGfx;             // Graphics layer, cleared & redrawn each frame
+var histLabels = [];     // 10 static Phaser.Text labels ("0".."9") below bars
+
+// Phaser integer colours matching DIGIT_CSS_COLORS above
+var DIGIT_PHASER_COLORS = [
+	0xFF5252, 0xFF9100, 0xFFD740, 0x69F0AE, 0x40C4FF,
+	0x00E5FF, 0x7C4DFF, 0xFF4081, 0xCCFF90, 0xFF6D00
+];
+
+// Panel geometry (bottom-right, clear of keyboard strip which starts at y=626)
+var HX = 1140, HY = 536, HW = 150, HH = 78;
+var HBARW = 10, HBARGAP = 4;
+var HBARMAXH = 52;                  // maximum bar height in pixels
+var HBARBASE  = HY + HH - 14;      // y-baseline just above digit labels
+
+function drawHistogram() {
+	histGfx.clear();
+
+	// Semi-transparent panel background
+	histGfx.lineStyle(1, 0xFFFFFF, 0.18);
+	histGfx.beginFill(0x000000, 0.48);
+	histGfx.drawRoundedRect(HX, HY, HW, HH, 5);
+	histGfx.endFill();
+
+	// Find the tallest bar for relative scaling
+	var maxCount = 1;
+	for (var i = 0; i < 10; i++) {
+		if (digitCounts[i] > maxCount) maxCount = digitCounts[i];
+	}
+
+	// Dashed reference line at the "expected" equal-share height
+	var total = decimal + 1;
+	if (total > 0) {
+		var expectedH = Math.min(HBARMAXH,
+			Math.round((total / 10 / maxCount) * HBARMAXH));
+		var expectedY = HBARBASE - expectedH;
+		histGfx.lineStyle(1, 0xFFFFFF, 0.38);
+		histGfx.moveTo(HX + 5, expectedY);
+		histGfx.lineTo(HX + HW - 5, expectedY);
+	}
+
+	// One coloured bar per digit
+	histGfx.lineStyle(0);
+	for (var d = 0; d < 10; d++) {
+		var barH = maxCount > 0
+			? Math.max(1, Math.round((digitCounts[d] / maxCount) * HBARMAXH))
+			: 1;
+		var barX = HX + 7 + d * (HBARW + HBARGAP);
+		histGfx.beginFill(DIGIT_PHASER_COLORS[d], 0.85);
+		histGfx.drawRect(barX, HBARBASE - barH, HBARW, barH);
+		histGfx.endFill();
+	}
+}
+// ──────────────────────────────────────────────────────────────────────────
+
 function addTickerItem(digit) {
 	var startX = 1320;
 	if (tickerItems.length > 0) {
@@ -463,6 +523,21 @@ function create() {
 	drawKeyboard();
 	rainGraphics = game.add.graphics(0, 0);
 
+	// ── Histogram panel + digit labels ────────────────────────────────────
+	histGfx = game.add.graphics(0, 0);
+	for (var hd = 0; hd < 10; hd++) {
+		var hlabel = game.add.text(
+			HX + 7 + hd * (HBARW + HBARGAP) + Math.floor(HBARW / 2),
+			HBARBASE + 2,
+			'' + hd,
+			{ font: 'bold 8px monospace', fill: DIGIT_CSS_COLORS[hd],
+			  stroke: '#000000', strokeThickness: 1 }
+		);
+		hlabel.anchor.setTo(0.5, 0);
+		histLabels.push(hlabel);
+	}
+	// ──────────────────────────────────────────────────────────────────────
+
 	// Dark band at the very top behind the ticker
 	tickerBgGfx = game.add.graphics(0, 0);
 	tickerBgGfx.beginFill(0x000000, 0.42);
@@ -604,6 +679,7 @@ function update() {
 
 		decimal++;
 		timer = 0;
+		digitCounts[pi[decimal]]++;   // feed the frequency histogram
 		nuages.push(game.add.tileSprite(-200, 400-(pi[decimal]*34-15), 768, 312, 'nuage'));
 		nuages[decimal].anchor.x = 0.7;
 		nuages[decimal].anchor.y = 0.5;
@@ -754,6 +830,14 @@ function update() {
 	uiGroup.bringToTop();
 	// HUD on the very top so it's always readable
 	hudText.bringToTop();
+
+	// ── Histogram: redraw and raise above everything ───────────────────────
+	drawHistogram();
+	histGfx.bringToTop();
+	for (var hl = 0; hl < histLabels.length; hl++) {
+		histLabels[hl].bringToTop();
+	}
+	// ──────────────────────────────────────────────────────────────────────
 }
 
 
