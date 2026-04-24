@@ -118,6 +118,14 @@ function drawKeyboard() {
     }
 }
 
+function toggleSound() {
+    initAudio();
+    audioEnabled = !audioEnabled;
+    var btn = document.getElementById('soundBtn');
+    btn.textContent   = audioEnabled ? '\u266B' : '\u266A';
+    btn.style.opacity = audioEnabled ? '1' : '0.55';
+}
+
 // ─────────────────────────────────────────────────────────────────────
 
 var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds',
@@ -148,51 +156,18 @@ var shootingStars     = [];
 var shootingStarTimer = 0;
 var shootingStarPiIdx = 200;   // read Pi from offset 200 (independent of cloud range)
 
-// ── Pi Digit Sonification ─────────────────────────────────────────────────
-var audioCtx    = null;
-var soundEnabled = false;
-
-// Two-octave pentatonic scale: digits 0–9 → C4 D4 E4 G4 A4 C5 D5 E5 G5 A5
-var noteFreqs = [261.63, 293.66, 329.63, 392.00, 440.00,
-                 523.25, 587.33, 659.25, 783.99, 880.00];
-
-function initAudio() {
-	if (!audioCtx) {
-		audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-	}
-}
-
-function toggleSound() {
-	initAudio();
-	soundEnabled = !soundEnabled;
-	var btn = document.getElementById('soundBtn');
-	btn.textContent   = soundEnabled ? '\u266B' : '\u266A';
-	btn.style.opacity = soundEnabled ? '1' : '0.55';
-}
-
-function playDigitNote(digit) {
-	if (!soundEnabled || !audioCtx) return;
-
-	var freq     = noteFreqs[digit];
-	var volume   = 0.04 + digit * 0.018;   // 0.04–0.202
-	var duration = 0.4  + digit * 0.07;    // 0.4–1.03 s
-
-	var osc  = audioCtx.createOscillator();
-	var gain = audioCtx.createGain();
-
-	osc.type = 'sine';
-	osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-
-	gain.gain.setValueAtTime(volume, audioCtx.currentTime);
-	gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
-
-	osc.connect(gain);
-	gain.connect(audioCtx.destination);
-
-	osc.start(audioCtx.currentTime);
-	osc.stop(audioCtx.currentTime + duration);
-}
-// ──────────────────────────────────────────────────────────────────────────────
+// ── Rain on Zero ───────────────────────────────────────────────────────────
+// When pi[decimal] === 0: a dark storm cloud spawns, a lightning flash fires,
+// and rain particles stream down through the sky for ~8 seconds.
+var rainParticles  = [];   // {x, y, vx, vy, alpha}
+var isStorm        = [];   // isStorm[decimal] = true for digit-0 clouds
+var rainGfx;               // Graphics layer for raindrop strokes
+var lightningGfx;          // Graphics layer for full-screen lightning flash
+var lightningFade  = 0;    // countdown 30->0; drives flash alpha
+var rainStormTimer = 0;    // frames of active rainfall remaining
+var MAX_RAIN       = 450;
+var STORM_DURATION = 240;  // frames added per zero-digit encountered
+// ──────────────────────────────────────────────────────────────────────────
 
 // ── Day / Night Cycle ──────────────────────────────────────────────────────
 var dayNightTimer = 0;
@@ -291,6 +266,10 @@ function create() {
 
 	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
 	fond2.alpha = 0.9;
+
+	// Rain graphics layers — created here, brought to top each frame
+	rainGfx      = game.add.graphics(0, 0);
+	lightningGfx = game.add.graphics(0, 0);
 
 	order0 = game.add.group();
 	order1 = game.add.group();
@@ -469,19 +448,35 @@ function update() {
 			break;
 		}
 
-		// Play the note for this Pi digit
-		playDigitNote(pi[decimal]);
+		// -- Storm cloud for digit 0 ------------------------------------------
+		if (pi[decimal] === 0) {
+			// The default scale(0,0) makes digit-0 clouds invisible; give them
+			// a real size and a stormy dark-blue tint instead.
+			nuages[decimal].scale.setTo(0.7, 0.7);
+			nuages2[decimal].scale.setTo(0.7, 0.7);
+			nuages[decimal].tint  = 0x334455;
+			nuages2[decimal].tint = 0x334455;
+			isStorm[decimal]      = true;
+			// Fire a lightning flash and extend the rainfall window
+			lightningFade   = 30;
+			rainStormTimer += STORM_DURATION;
+		}
+		// ----------------------------------------------------------------------
 	}
 
 	while (jj <= decimal ) {
 		if (nuages[jj].x > 1800) {
 			nuages[jj].destroy();
 		}
-		nuages[jj].x  += (pi[jj])/Math.abs(velocityDivider);
-		nuages2[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		// Tint clouds to match the current time of day
-		nuages[jj].tint  = currentTintHex;
-		nuages2[jj].tint = currentTintHex;
+		// Digit-0 clouds have zero velocity and would never leave; give min speed
+		var cVel = (pi[jj] > 0) ? pi[jj] / Math.abs(velocityDivider) : 2;
+		nuages[jj].x  += cVel;
+		nuages2[jj].x += cVel;
+		// Day/night tint -- storm clouds keep their dark tint
+		if (!isStorm[jj]) {
+			nuages[jj].tint  = currentTintHex;
+			nuages2[jj].tint = currentTintHex;
+		}
 		jj++;
 	}
 	jj = 0;
@@ -497,6 +492,55 @@ function update() {
 	game.world.bringToTop(order8);
 	game.world.bringToTop(order9);
 	fond2.bringToTop();
+
+	// -- Rain on Zero ----------------------------------------------------------
+
+	// 1. Lightning flash -- white overlay fades out over 30 frames
+	if (lightningFade > 0) {
+		lightningFade--;
+		lightningGfx.clear();
+		lightningGfx.beginFill(0xFFFFFF, (lightningFade / 30) * 0.65);
+		lightningGfx.drawRect(0, 0, 1300, 700);
+		lightningGfx.endFill();
+	} else {
+		lightningGfx.clear();
+	}
+
+	// 2. Spawn new raindrops from the top of the sky while storm is active
+	if (rainStormTimer > 0) {
+		rainStormTimer--;
+		if (rainParticles.length < MAX_RAIN) {
+			for (var rn = 0; rn < 6; rn++) {
+				rainParticles.push({
+					x:     Math.random() * 1420,
+					y:     -8,
+					vx:    -1.3 + Math.random() * 0.5,
+					vy:    9   + Math.random() * 5,
+					alpha: 0.5 + Math.random() * 0.4
+				});
+			}
+		}
+	}
+
+	// 3. Advance and draw rain -- each drop is a short diagonal stroke
+	rainGfx.clear();
+	for (var ri = rainParticles.length - 1; ri >= 0; ri--) {
+		var rp = rainParticles[ri];
+		rp.x += rp.vx;
+		rp.y += rp.vy;
+		if (rp.y >= 398 || rp.x < -20) {
+			rainParticles.splice(ri, 1);
+			continue;
+		}
+		rainGfx.lineStyle(1, 0xAADDFF, rp.alpha);
+		rainGfx.moveTo(rp.x, rp.y);
+		rainGfx.lineTo(rp.x + rp.vx, rp.y + 7);
+	}
+
+	// Rain sits above clouds/water; lightning sits above everything
+	game.world.bringToTop(rainGfx);
+	game.world.bringToTop(lightningGfx);
+	// --------------------------------------------------------------------------
 
 	// Redraw keyboard and keep it on top of everything
 	drawKeyboard();
