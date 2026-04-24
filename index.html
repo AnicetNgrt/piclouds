@@ -423,6 +423,55 @@ function spawnShootingStar() {
 var rainDrops    = [];
 var rainGraphics;
 
+// ── Lightning Storm System ─────────────────────────────────────────────────
+// Augments the digit-0 rain with a forked lightning bolt + screen flash.
+// boltPoints caches zigzag vertices so the glow and core passes share one path.
+var lightningGraphics;
+var flashGraphics;
+var lightningTimer   = 0;
+var LIGHTNING_FRAMES = 8;   // frames the bolt stays visible (~0.27 s at 30 fps)
+var flashAlpha       = 0;   // 0–1; decremented each frame until dark again
+var boltPoints       = [];
+
+function buildBolt(pidx) {
+	boltPoints = [];
+	var startX = (pi[pidx % pi.length] * 130 + pi[(pidx + 1) % pi.length] * 13) % 1200 + 50;
+	var x = startX, y = 0;
+	boltPoints.push({ x: x, y: y });
+	var numSegs = 7 + (pi[pidx % pi.length] % 5);   // 7–11 segments
+	for (var s = 0; s < numSegs; s++) {
+		y += Math.floor(360 / numSegs);
+		x += (pi[(pidx + s + 2) % pi.length] - 4) * 22;   // zigzag ±88 px
+		x = Math.max(20, Math.min(1280, x));                // clamp to canvas
+		boltPoints.push({ x: x, y: y });
+	}
+}
+
+function drawBolt() {
+	lightningGraphics.clear();
+	if (boltPoints.length < 2) { return; }
+	// Glow pass — thick soft yellow-white halo
+	lightningGraphics.lineStyle(5, 0xFFFF99, 0.35);
+	lightningGraphics.moveTo(boltPoints[0].x, boltPoints[0].y);
+	for (var k = 1; k < boltPoints.length; k++) {
+		lightningGraphics.lineTo(boltPoints[k].x, boltPoints[k].y);
+	}
+	// Core pass — thin bright white
+	lightningGraphics.lineStyle(2, 0xFFFFFF, 1.0);
+	lightningGraphics.moveTo(boltPoints[0].x, boltPoints[0].y);
+	for (var k = 1; k < boltPoints.length; k++) {
+		lightningGraphics.lineTo(boltPoints[k].x, boltPoints[k].y);
+	}
+}
+
+function triggerLightning(pidx) {
+	buildBolt(pidx);
+	drawBolt();
+	lightningTimer = LIGHTNING_FRAMES;
+	flashAlpha = Math.max(flashAlpha, 0.55);
+}
+// ──────────────────────────────────────────────────────────────────────────
+
 function spawnRain() {
 	var NUM_DROPS = 28;
 	var centreX   = 60 + Math.random() * 1180;
@@ -521,7 +570,9 @@ function create() {
 
 	game.input.onDown.add(initAudio);
 	drawKeyboard();
-	rainGraphics = game.add.graphics(0, 0);
+	rainGraphics      = game.add.graphics(0, 0);
+	lightningGraphics = game.add.graphics(0, 0);
+	flashGraphics     = game.add.graphics(0, 0);
 
 	// ── Histogram panel + digit labels ────────────────────────────────────
 	histGfx = game.add.graphics(0, 0);
@@ -712,7 +763,8 @@ function update() {
 		case 0:
 			order0.add(nuages[decimal]);
 			order0.add(nuages2[decimal]);
-			spawnRain();   // digit 0 → invisible cloud → rain shower
+			spawnRain();              // digit 0 → rain shower
+			triggerLightning(decimal); // + Pi-seeded lightning bolt + flash
 			break;
 		case 1:
 			order1.add(nuages[decimal]);
@@ -837,6 +889,26 @@ function update() {
 	for (var hl = 0; hl < histLabels.length; hl++) {
 		histLabels[hl].bringToTop();
 	}
+	// ──────────────────────────────────────────────────────────────────────
+
+	// ── Lightning & Flash update ───────────────────────────────────────────
+	if (lightningTimer > 0) {
+		lightningTimer--;
+		if (lightningTimer === 0) {
+			lightningGraphics.clear();
+		}
+	}
+	if (flashAlpha > 0) {
+		flashAlpha = Math.max(0, flashAlpha - 0.055);
+		flashGraphics.clear();
+		flashGraphics.beginFill(0xFFFFFF, flashAlpha);
+		flashGraphics.drawRect(0, 0, 1300, 700);
+		flashGraphics.endFill();
+	} else {
+		flashGraphics.clear();
+	}
+	lightningGraphics.bringToTop();
+	flashGraphics.bringToTop();
 	// ──────────────────────────────────────────────────────────────────────
 }
 
