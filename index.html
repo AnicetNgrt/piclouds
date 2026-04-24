@@ -198,6 +198,7 @@ function playDigitNote(digit) {
 var dayNightTimer = 0;
 var CYCLE_FRAMES  = 3600;   // one full cycle every 2 minutes at 30 fps
 var starsLayer;
+var celestialLayer; // sun and moon
 var currentTintHex = 0xFFFFFF;
 
 function lerp(a, b, t) { return a + (b - a) * t; }
@@ -320,6 +321,9 @@ function create() {
 	// Shooting star trails sit above the star-dot layer
 	shootingStarGfx = game.add.graphics(0, 0);
 
+	// Celestial layer: sun during day, moon during night (behind clouds)
+	celestialLayer = game.add.graphics(0, 0);
+
 	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
 	fond2.alpha = 0.9;
 
@@ -438,6 +442,43 @@ function update() {
 	}
 	// ─────────────────────────────────────────────────────────────────────────
 
+	// ── Sun & Moon ───────────────────────────────────────────────────────────
+	// Day  = phase 0.75 → 1.0 → 0.0 → 0.25 (wraps through 0)
+	// Night = phase 0.25 → 0.75
+	celestialLayer.clear();
+	var isDaytime = (phase < 0.25 || phase > 0.75);
+
+	if (isDaytime) {
+		// dayNorm: 0 = sunrise (left), 0.5 = noon (zenith), 1 = sunset (right)
+		var dayNorm = phase > 0.75 ? (phase - 0.75) / 0.5 : (phase + 0.25) / 0.5;
+		var sunX    = dayNorm * 1200 + 50;
+		var sunY    = 370 - Math.sin(dayNorm * Math.PI) * 300;
+		// Fade in/out near horizons
+		var sunVis  = Math.min(dayNorm / 0.12, (1.0 - dayNorm) / 0.12, 1.0);
+		// Outer halo
+		celestialLayer.beginFill(0xFFEE88, sunVis * 0.22);
+		celestialLayer.drawCircle(sunX, sunY, 90);
+		celestialLayer.endFill();
+		// Core disc
+		celestialLayer.beginFill(0xFFDD44, sunVis);
+		celestialLayer.drawCircle(sunX, sunY, 46);
+		celestialLayer.endFill();
+	} else {
+		// moonNorm: 0 = moonrise (left), 0.5 = midnight (zenith), 1 = moonset (right)
+		var moonNorm = (phase - 0.25) / 0.5;
+		var moonX    = moonNorm * 1200 + 50;
+		var moonY    = 370 - Math.sin(moonNorm * Math.PI) * 290;
+		// Soft outer glow
+		celestialLayer.beginFill(0xCCDDFF, nightAlpha * 0.18);
+		celestialLayer.drawCircle(moonX, moonY, 62);
+		celestialLayer.endFill();
+		// Core disc
+		celestialLayer.beginFill(0xF0F5FF, nightAlpha);
+		celestialLayer.drawCircle(moonX, moonY, 30);
+		celestialLayer.endFill();
+	}
+	// ─────────────────────────────────────────────────────────────────────────
+
 	timer++;
 
 	if (timer > (pi[decimal+1])*densityDivider) {
@@ -519,6 +560,8 @@ function update() {
 	}
 	jj = 0;
 
+	// Place celestial layer above stars but below all cloud groups
+	celestialLayer.bringToTop();
 	game.world.bringToTop(order0);
 	game.world.bringToTop(order1);
 	game.world.bringToTop(order2);
