@@ -5,174 +5,251 @@
 	<link href="stylesheet.css" rel="stylesheet">
 	<meta charset="utf-8"/>
 	<script type="text/javascript" src="phaser.min.js"></script>
-	<script>
-var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds', { preload: preload, create: create, update: update }, false, false);
-var nuages = []; var densityDivider = 4; var velocityDivider = 0.6;
-var nuages2 = []; var field; var fond; var fond2;
-var nn = 0; var jj = 0; var sum = 0; var lock = 0;
-var decimal = -1;
-var pi = [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,8,4,1,9,7,1,6,9,3,9,9,3,7,5,1,0,5,8,2,0,9,7,4,9,4,4,5,9,2,3,0,7,8,1,6,4,0,6,2,8,6,2,0,8,9,9,8,6,2,8,0,3,4,8,2,5,3,4,2,1,1,7,0,6,7,9,8,2,1,4,8,0,8,6,5,1,3,2,8,2,3,0,6,6,4,7,0,9,3,8,4,4,6,0,9,5,5,0,5,8,2,2,3,1,7,2,5,3,5,9,4,0,8,1,2,8,4,8,1,1,1,7,4,5,0,2,8,4,1,0,2,7,0,1,9,3,8,5,2,1,1,0,5,5,5,9,6,4,4,6,2,2,9,4,8,9,5,4,9,3,0,3,8,1,9,6,4,4,2,8,8,1,0,9,7,5,6,6,5,9,3,3,4,4,6,1,2,8,4,7,5,6,4,8,2,3,3,7,8,6,7,8,3,1,6,5,2,7,1,2,0,1,9,0,9,1,4,5,6,4,8,5,6,6,9,2,3,4,6,0,3,4,8,6,1,0,4,5,4,3,2,6,6,4,8,2,1,3,3,9,3,6,0,7,2,6,0,2,4,9,1,4,1,2,7,3,7,2,4,5,8,7,0,0,6,6,0,6,3,1,5,5,8,8,1,7,4,8,8,1,5,2,0,9,2,0,9,6,2,8,2,9,2,5,4,0,9,1,7,1,5,3,6,4,3,6,7,8,9,2,5,9,0,3,6,0,0,1,1,3,3,0,5,3,0,5,4,8,8,2,0,4,6,6,5,2,1,3,8,4,1,4,6,9,5,1,9,4,1,5,1,1,6,0,9,4,3,3,0,5,7,2,7,0,3,6,5,7,5,9,5,9,1,9,5,3,0,9,2,1,8,6,1,1,7,3,8,1,9,3,2,6,1,1,7,9,3,1,0,5,1,1,8,5,4,8,0,7,4,4,6,2,3,7,9,9,6,2,7,4,9,5,6,7,3,5,1,8,8,5,7,5,2,7,2,4,8,9,1,2,2,7,9,3,8,1,8,3,0,1,1,9,4,9,1,2,9,8,3,3,6,7,3,3,6,2,4,4,0,6,5,6,6,4,3,0,8,6,0,2,1,3,9,4,9,4,6,3,9,5,2,2,4,7,3,7,1,9,0,7,0,2,1,7,9,8,6,0,9,4,3,7,0,2,7,7,0,5,3,9,2,1,7,1,7,6,2,9,3,1,7,6,7,5,2,3,8,4,6,7,4,8,1,8,4,6,7,6,6,9,4,0,5,1,3,2,0,0,0,5,6,8,1,2,7,1,4,5,2,6,3,5,6,0,8,2,7,7,8,5,7,7,1,3,4,2,7,5,7,7,8,9,6,0,9,1,7,3,6,3,7,1,7,8,7,2,1,4,6,8,4,4,0,9,0,1,2,2,4,9,5,3,4,3,0,1,4,6,5,4,9,5,8,5,3,7,1,0,5,0,7,9,2,2,7,9,6,8,9,2,5,8,9,2,3,5,4,2,0,1,9,9,5,6,1,1,2,1,2,9,0,2,1,9,6,0,8,6,4,0,3,4,4,1,8,1,5,9,8,1,3,6,2,9,7,7,4,7,7,1,3,0,9,9,6,0,5,1,8,7,0,7,2,1,1,3,4,9,9,9,9,9,9,8,3,7,2,9,7,8,0,4,9,9,5,1,0,5,9,7,3,1,7,3,2,8,1,6,0,9,6,3,1,8,5,9,5,0,2,4,4,5,9,4,5,5,3,4,6,9,0,8,3,0,2,6,4,2,5,2,2,3,0,8,2,5,3,3,4,4,6,8,5,0,3,5,2,6,1,9,3,1,1,8,8,1,7,1,0,1,0,0,0,3,1,3,7,8,3,8,7,5,2,8,8,6,5,8,7,5,3,3,2,0,8,3,8,1,4,2,0];
-
-function randInt(min, max) {
-	return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-		
-for (var i = 0; i<10000; i++) {
-	pi.push(randInt(0,9));
-	console.log(pi[886+i]);
-}
-
-var timer = 0;
-
-function sleep(milliseconds) {
-	var start = new Date().getTime();
-	for (var i = 0; i < 1e7; i++) {
-		if ((new Date().getTime() - start) > milliseconds){
-		 break;
+	<style>
+		#switcher {
+			position: absolute;
+			bottom: 18px;
+			left: 50%;
+			transform: translateX(-50%);
+			z-index: 100;
+			display: flex;
+			gap: 10px;
+			background: rgba(0,0,0,0.32);
+			border-radius: 40px;
+			padding: 7px 20px;
 		}
+		.cbtn {
+			background: rgba(255,255,255,0.13);
+			border: 2px solid rgba(255,255,255,0.35);
+			color: rgba(255,255,255,0.9);
+			font-family: Georgia, serif;
+			font-size: 20px;
+			padding: 5px 16px;
+			border-radius: 28px;
+			cursor: pointer;
+			transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+			outline: none;
+			letter-spacing: 1px;
+		}
+		.cbtn:hover {
+			background: rgba(255,255,255,0.25);
+			border-color: rgba(255,255,255,0.7);
+		}
+		.cbtn.active {
+			background: rgba(255,255,255,0.32);
+			border-color: rgba(255,255,255,0.95);
+			box-shadow: 0 0 16px rgba(255,255,255,0.55);
+		}
+		#clabel {
+			position: absolute;
+			top: 12px;
+			left: 18px;
+			z-index: 100;
+			color: rgba(255,255,255,0.8);
+			font-family: Georgia, serif;
+			font-size: 26px;
+			pointer-events: none;
+			text-shadow: 1px 2px 8px rgba(0,0,0,0.55);
+			letter-spacing: 1px;
+		}
+		#dcounter {
+			position: absolute;
+			top: 14px;
+			right: 18px;
+			z-index: 100;
+			color: rgba(255,255,255,0.65);
+			font-family: 'Courier New', monospace;
+			font-size: 13px;
+			pointer-events: none;
+			text-align: right;
+			text-shadow: 1px 1px 4px rgba(0,0,0,0.4);
+		}
+	</style>
+	<script>
+// ─── Mathematical constants ────────────────────────────────────────────────
+var CONSTS = {
+	pi: {
+		symbol: 'π', name: 'Pi', preview: '3.14159265…',
+		digits: [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,8,4,1,9,7,1,6,9,3,9,9,3,7,5,1,0,5,8,2,0,9,7,4,9,4,4,5,9,2,3,0,7,8,1,6,4,0,6,2,8,6,2,0,8,9,9,8,6,2,8,0,3,4,8,2,5,3,4,2,1,1,7,0,6,7,9,8,2,1,4,8,0,8,6,5,1,3,2,8,2,3,0,6,6,4,7,0,9,3,8,4,4,6,0,9,5,5,0,5,8,2,2,3,1,7,2,5,3,5,9,4,0,8,1,2,8,4,8,1,1,1,7,4,5,0,2,8,4,1,0,2,7,0,1,9,3,8,5,2,1,1,0,5,5,5,9,6,4,4,6,2,2,9,4,8,9,5,4,9,3,0,3,8,1,9,6,4,4,2,8,8,1,0,9,7,5,6,6,5,9,3,3,4,4,6,1,2,8,4,7,5,6,4,8,2,3,3,7,8,6,7,8,3,1,6,5,2,7,1,2,0,1,9,0,9,1,4,5,6,4,8,5,6,6,9,2,3,4,6,0,3,4,8,6,1,0,4,5,4,3,2,6,6,4,8,2,1,3,3,9,3,6,0,7,2,6,0,2,4,9,1,4,1,2,7,3,7,2,4,5,8,7,0,0,6,6,0,6,3,1,5,5,8,8,1,7,4,8,8,1,5,2,0,9,2,0,9,6,2,8,2,9,2,5,4,0,9,1,7,1,5,3,6,4,3,6,7,8,9,2,5,9,0,3,6,0,0,1,1,3,3,0,5,3,0,5,4,8,8,2,0,4,6,6,5,2,1,3,8,4,1,4,6,9,5,1,9,4,1,5,1,1,6,0,9,4,3,3,0,5,7,2,7,0,3,6,5,7,5,9,5,9,1,9,5,3,0,9,2,1,8,6,1,1,7,3,8,1,9,3,2,6,1,1,7,9,3,1,0,5,1,1,8,5,4,8,0,7,4,4,6,2,3,7,9,9,6,2,7,4,9,5,6,7,3,5,1,8,8,5,7,5,2,7,2,4,8,9,1,2,2,7,9,3,8,1,8,3,0,1,1,9,4,9,1,2,9,8,3,3,6,7,3,3,6,2,4,4,0,6,5,6,6,4,3,0,8,6,0,2,1,3,9,4,9,4,6,3,9,5,2,2,4,7,3,7,1,9,0,7,0,2,1,7,9,8,6,0,9,4,3,7,0,2,7,7,0,5,3,9,2,1,7,1,7,6,2,9,3,1,7,6,7,5,2,3,8,4,6,7,4,8,1,8,4,6,7,6,6,9,4,0,5,1,3,2,0,0,0,5,6,8,1,2,7,1,4,5,2,6,3,5,6,0,8,2,7,7,8,5,7,7,1,3,4,2,7,5,7,7,8,9,6,0,9,1,7,3,6,3,7,1,7,8,7,2,1,4,6,8,4,4,0,9,0,1,2,2,4,9,5,3,4,3,0,1,4,6,5,4,9,5,8,5,3,7,1,0,5,0,7,9,2,2,7,9,6,8,9,2,5,8,9,2,3,5,4,2,0,1,9,9,5,6,1,1,2,1,2,9,0,2,1,9,6,0,8,6,4,0,3,4,4,1,8,1,5,9,8,1,3,6,2,9,7,7,4,7,7,1,3,0,9,9,6,0,5,1,8,7,0,7,2,1,1,3,4,9,9,9,9,9,9,8,3,7,2,9,7,8,0,4,9,9,5,1,0,5,9,7,3,1,7,3,2,8,1,6,0,9,6,3,1,8,5,9,5,0,2,4,4,5,9,4,5,5,3,4,6,9,0,8,3,0,2,6,4,2,5,2,2,3,0,8,2,5,3,3,4,4,6,8,5,0,3,5,2,6,1,9,3,1,1,8,8,1,7,1,0,1,0,0,0,3,1,3,7,8,3,8,7,5,2,8,8,6,5,8,7,5,3,3,2,0,8,3,8,1,4,2,0],
+		tints: [0x1E5096,0x3264AA,0x4678BE,0x5A8CD2,0x6EA0DC,0x82AFE6,0x96BEF0,0xAAD0F5,0xBEDCFA,0xD2EBFF],
+		bg: '#4488AA', bodyBg: 'rgb(68,136,170)'
+	},
+	e: {
+		symbol: 'e', name: "Euler's e", preview: '2.71828182…',
+		digits: [2,7,1,8,2,8,1,8,2,8,4,5,9,0,4,5,2,3,5,3,6,0,2,8,7,4,7,1,3,5,2,6,6,2,4,9,7,7,5,7,2,4,7,0,9,3,6,9,9,9,5,9,5,7,4,9,6,6,9,6,7,6,2,7,7,2,4,0,7,6,6,3,0,3,5,3,5,4,7,5,9,4,5,7,1,3,8,2,1,7,8,5,2,5,1,6,6,4,2,7,4,2,7,4,6,6,3,9,1,9,3,2,0,0,3,0,5,9,9,2,1,8,1,7,4,1,3,5,9,6,6,2,9,0,4,3,5,7,2,9,0,0,3,3,4,2,9,5,2,6,0,5,9,5,6,3,0,7,3,8,1,3,2,3,2,8,6,2,7,9,4,3,4,9,0,7,6,3,2,3,3,8,2,9,8,8,0,7,5,3,1,9,5,2,5,1,0,1,9,0,1,1,5,7,3,8,3,4,1,8,7,9,3,0,7,0,2,1,5,4,0,8,9,1,4,9,9,3,4,8,8,4,1,6,7,5,0,9,2,4,4,7,6,1,4,6,0,6,6,8,0,8,2,2,6,4,8,0,0,1,6,8,4,7,7,4,1,1,8,5,3,7,4,2,3,4,5,4,4,2,4,3,7,1,0,7,5,3,9,0,7,7,7,4,4,9,9,2,0,6,9,5,5,1,7,0,2,7,6,1,8,3,8,6,0,6,2,6,1,3,3,1,3,8,4,5,8,3,0,0,0,7,5,2,0,4,4,9,3,3,8,2,6,5,6,0,2,9,7,6,0,6,7,3,7,1,1,3,2,0,0,7,0,9,3,2,8,7,0,9,1,2,7,4,4,3,7,4,7,0,4,7,2,3,0,6,9,6,9,7,7,2,0,9,3,1,0,1,4,1],
+		tints: [0x1E6432,0x327846,0x468C5A,0x5A9B6E,0x6EAA82,0x82B996,0x96C8AA,0xAAD7BE,0xBEE6D2,0xD2F5E6],
+		bg: '#2D6845', bodyBg: 'rgb(45,104,69)'
+	},
+	phi: {
+		symbol: 'φ', name: 'Golden Ratio', preview: '1.61803398…',
+		digits: [1,6,1,8,0,3,3,9,8,8,7,4,9,8,9,4,8,4,8,2,0,4,5,8,6,8,3,4,3,6,5,6,3,8,1,1,7,7,2,0,3,0,9,1,7,9,8,0,5,7,6,2,8,6,2,1,3,5,4,4,8,6,2,2,7,0,5,2,6,0,4,6,2,8,1,8,9,0,2,4,4,9,7,0,7,2,0,7,2,0,4,1,8,9,3,9,1,1,3,7,4,8,4,7,5,4,0,8,8,0,7,5,3,8,6,8,9,1,7,5,2,1,2,6,6,3,3,8,6,2,2,2,3,5,3,6,9,3,1,7,9,3,1,8,0,0,6,0,7,6,6,7,2,6,3,5,4,4,3,3,3,8,9,0,8,6,5,9,5,9,3,9,5,8,2,9,0,5,6,3,8,3,2,2,6,6,1,3,1,9,9,2,8,2,9,0,2,6,7,8,8,0,6,7,5,2,0,8,7,6,6,8,9,2,5,0,1,7,1,1,6,9,6,2,0,7,0,3,2,2,2,1,0,4,3,2,1,6,2,6,9,5,4,8,6,2,6,2,9,6,3,1,3,6,1,4,4,3,8,1,4,9,7,5,8,7,0,1,2,2,0,3,4,0,8,0,5,8,8,7,9,5,4,4,5,4,7,4,9,2,4,6,1,8,5,6,9,5,3,6,4,8,6,4,4,4,9,2,4,1,0,4,4,3,2,0,7,7,1,3,4,4,9,4,7,0,4,9,5,6,5,8,4,6,7,8,8,5,0,9,8,7,4,3,3,9,4,4,2,2,1,2,5,4,4,8,7,7,0,6,6,4,7,8,0,9,1,5,8,8,4,6,0,7,4,9,9,8,8,6,7,8,5,8,9,9,6,8,4,4,7,3,0,6,7,9,4,2,1,4,8],
+		tints: [0x644600,0x785A0A,0x8C6E14,0xA0821E,0xB49628,0xC8AA3C,0xDCBE50,0xEBD264,0xF5E182,0xFFF0A0],
+		bg: '#7B6025', bodyBg: 'rgb(123,96,37)'
+	},
+	sqrt2: {
+		symbol: '√2', name: '√2', preview: '1.41421356…',
+		digits: [1,4,1,4,2,1,3,5,6,2,3,7,3,0,9,5,0,4,8,8,0,1,6,8,8,7,2,4,2,0,9,6,9,8,0,7,8,5,6,9,6,7,1,8,7,5,3,7,6,9,4,8,0,7,3,1,7,6,6,7,9,7,3,7,9,9,0,7,3,2,4,7,8,4,6,2,1,0,7,0,3,8,8,5,0,3,8,7,5,3,4,3,2,7,6,4,1,5,7,2,7,3,5,0,1,3,8,4,6,2,3,0,9,1,2,2,9,7,0,2,4,9,2,4,8,3,6,0,5,5,8,5,0,7,3,7,2,1,2,6,4,4,1,2,1,4,9,7,0,9,9,9,3,5,8,3,1,4,1,3,2,2,2,6,6,5,9,2,7,5,0,5,5,9,2,7,5,5,7,9,9,9,5,0,5,0,1,1,5,2,7,8,2,0,6,0,5,7,1,4,7,0,1,0,9,5,5,9,9,7,1,6,0,5,9,7,0,2,7,4,5,3,4,5,9,6,8,9,2,6,4,0,7,4,4,1,8,6,3,3,8,3,4,3,4,7,4,1,8,2,8,3,2,0,5,6,7,6,8,6,5,0,7,6,4,5,3,0,7,3,9,9,2,4,2,8,5,2,9,1,9,0,8,3,5,6,3,8,4,7,0,7,7,5,1,6,6,4,3,1,6,3,0,4,1,0,0,5,3,2,5,5,3,3,6,3,7,3,2,5,2,3,3,5,4,4,1,5,6,5,0,4,9,3,1,2,5,3,5,4,8,2,2,3,3,8,2,2,4,8,6,3,0,1,6,3,5,1,6,0,4,7,9,6,2,2,3,5,9,6,8,6,5,0,9,0,6,0,3,8,5,0,7,3,6,2,0,0,0,4,4,1,3,7,9,0,6,9,5,1,6],
+		tints: [0x3C0064,0x501478,0x64288C,0x783CA0,0x8C50B4,0xA064C8,0xB478D7,0xC88CE6,0xDCA0F5,0xF0B4FF],
+		bg: '#4A2560', bodyBg: 'rgb(74,37,96)'
 	}
+};
+
+// ─── Working state ─────────────────────────────────────────────────────────
+var activeKey = 'pi';
+var pi = CONSTS.pi.digits.slice();
+for (var _i = 0; _i < 10000; _i++) pi.push(Math.floor(Math.random() * 10));
+
+var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds', { preload: preload, create: create, update: update }, false, false);
+
+var nuages = [], nuages2 = [], labels = [];
+var densityDivider = 4, velocityDivider = 0.6;
+var decimal = -1, timer = 0;
+var fond, fond2, labelGroup;
+var order0, order1, order2, order3, order4, order5, order6, order7, order8, order9;
+
+// ─── Constant switcher ─────────────────────────────────────────────────────
+function switchConstant(key) {
+	if (key === activeKey) return;
+	activeKey = key;
+	var c = CONSTS[key];
+
+	for (var i = 0; i < nuages.length; i++) {
+		if (nuages[i]  && nuages[i].alive)  nuages[i].destroy();
+		if (nuages2[i] && nuages2[i].alive) nuages2[i].destroy();
+		if (labels[i]  && labels[i].alive)  labels[i].destroy();
+	}
+	nuages = []; nuages2 = []; labels = [];
+	decimal = -1; timer = 0;
+
+	pi = c.digits.slice();
+	for (var j = 0; j < 10000; j++) pi.push(Math.floor(Math.random() * 10));
+
+	game.stage.backgroundColor = c.bg;
+	document.body.style.backgroundColor = c.bodyBg;
+
+	document.querySelectorAll('.cbtn').forEach(function(b) { b.classList.remove('active'); });
+	document.getElementById('btn-' + key).classList.add('active');
+	document.getElementById('clabel').textContent = c.symbol + ' = ' + c.preview;
+	document.getElementById('dcounter').textContent = c.symbol + ' digit #0';
 }
+
+// ─── Phaser lifecycle ───────────────────────────────────────────────────────
 function preload() {
-	game.load.image('nuage','nuage.png');
-	game.load.image('nuage2','nuage2.png');
-	game.load.image('field','field.png');
-	game.load.image('fond','fond.png');
-	game.load.image('fond2','fond2.png');
+	game.load.image('nuage',  'nuage.png');
+	game.load.image('nuage2', 'nuage2.png');
+	game.load.image('field',  'field.png');
+	game.load.image('fond',   'fond.png');
+	game.load.image('fond2',  'fond2.png');
 }
+
 function create() {
 	game.time.desiredFps = 30;
-	game.stage.backgroundColor = "#4488AA";
-	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
+	game.stage.backgroundColor = '#4488AA';
+	fond  = game.add.tileSprite(0,   0, 1300, 400, 'fond');
 	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
-	order0 = game.add.group();
-	order1 = game.add.group();
-	order2 = game.add.group();
-	order3 = game.add.group();
-	order4 = game.add.group();
-	order5 = game.add.group();
-	order6 = game.add.group();
-	order7 = game.add.group();
-	order8 = game.add.group();
-	order9 = game.add.group();
-	//fond2.angle = 180;
 	fond2.alpha = 0.9;
-	//field = game.add.tileSprite(0, 465, 1300, 300, 'field');
-	//field.alpha = 0.2;
-
+	order0 = game.add.group(); order1 = game.add.group();
+	order2 = game.add.group(); order3 = game.add.group();
+	order4 = game.add.group(); order5 = game.add.group();
+	order6 = game.add.group(); order7 = game.add.group();
+	order8 = game.add.group(); order9 = game.add.group();
+	labelGroup = game.add.group();
 }
+
 function update() {
-
 	timer++;
+	var c = CONSTS[activeKey];
 
-	if (timer > (pi[decimal+1])*densityDivider) {
-
+	if (timer > pi[decimal + 1] * densityDivider) {
 		decimal++;
 		timer = 0;
-		nuages.push(game.add.tileSprite(-200, 400-(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage'));
-		nuages[decimal].anchor.x = 0.7;
-		nuages[decimal].anchor.y = 0.5;
-		nuages[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
-		nuages[decimal].alpha = 0.9;
-		//sum += pi[decimal];
-		nuages2.push(game.add.tileSprite(-200, 400+(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage2'));
-		nuages2[decimal].anchor.x = 0.7;
-		nuages2[decimal].anchor.y = 0.5;
-		nuages2[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
-		nuages[decimal].alpha = 0.99;
+		var digit = pi[decimal];
+		var tint  = c.tints[digit];
+		var yOff  = digit * 34 - 15;
 
-		switch(pi[decimal]) {
-		case 0:
-			order0.add(nuages[decimal]);
-			order0.add(nuages2[decimal]);
-			break;
-		case 1:
-			order1.add(nuages[decimal]);
-			order1.add(nuages2[decimal]);
-			break;
-		case 2:
-			order2.add(nuages[decimal]);
-			order2.add(nuages2[decimal]);
-			break;
-		case 3:
-			order3.add(nuages[decimal]);
-			order3.add(nuages2[decimal]);
-			break;
-		case 4:
-			order4.add(nuages[decimal]);
-			order4.add(nuages2[decimal]);
-			break;
-		case 5:
-			order5.add(nuages[decimal]);
-			order5.add(nuages2[decimal]);
-			break;
-		case 6:
-			order6.add(nuages[decimal]);
-			order6.add(nuages2[decimal]);
-			break;
-		case 7:
-			order7.add(nuages[decimal]);
-			order7.add(nuages2[decimal]);
-			break;
-		case 8:
-			order8.add(nuages[decimal]);
-			order8.add(nuages2[decimal]);
-			break;
-		case 9:
-			order9.add(nuages[decimal]);
-			order9.add(nuages2[decimal]);
-			break;
+		var n = game.add.tileSprite(-200, 400 - yOff, 768, 312, 'nuage');
+		n.anchor.setTo(0.7, 0.5);
+		n.scale.setTo(digit / 10, digit / 10);
+		n.alpha = 0.9;
+		n.tint  = tint;
+		nuages.push(n);
+
+		var n2 = game.add.tileSprite(-200, 400 + yOff, 768, 312, 'nuage2');
+		n2.anchor.setTo(0.7, 0.5);
+		n2.scale.setTo(digit / 10, digit / 10);
+		n2.alpha = 0.99;
+		n2.tint  = tint;
+		nuages2.push(n2);
+
+		// Floating digit label — positioned above the top cloud
+		var labelY = Math.min(400 - yOff - 18, 390);
+		var lbl = game.add.text(-160, labelY, String(digit), {
+			font: 'bold 19px monospace',
+			fill: '#ffffff',
+			stroke: '#000000',
+			strokeThickness: 3
+		});
+		lbl.anchor.setTo(0.5, 1.0);
+		lbl.alpha = 0.9;
+		labelGroup.add(lbl);
+		labels.push(lbl);
+
+		var groups = [order0,order1,order2,order3,order4,order5,order6,order7,order8,order9];
+		groups[digit].add(n);
+		groups[digit].add(n2);
+
+		document.getElementById('dcounter').textContent = c.symbol + ' digit #' + (decimal + 1);
+	}
+
+	for (var i = 0; i <= decimal; i++) {
+		var cloud = nuages[i];
+		if (!cloud || !cloud.alive) continue;
+		if (cloud.x > 1800) {
+			cloud.destroy();
+			if (nuages2[i] && nuages2[i].alive) nuages2[i].destroy();
+			if (labels[i]  && labels[i].alive)  labels[i].destroy();
+		} else {
+			var speed = pi[i] / Math.abs(velocityDivider);
+			cloud.x      += speed;
+			nuages2[i].x += speed;
+			labels[i].x   = cloud.x - 40;
+			labels[i].alpha = 0.9 * Math.max(0, 1 - cloud.x / 1100);
 		}
 	}
 
-	while (jj <= decimal ) {
-		if (nuages[jj].x > 1800) {
-			nuages[jj].destroy();
-		}
-		nuages[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		nuages2[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		//nuages[jj].angle += (1/(pi[jj]))*3;
-		jj++;
-		//if (nuages[jj].x > 1300) {
-		//}
-	}
-	jj = 0;
-
-	game.world.bringToTop(order0);
-	game.world.bringToTop(order1);
-	game.world.bringToTop(order2);
-	game.world.bringToTop(order3);
-	game.world.bringToTop(order4);
-	game.world.bringToTop(order5);
-	game.world.bringToTop(order6);
-	game.world.bringToTop(order7);
-	game.world.bringToTop(order8);
-	game.world.bringToTop(order9);
+	game.world.bringToTop(order0); game.world.bringToTop(order1);
+	game.world.bringToTop(order2); game.world.bringToTop(order3);
+	game.world.bringToTop(order4); game.world.bringToTop(order5);
+	game.world.bringToTop(order6); game.world.bringToTop(order7);
+	game.world.bringToTop(order8); game.world.bringToTop(order9);
 	fond2.bringToTop();
+	labelGroup.bringToTop();
 }
-
-
-
-  </script>
-
-
-
-
+	</script>
 </head>
-<body style="background-color: rgb(67,169,223);">
+<body style="background-color: rgb(68,136,170);">
 	<div id="game" style="
 		cursor: none;
 		position: absolute;
 		TOP: 0px;
 		LEFT: 0px;
-
-
 		image-rendering: optimizeSpeed;
 		image-rendering: -moz-crisp-edges;
 		image-rendering: -o-crisp-edges;
 		image-rendering: -webkit-optimize-contrast;
 		image-rendering: optimize-contrast;
 		-ms-interpolation-mode: nearest-neighbor;
-		image-rendering : pixelated;">
+		image-rendering: pixelated;">
+	</div>
+
+	<div id="clabel">π = 3.14159265…</div>
+	<div id="dcounter">π digit #0</div>
+
+	<div id="switcher">
+		<button id="btn-pi"    class="cbtn active" onclick="switchConstant('pi')">π  Pi</button>
+		<button id="btn-e"     class="cbtn"        onclick="switchConstant('e')">e  Euler</button>
+		<button id="btn-phi"   class="cbtn"        onclick="switchConstant('phi')">φ  Golden</button>
+		<button id="btn-sqrt2" class="cbtn"        onclick="switchConstant('sqrt2')">√2  Root</button>
 	</div>
 </body>
 </html>
