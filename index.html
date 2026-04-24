@@ -234,6 +234,68 @@ function getDayNightTint(phase) {
 }
 // ──────────────────────────────────────────────────────────────────────────
 
+// ── Pi Digit Ticker & Click-to-Reveal ─────────────────────────────────────
+// 10 vivid colours, one per digit 0-9
+var DIGIT_CSS_COLORS = [
+	'#FF5252', // 0  red
+	'#FF9100', // 1  orange
+	'#FFD740', // 2  yellow
+	'#69F0AE', // 3  green
+	'#40C4FF', // 4  sky-blue
+	'#00E5FF', // 5  cyan
+	'#7C4DFF', // 6  purple
+	'#FF4081', // 7  pink
+	'#CCFF90', // 8  lime
+	'#FF6D00'  // 9  deep-orange
+];
+
+var tickerItems  = [];   // Phaser.Text refs for the scrolling ticker
+var tickerGroup;         // Phaser.Group (z-ordered above fond2)
+var tickerBgGfx;         // dark band at the top behind the ticker
+var hudText;             // left-corner "π[N] = D" counter
+var TICKER_Y = 14;       // vertical centre of the top ticker strip
+
+function addTickerItem(digit) {
+	var startX = 1320;
+	if (tickerItems.length > 0) {
+		var prev = tickerItems[tickerItems.length - 1];
+		if (prev.x + 26 > startX) { startX = prev.x + 26; }
+	}
+	var item = game.add.text(startX, TICKER_Y, '' + digit, {
+		font: 'bold 15px monospace',
+		fill: DIGIT_CSS_COLORS[digit],
+		stroke: '#111111',
+		strokeThickness: 3
+	});
+	item.anchor.setTo(0.5, 0.5);
+	tickerGroup.add(item);
+	tickerItems.push(item);
+}
+
+function showDigitPopup(x, y, digit, index) {
+	var bigLabel = game.add.text(x, y, '' + digit, {
+		font: 'bold 80px monospace',
+		fill: DIGIT_CSS_COLORS[digit],
+		stroke: '#000000',
+		strokeThickness: 6
+	});
+	bigLabel.anchor.setTo(0.5, 0.5);
+	var subLabel = game.add.text(x, y + 55, '\u03C0[' + index + ']', {
+		font: 'bold 18px monospace',
+		fill: '#FFFFFF',
+		stroke: '#000000',
+		strokeThickness: 3
+	});
+	subLabel.anchor.setTo(0.5, 0.5);
+	game.add.tween(bigLabel).to({ y: y - 130, alpha: 0 }, 1500,
+		Phaser.Easing.Quadratic.Out, true)
+		.onComplete.add(function() { bigLabel.destroy(); });
+	game.add.tween(subLabel).to({ y: y - 70, alpha: 0 }, 1500,
+		Phaser.Easing.Quadratic.Out, true)
+		.onComplete.add(function() { subLabel.destroy(); });
+}
+// ──────────────────────────────────────────────────────────────────────────
+
 // Returns a new shooting-star object by consuming 6 Pi digits
 function spawnShootingStar() {
 	var i  = shootingStarPiIdx % (pi.length - 10);
@@ -362,6 +424,25 @@ function create() {
 	game.input.onDown.add(initAudio);
 	drawKeyboard();
 	rainGraphics = game.add.graphics(0, 0);
+
+	// Dark band at the very top behind the ticker
+	tickerBgGfx = game.add.graphics(0, 0);
+	tickerBgGfx.beginFill(0x000000, 0.42);
+	tickerBgGfx.drawRect(0, 0, 1300, 28);
+	tickerBgGfx.endFill();
+
+	// Group for scrolling digit badges
+	tickerGroup = game.add.group();
+
+	// HUD: top-left Pi counter (inside the ticker band)
+	hudText = game.add.text(8, TICKER_Y, '\u03C0[0] = 3', {
+		font: 'bold 13px monospace',
+		fill: '#FFFFFF',
+		stroke: '#000000',
+		strokeThickness: 2
+	});
+	hudText.anchor.setTo(0, 0.5);
+	hudText.alpha = 0.85;
 	// ──────────────────────────────────────────────────────────
 }
 
@@ -496,6 +577,17 @@ function update() {
 		nuages2[decimal].scale.setTo((pi[decimal])/10, (pi[decimal])/10);
 		nuages[decimal].alpha = 0.99;
 
+		// Enable click-to-reveal on this cloud
+		nuages[decimal].inputEnabled = true;
+		nuages[decimal].piDigit     = pi[decimal];
+		nuages[decimal].piIndex     = decimal;
+		nuages[decimal].events.onInputDown.add(function(sprite) {
+			showDigitPopup(sprite.x, sprite.y - 60, sprite.piDigit, sprite.piIndex);
+		});
+
+		// Push this digit onto the top ticker strip
+		addTickerItem(pi[decimal]);
+
 		// Play the note for this digit
 		playDigitNote(pi[decimal]);
 
@@ -562,6 +654,21 @@ function update() {
 
 	// Place celestial layer above stars but below all cloud groups
 	celestialLayer.bringToTop();
+
+	// Scroll ticker items leftward; remove those that exit the canvas
+	for (var ti = tickerItems.length - 1; ti >= 0; ti--) {
+		tickerItems[ti].x -= 1.5;
+		if (tickerItems[ti].x < -20) {
+			tickerItems[ti].destroy();
+			tickerItems.splice(ti, 1);
+		}
+	}
+
+	// Refresh the Pi index counter in the HUD
+	if (decimal >= 0) {
+		hudText.setText('\u03C0[' + decimal + ']=' + pi[decimal]);
+	}
+
 	game.world.bringToTop(order0);
 	game.world.bringToTop(order1);
 	game.world.bringToTop(order2);
@@ -596,10 +703,15 @@ function update() {
 		rainGraphics.lineTo(drop.x - drop.vx * drop.len * 0.4, drop.y - drop.len);
 	}
 	// ─────────────────────────────────────────────────────────────────
+	// Ticker band sits above the water layer
+	tickerBgGfx.bringToTop();
+	tickerGroup.bringToTop();
 
 	// Redraw keyboard and keep it on top of everything
 	drawKeyboard();
 	uiGroup.bringToTop();
+	// HUD on the very top so it's always readable
+	hudText.bringToTop();
 }
 
 
