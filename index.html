@@ -16,13 +16,52 @@ var pi = [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,
 function randInt(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-		
+
 for (var i = 0; i<10000; i++) {
 	pi.push(randInt(0,9));
 	console.log(pi[886+i]);
 }
 
 var timer = 0;
+
+// ── Day / Night Cycle ──────────────────────────────────────────────────────
+var dayNightTimer = 0;
+var CYCLE_FRAMES  = 3600;   // one full cycle every 2 minutes at 30 fps
+var starsLayer;
+var currentTintHex = 0xFFFFFF;
+
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+function rgbToPhaser(r, g, b) { return (r << 16) | (g << 8) | b; }
+
+function rgbToCSS(r, g, b) {
+	return '#' +
+		('0' + r.toString(16)).slice(-2) +
+		('0' + g.toString(16)).slice(-2) +
+		('0' + b.toString(16)).slice(-2);
+}
+
+// Four colour stops around the cycle (phase 0 = noon, 0.5 = midnight)
+var tintStops = [
+	{ r: 255, g: 255, b: 255 },  // 0.00 noon  – no tint
+	{ r: 255, g: 130, b: 50  },  // 0.25 dusk  – warm orange
+	{ r: 18,  g: 22,  b: 75  },  // 0.50 night – deep indigo
+	{ r: 255, g: 165, b: 110 },  // 0.75 dawn  – peach
+];
+
+function getDayNightTint(phase) {
+	var n  = tintStops.length;
+	var sc = phase * n;
+	var i  = Math.floor(sc) % n;
+	var j  = (i + 1) % n;
+	var t  = sc - Math.floor(sc);
+	return {
+		r: Math.floor(lerp(tintStops[i].r, tintStops[j].r, t)),
+		g: Math.floor(lerp(tintStops[i].g, tintStops[j].g, t)),
+		b: Math.floor(lerp(tintStops[i].b, tintStops[j].b, t))
+	};
+}
+// ──────────────────────────────────────────────────────────────────────────
 
 function sleep(milliseconds) {
 	var start = new Date().getTime();
@@ -43,6 +82,21 @@ function create() {
 	game.time.desiredFps = 30;
 	game.stage.backgroundColor = "#4488AA";
 	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
+
+	// Stars layer – drawn once, positioned by Pi digits, revealed at night
+	starsLayer = game.add.graphics(0, 0);
+	for (var s = 0; s < 150; s++) {
+		var px       = s * 3;
+		var sx       = (pi[px] * 130 + pi[px+1] * 13 + pi[px+2] * 7) % 1300;
+		var sy       = (pi[px] * 33  + pi[px+1] * 4  + 5)             % 330;
+		var starSize = (pi[px] % 2) + 1;           // radius 1 or 2 px
+		var starAlpha = 0.35 + (pi[px+2] / 14.0); // 0.35 – 0.99
+		starsLayer.beginFill(0xFFFFFF, starAlpha);
+		starsLayer.drawCircle(sx, sy, starSize * 2);
+		starsLayer.endFill();
+	}
+	starsLayer.alpha = 0; // invisible during the day
+
 	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
 	order0 = game.add.group();
 	order1 = game.add.group();
@@ -61,6 +115,30 @@ function create() {
 
 }
 function update() {
+
+	// ── Day / Night Cycle ───────────────────────────────────────────────
+	dayNightTimer++;
+	var phase = (dayNightTimer % CYCLE_FRAMES) / CYCLE_FRAMES;
+	var tint  = getDayNightTint(phase);
+	currentTintHex = rgbToPhaser(tint.r, tint.g, tint.b);
+
+	// Tint the sky and water backgrounds
+	fond.tint  = currentTintHex;
+	fond2.tint = currentTintHex;
+
+	// Stars fade in during the night half of the cycle (phase 0.25 – 0.75)
+	var nightAlpha = 0;
+	if (phase > 0.25 && phase < 0.75) {
+		nightAlpha = Math.sin((phase - 0.25) / 0.5 * Math.PI);
+	}
+	starsLayer.alpha = nightAlpha;
+
+	// Darken the stage background at night
+	var bgR = Math.floor(lerp(67,  5,  nightAlpha));
+	var bgG = Math.floor(lerp(169, 5,  nightAlpha));
+	var bgB = Math.floor(lerp(223, 30, nightAlpha));
+	game.stage.backgroundColor = rgbToCSS(bgR, bgG, bgB);
+	// ────────────────────────────────────────────────────────────────────
 
 	timer++;
 
@@ -128,8 +206,11 @@ function update() {
 		if (nuages[jj].x > 1800) {
 			nuages[jj].destroy();
 		}
-		nuages[jj].x += (pi[jj])/Math.abs(velocityDivider);
+		nuages[jj].x  += (pi[jj])/Math.abs(velocityDivider);
 		nuages2[jj].x += (pi[jj])/Math.abs(velocityDivider);
+		// Tint clouds to match the current time of day
+		nuages[jj].tint  = currentTintHex;
+		nuages2[jj].tint = currentTintHex;
 		//nuages[jj].angle += (1/(pi[jj]))*3;
 		jj++;
 		//if (nuages[jj].x > 1300) {
