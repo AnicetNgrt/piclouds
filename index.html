@@ -16,13 +16,184 @@ var pi = [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,
 function randInt(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-		
+
 for (var i = 0; i<10000; i++) {
 	pi.push(randInt(0,9));
 	console.log(pi[886+i]);
 }
 
 var timer = 0;
+
+// ── Day / Night Cycle ──────────────────────────────────────────────────────
+var dayNightTimer = 0;
+var CYCLE_FRAMES  = 3600;   // one full cycle every 2 minutes at 30 fps
+var starsLayer;
+var currentTintHex = 0xFFFFFF;
+
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+function rgbToPhaser(r, g, b) { return (r << 16) | (g << 8) | b; }
+
+function rgbToCSS(r, g, b) {
+	return '#' +
+		('0' + r.toString(16)).slice(-2) +
+		('0' + g.toString(16)).slice(-2) +
+		('0' + b.toString(16)).slice(-2);
+}
+
+// Four colour stops around the cycle (phase 0 = noon, 0.5 = midnight)
+var tintStops = [
+	{ r: 255, g: 255, b: 255 },  // 0.00 noon  – no tint
+	{ r: 255, g: 130, b: 50  },  // 0.25 dusk  – warm orange
+	{ r: 18,  g: 22,  b: 75  },  // 0.50 night – deep indigo
+	{ r: 255, g: 165, b: 110 },  // 0.75 dawn  – peach
+];
+
+function getDayNightTint(phase) {
+	var n  = tintStops.length;
+	var sc = phase * n;
+	var i  = Math.floor(sc) % n;
+	var j  = (i + 1) % n;
+	var t  = sc - Math.floor(sc);
+	return {
+		r: Math.floor(lerp(tintStops[i].r, tintStops[j].r, t)),
+		g: Math.floor(lerp(tintStops[i].g, tintStops[j].g, t)),
+		b: Math.floor(lerp(tintStops[i].b, tintStops[j].b, t))
+	};
+}
+// ──────────────────────────────────────────────────────────────────────────
+
+// ── Pi Sonification & Cloud Click Annotation ──────────────────────────────
+var audioCtx     = null;
+var soundEnabled = false;
+
+// Digits 1-9 map to a C-major pentatonic scale across two octaves.
+// Digit 0 produces a soft wind-like tone.
+var noteFrequencies = [
+	0,      // 0  – wind noise
+	261.63, // 1  – C4
+	293.66, // 2  – D4
+	329.63, // 3  – E4
+	392.00, // 4  – G4
+	440.00, // 5  – A4
+	523.25, // 6  – C5
+	587.33, // 7  – D5
+	659.25, // 8  – E5
+	783.99  // 9  – G5
+];
+
+function initAudio() {
+	if (!audioCtx) {
+		audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+	}
+}
+
+// Play a soft ambient tone for the given Pi digit.
+// volume  : 0..1  (default 0.06)
+// duration: seconds (default 0.85)
+function playDigitTone(digit, volume, duration) {
+	if (!soundEnabled || !audioCtx) return;
+	volume   = (volume   !== undefined) ? volume   : 0.06;
+	duration = (duration !== undefined) ? duration : 0.85;
+
+	var osc   = audioCtx.createOscillator();
+	var gain  = audioCtx.createGain();
+	// Subtle echo for ambient feel
+	var delay = audioCtx.createDelay(0.5);
+	var dGain = audioCtx.createGain();
+	delay.delayTime.value = 0.22;
+	dGain.gain.value      = 0.28;
+
+	osc.connect(gain);
+	gain.connect(audioCtx.destination);
+	gain.connect(delay);
+	delay.connect(dGain);
+	dGain.connect(audioCtx.destination);
+
+	if (digit === 0) {
+		// Digit 0: low sawtooth wind texture
+		osc.type = 'sawtooth';
+		osc.frequency.value = 85 + Math.random() * 35;
+		gain.gain.setValueAtTime(volume * 0.2, audioCtx.currentTime);
+	} else {
+		osc.type = 'sine';
+		osc.frequency.value = noteFrequencies[digit];
+		gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+	}
+	gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+	osc.start(audioCtx.currentTime);
+	osc.stop(audioCtx.currentTime + duration);
+}
+
+// Called when the user clicks a cloud sprite.
+// cloudIndex is the position in the pi[] array (and in nuages[]).
+function onCloudClicked(sprite, pointer, cloudIndex) {
+	// First interaction initialises Web Audio and enables ambient tones
+	initAudio();
+	soundEnabled = true;
+	document.getElementById('soundToggle').textContent = '[sound: on]';
+
+	var digit = pi[cloudIndex];
+
+	// Play a clear, resonant note
+	playDigitTone(digit, 0.28, 2.2);
+
+	// ---- Floating HTML annotation ----------------------------------------
+	// Using an HTML element guarantees it renders above the Phaser canvas.
+	var label = document.createElement('div');
+	label.textContent = '\u03c0[' + (cloudIndex + 1) + '] = ' + digit;
+	label.style.position   = 'absolute';
+	label.style.top        = (pointer.y - 44) + 'px';
+	label.style.left       = pointer.x + 'px';
+	label.style.color      = '#ffffff';
+	label.style.fontFamily = 'monospace';
+	label.style.fontSize   = '19px';
+	label.style.fontWeight = 'bold';
+	label.style.textShadow = '0 0 6px #05111f, 0 0 14px #05111f';
+	label.style.pointerEvents = 'none';
+	label.style.zIndex     = '300';
+	label.style.transform  = 'translateX(-50%)';
+	label.style.transition = 'opacity 1.9s ease-out, top 1.9s ease-out';
+	label.style.opacity    = '1';
+	document.body.appendChild(label);
+
+	// Trigger CSS transition on the next paint frame
+	requestAnimationFrame(function() {
+		requestAnimationFrame(function() {
+			label.style.top     = (pointer.y - 120) + 'px';
+			label.style.opacity = '0';
+		});
+	});
+
+	setTimeout(function() {
+		if (label.parentNode) { label.parentNode.removeChild(label); }
+	}, 2200);
+
+	// ---- Scale-pulse on the cloud sprite ---------------------------------
+	if (sprite.alive) {
+		var ox = sprite.scale.x;
+		var oy = sprite.scale.y;
+		game.add.tween(sprite.scale).to(
+			{ x: ox * 1.2, y: oy * 1.2 }, 140,
+			Phaser.Easing.Quadratic.Out, true
+		).onComplete.add(function() {
+			if (sprite.alive) {
+				game.add.tween(sprite.scale).to(
+					{ x: ox, y: oy }, 200,
+					Phaser.Easing.Quadratic.In, true
+				);
+			}
+		});
+	}
+}
+
+function toggleSound() {
+	initAudio();
+	soundEnabled = !soundEnabled;
+	document.getElementById('soundToggle').textContent =
+		soundEnabled ? '[sound: on]' : '[sound: off]';
+}
+// ──────────────────────────────────────────────────────────────────────────
 
 function sleep(milliseconds) {
 	var start = new Date().getTime();
@@ -43,6 +214,21 @@ function create() {
 	game.time.desiredFps = 30;
 	game.stage.backgroundColor = "#4488AA";
 	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
+
+	// Stars layer – drawn once, positioned by Pi digits, revealed at night
+	starsLayer = game.add.graphics(0, 0);
+	for (var s = 0; s < 150; s++) {
+		var px       = s * 3;
+		var sx       = (pi[px] * 130 + pi[px+1] * 13 + pi[px+2] * 7) % 1300;
+		var sy       = (pi[px] * 33  + pi[px+1] * 4  + 5)             % 330;
+		var starSize = (pi[px] % 2) + 1;           // radius 1 or 2 px
+		var starAlpha = 0.35 + (pi[px+2] / 14.0); // 0.35 – 0.99
+		starsLayer.beginFill(0xFFFFFF, starAlpha);
+		starsLayer.drawCircle(sx, sy, starSize * 2);
+		starsLayer.endFill();
+	}
+	starsLayer.alpha = 0; // invisible during the day
+
 	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
 	order0 = game.add.group();
 	order1 = game.add.group();
@@ -54,13 +240,33 @@ function create() {
 	order7 = game.add.group();
 	order8 = game.add.group();
 	order9 = game.add.group();
-	//fond2.angle = 180;
 	fond2.alpha = 0.9;
-	//field = game.add.tileSprite(0, 465, 1300, 300, 'field');
-	//field.alpha = 0.2;
-
 }
 function update() {
+
+	// ── Day / Night Cycle ───────────────────────────────────────────────
+	dayNightTimer++;
+	var phase = (dayNightTimer % CYCLE_FRAMES) / CYCLE_FRAMES;
+	var tint  = getDayNightTint(phase);
+	currentTintHex = rgbToPhaser(tint.r, tint.g, tint.b);
+
+	// Tint the sky and water backgrounds
+	fond.tint  = currentTintHex;
+	fond2.tint = currentTintHex;
+
+	// Stars fade in during the night half of the cycle (phase 0.25 – 0.75)
+	var nightAlpha = 0;
+	if (phase > 0.25 && phase < 0.75) {
+		nightAlpha = Math.sin((phase - 0.25) / 0.5 * Math.PI);
+	}
+	starsLayer.alpha = nightAlpha;
+
+	// Darken the stage background at night
+	var bgR = Math.floor(lerp(67,  5,  nightAlpha));
+	var bgG = Math.floor(lerp(169, 5,  nightAlpha));
+	var bgB = Math.floor(lerp(223, 30, nightAlpha));
+	game.stage.backgroundColor = rgbToCSS(bgR, bgG, bgB);
+	// ────────────────────────────────────────────────────────────────────
 
 	timer++;
 
@@ -68,17 +274,25 @@ function update() {
 
 		decimal++;
 		timer = 0;
-		nuages.push(game.add.tileSprite(-200, 400-(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage'));
+		nuages.push(game.add.tileSprite(-200, 400-(pi[decimal]*34-15), 768, 312, 'nuage'));
 		nuages[decimal].anchor.x = 0.7;
 		nuages[decimal].anchor.y = 0.5;
-		nuages[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
+		nuages[decimal].scale.setTo((pi[decimal])/10, (pi[decimal])/10);
 		nuages[decimal].alpha = 0.9;
-		//sum += pi[decimal];
-		nuages2.push(game.add.tileSprite(-200, 400+(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage2'));
+		nuages2.push(game.add.tileSprite(-200, 400+(pi[decimal]*34-15), 768, 312, 'nuage2'));
 		nuages2[decimal].anchor.x = 0.7;
 		nuages2[decimal].anchor.y = 0.5;
-		nuages2[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
+		nuages2[decimal].scale.setTo((pi[decimal])/10, (pi[decimal])/10);
 		nuages[decimal].alpha = 0.99;
+
+		// ── Enable click interaction on sky cloud ────────────────────────
+		nuages[decimal].inputEnabled = true;
+		nuages[decimal].input.useHandCursor = true;
+		nuages[decimal].events.onInputDown.add(onCloudClicked, null, 0, decimal);
+
+		// Soft ambient tone on spawn (only fires once audio is unlocked)
+		if (audioCtx) { playDigitTone(pi[decimal], 0.055, 0.9); }
+		// ────────────────────────────────────────────────────────────────
 
 		switch(pi[decimal]) {
 		case 0:
@@ -128,12 +342,12 @@ function update() {
 		if (nuages[jj].x > 1800) {
 			nuages[jj].destroy();
 		}
-		nuages[jj].x += (pi[jj])/Math.abs(velocityDivider);
+		nuages[jj].x  += (pi[jj])/Math.abs(velocityDivider);
 		nuages2[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		//nuages[jj].angle += (1/(pi[jj]))*3;
+		// Tint clouds to match the current time of day
+		nuages[jj].tint  = currentTintHex;
+		nuages2[jj].tint = currentTintHex;
 		jj++;
-		//if (nuages[jj].x > 1300) {
-		//}
 	}
 	jj = 0;
 
@@ -159,12 +373,11 @@ function update() {
 
 </head>
 <body style="background-color: rgb(67,169,223);">
-	<div id="game" style="
-		cursor: none;
+	<div id="PIclouds" style="
+		cursor: default;
 		position: absolute;
-		TOP: 0px;
-		LEFT: 0px;
-
+		top: 0px;
+		left: 0px;
 
 		image-rendering: optimizeSpeed;
 		image-rendering: -moz-crisp-edges;
@@ -172,7 +385,58 @@ function update() {
 		image-rendering: -webkit-optimize-contrast;
 		image-rendering: optimize-contrast;
 		-ms-interpolation-mode: nearest-neighbor;
-		image-rendering : pixelated;">
+		image-rendering: pixelated;">
 	</div>
+
+	<!-- UI overlay: always above the Phaser canvas -->
+	<div id="ui-overlay" style="
+		position: absolute; top: 0; left: 0;
+		width: 1300px; height: 700px;
+		pointer-events: none; z-index: 100;">
+
+		<!-- Sound toggle button -->
+		<div id="soundToggle"
+			onclick="toggleSound()"
+			style="
+				pointer-events: all;
+				position: absolute; bottom: 12px; right: 14px;
+				background: rgba(0,0,0,0.42);
+				color: rgba(255,255,255,0.88);
+				padding: 6px 15px;
+				border-radius: 18px;
+				cursor: pointer;
+				font-family: monospace;
+				font-size: 13px;
+				user-select: none;
+				border: 1px solid rgba(255,255,255,0.22);
+				letter-spacing: 0.4px;
+				transition: background 0.2s;">
+			[sound: off]
+		</div>
+
+		<!-- Hint text — fades out after 9 s -->
+		<div id="clickHint" style="
+			position: absolute; bottom: 16px; left: 50%;
+			transform: translateX(-50%);
+			color: rgba(255,255,255,0.72);
+			font-family: monospace;
+			font-size: 12px;
+			pointer-events: none;
+			transition: opacity 1s ease-out;
+			white-space: nowrap;">
+			click a cloud to reveal its Pi digit
+		</div>
+	</div>
+
+	<script>
+		// Fade out the hint after 9 seconds
+		setTimeout(function() {
+			var h = document.getElementById('clickHint');
+			if (h) {
+				h.style.opacity = '0';
+				setTimeout(function() { if (h.parentNode) h.parentNode.removeChild(h); }, 1100);
+			}
+		}, 9000);
+	</script>
 </body>
 </html>
