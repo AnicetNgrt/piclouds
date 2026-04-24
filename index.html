@@ -31,10 +31,35 @@ function randInt(min, max) {
 
 for (var i = 0; i<10000; i++) {
 	pi.push(randInt(0,9));
-	console.log(pi[886+i]);
 }
 
 var timer = 0;
+
+// ── Digit colour palette (rainbow: 0=blue … 9=violet) ──────────────────────
+var digitColors = [
+	0x4466DD,  // 0: blue
+	0x22AAFF,  // 1: sky-blue
+	0x00DDCC,  // 2: cyan-teal
+	0x00BB66,  // 3: green
+	0x88DD00,  // 4: lime
+	0xFFCC00,  // 5: yellow
+	0xFF8800,  // 6: orange
+	0xFF3333,  // 7: red
+	0xFF00BB,  // 8: magenta
+	0x9900FF   // 9: violet
+];
+
+// ── Frequency equalizer state ───────────────────────────────────────────────
+var digitFrequency = [0,0,0,0,0,0,0,0,0,0];
+var maxFrequency   = 1;
+var pulseTimers    = [0,0,0,0,0,0,0,0,0,0]; // frames left for pulse glow
+var eqGroup, eqBg, eqBars, freqLabels = [], countText;
+
+function hexStr(n) {
+	var s = n.toString(16);
+	while (s.length < 6) s = '0' + s;
+	return '#' + s;
+}
 
 function sleep(milliseconds) {
 	var start = new Date().getTime();
@@ -98,11 +123,43 @@ function create() {
 	order7 = game.add.group();
 	order8 = game.add.group();
 	order9 = game.add.group();
-	//fond2.angle = 180;
 	fond2.alpha = 0.9;
-	//field = game.add.tileSprite(0, 465, 1300, 300, 'field');
-	//field.alpha = 0.2;
 
+	// ── Frequency equalizer overlay (top-right corner, above fond2 region) ──
+	eqGroup = game.add.group();
+
+	eqBg   = game.add.graphics(0, 0);
+	eqGroup.add(eqBg);
+
+	eqBars = game.add.graphics(0, 0);
+	eqGroup.add(eqBars);
+
+	var titleTxt = game.add.text(1068, 14, '\u03c0 digit frequency', {
+		font: 'bold 11px monospace',
+		fill: '#ffffff',
+		stroke: '#000033',
+		strokeThickness: 2
+	});
+	eqGroup.add(titleTxt);
+
+	for (var d = 0; d < 10; d++) {
+		var lbl = game.add.text(1067 + d * 22, 138, '' + d, {
+			font: 'bold 10px monospace',
+			fill: hexStr(digitColors[d]),
+			stroke: '#000033',
+			strokeThickness: 2
+		});
+		freqLabels.push(lbl);
+		eqGroup.add(lbl);
+	}
+
+	countText = game.add.text(1068, 152, 'n = 0', {
+		font: '10px monospace',
+		fill: '#aaccee',
+		stroke: '#000033',
+		strokeThickness: 1
+	});
+	eqGroup.add(countText);
 }
 function update() {
 
@@ -112,17 +169,26 @@ function update() {
 
 		decimal++;
 		timer = 0;
-		nuages.push(game.add.tileSprite(-200, 400-(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage'));
+		nuages.push(game.add.tileSprite(-200, 400-(pi[decimal]*34-15), 768, 312, 'nuage'));
 		nuages[decimal].anchor.x = 0.7;
 		nuages[decimal].anchor.y = 0.5;
-		nuages[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
+		nuages[decimal].scale.setTo((pi[decimal])/10, (pi[decimal])/10);
 		nuages[decimal].alpha = 0.9;
-		//sum += pi[decimal];
-		nuages2.push(game.add.tileSprite(-200, 400+(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage2'));
+		nuages[decimal].tint  = digitColors[pi[decimal]]; // ← colour by digit
+
+		nuages2.push(game.add.tileSprite(-200, 400+(pi[decimal]*34-15), 768, 312, 'nuage2'));
 		nuages2[decimal].anchor.x = 0.7;
 		nuages2[decimal].anchor.y = 0.5;
-		nuages2[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
+		nuages2[decimal].scale.setTo((pi[decimal])/10, (pi[decimal])/10);
 		nuages[decimal].alpha = 0.99;
+		nuages2[decimal].tint  = digitColors[pi[decimal]]; // ← colour by digit
+
+		// Update frequency tracking
+		digitFrequency[pi[decimal]]++;
+		if (digitFrequency[pi[decimal]] > maxFrequency) {
+			maxFrequency = digitFrequency[pi[decimal]];
+		}
+		pulseTimers[pi[decimal]] = 9; // 9-frame pulse glow
 
 		switch(pi[decimal]) {
 		case 0:
@@ -202,10 +268,7 @@ function update() {
 		}
 		nuages[jj].x += (pi[jj])/Math.abs(velocityDivider);
 		nuages2[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		//nuages[jj].angle += (1/(pi[jj]))*3;
 		jj++;
-		//if (nuages[jj].x > 1300) {
-		//}
 	}
 	jj = 0;
 
@@ -223,8 +286,59 @@ function update() {
 	game.world.bringToTop(order8);
 	game.world.bringToTop(order9);
 	fond2.bringToTop();
-}
 
+	// ── Draw frequency equalizer (always rendered above everything) ─────────
+	eqGroup.bringToTop();
+	eqBg.clear();
+	eqBars.clear();
+
+	// Semi-transparent dark panel
+	eqBg.lineStyle(1, 0x88AACC, 0.5);
+	eqBg.beginFill(0x000022, 0.55);
+	eqBg.drawRoundedRect(1060, 10, 228, 162, 6);
+	eqBg.endFill();
+
+	// Thin separator under title
+	eqBg.lineStyle(1, 0x445577, 0.6);
+	eqBg.moveTo(1065, 32);
+	eqBg.lineTo(1282, 32);
+
+	var panelLeft = 1065;
+	var barW      = 16;
+	var barSpacing = 22;   // 16px bar + 6px gap
+	var maxBarH   = 92;
+	var barBaseY  = 134;   // y of bar bottoms
+
+	for (var d = 0; d < 10; d++) {
+		var isPulsing = pulseTimers[d] > 0;
+		if (isPulsing) pulseTimers[d]--;
+
+		var ratio = digitFrequency[d] / maxFrequency;
+		var barH  = Math.max(2, Math.floor(ratio * maxBarH));
+		var alpha = isPulsing ? 1.0 : 0.78;
+		var bx    = panelLeft + d * barSpacing;
+		var by    = barBaseY - barH;
+
+		// Bar body
+		eqBars.beginFill(digitColors[d], alpha);
+		eqBars.drawRect(bx, by, barW, barH);
+		eqBars.endFill();
+
+		// White flash at top of bar when pulsing
+		if (isPulsing) {
+			eqBars.beginFill(0xffffff, 0.75);
+			eqBars.drawRect(bx, by, barW, 3);
+			eqBars.endFill();
+		}
+
+		// Tiny dim base line so zero bars are visible
+		eqBars.beginFill(digitColors[d], 0.3);
+		eqBars.drawRect(bx, barBaseY, barW, 2);
+		eqBars.endFill();
+	}
+
+	countText.setText('n = ' + (decimal + 1));
+}
 
 
   </script>
