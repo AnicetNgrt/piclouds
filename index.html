@@ -48,6 +48,56 @@ for (var i = 0; i < 10000; i++) {
 }
 
 var timer = 0;
+var frameCount = 0;
+
+// --- Day/Night Cycle ---
+var dayAngle = 180;          // degrees: 0=midnight, 90=dawn, 180=noon, 270=dusk
+var DAY_CYCLE_SPEED = 0.05;  // base degrees per frame (~4 min per full cycle at 30 fps)
+var nightGraphic;
+var starData = [];
+var NUM_STARS = 100;
+
+function lerpVal(a, b, t) { return a + (b - a) * t; }
+function lerpColor(c1, c2, t) {
+	return {
+		r: Math.round(lerpVal(c1.r, c2.r, t)),
+		g: Math.round(lerpVal(c1.g, c2.g, t)),
+		b: Math.round(lerpVal(c1.b, c2.b, t))
+	};
+}
+function toHex(c) { return (c.r << 16) | (c.g << 8) | c.b; }
+
+function getSkyColor(angle) {
+	var a = ((angle % 360) + 360) % 360;
+	var NIGHT = {r:4,   g:7,   b:30};
+	var DAWN  = {r:210, g:95,  b:25};
+	var DAY   = {r:68,  g:136, b:170};
+	var DUSK  = {r:170, g:55,  b:85};
+	var c1, c2, t;
+	if      (a < 90)  { c1=NIGHT; c2=DAWN;  t=a/90; }
+	else if (a < 180) { c1=DAWN;  c2=DAY;   t=(a-90)/90; }
+	else if (a < 270) { c1=DAY;   c2=DUSK;  t=(a-180)/90; }
+	else              { c1=DUSK;  c2=NIGHT; t=(a-270)/90; }
+	return lerpColor(c1, c2, t);
+}
+
+function getNightness(angle) {
+	var a = ((angle % 360) + 360) % 360;
+	return (1 + Math.cos(a * Math.PI / 180)) / 2;
+}
+
+function initStars() {
+	for (var i = 0; i < NUM_STARS; i++) {
+		starData.push({
+			x:      Math.floor(Math.random() * 1300),
+			y:      Math.floor(Math.random() * 390),
+			r:      0.8 + Math.random() * 1.5,
+			phase:  Math.random() * Math.PI * 2,
+			bright: 0.5 + Math.random() * 0.5
+		});
+	}
+}
+// --- End Day/Night Cycle Declarations ---
 
 function sleep(milliseconds) {
 	var start = new Date().getTime();
@@ -84,6 +134,9 @@ function create() {
 	game.stage.backgroundColor = "#4488AA";
 	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
 	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
+	// Night sky layer — sits above background images, below cloud groups
+	nightGraphic = game.add.graphics(0, 0);
+	initStars();
 	order0 = game.add.group();
 	order1 = game.add.group();
 	order2 = game.add.group();
@@ -99,8 +152,57 @@ function create() {
 }
 
 function update() {
-
+	frameCount++;
 	timer++;
+
+	// --- Day/Night Cycle Update ---
+	var curDigit = (decimal >= 0) ? pi[decimal] : 5;
+	// Pi digit 0-9 scales speed: 0 → 0.3x, 9 → 2.0x
+	var digitFactor = 0.3 + (curDigit / 9) * 1.7;
+	dayAngle = (dayAngle + DAY_CYCLE_SPEED * digitFactor) % 360;
+
+	var nightness  = getNightness(dayAngle);
+	var skyColor   = getSkyColor(dayAngle);
+	var skyHex     = toHex(skyColor);
+	var hexStr     = ('000000' + skyHex.toString(16)).slice(-6);
+	game.stage.backgroundColor = '#' + hexStr;
+
+	nightGraphic.clear();
+	if (nightness > 0.01) {
+		// Sky area overlay (top half)
+		nightGraphic.beginFill(skyHex, nightness * 0.75);
+		nightGraphic.drawRect(0, 0, 1300, 400);
+		nightGraphic.endFill();
+		// Ground area subtle darkening (bottom half)
+		nightGraphic.beginFill(0x050820, nightness * 0.42);
+		nightGraphic.drawRect(0, 400, 1300, 300);
+		nightGraphic.endFill();
+		// Twinkling stars
+		for (var si = 0; si < NUM_STARS; si++) {
+			var s = starData[si];
+			var twinkle   = (1 + Math.sin(frameCount * 0.07 + s.phase)) / 2;
+			var starAlpha = nightness * s.bright * (0.4 + twinkle * 0.6);
+			nightGraphic.beginFill(0xFFFFFF, starAlpha);
+			nightGraphic.drawCircle(s.x, s.y, s.r * 2);
+			nightGraphic.endFill();
+		}
+		// Moon: arcs across sky — rises right at dusk, peaks centre at midnight, sets left at dawn
+		if (nightness > 0.3) {
+			var moonArc   = dayAngle * Math.PI / 180;
+			var moonX     = 650 - Math.sin(moonArc) * 450;
+			var moonY     = 200 - Math.cos(moonArc) * 120;
+			var moonAlpha = Math.min(1, (nightness - 0.3) / 0.7);
+			if (moonX > -40 && moonX < 1340 && moonY > 0 && moonY < 390) {
+				nightGraphic.beginFill(0xFFFF88, moonAlpha * 0.13);
+				nightGraphic.drawCircle(moonX, moonY, 90);   // soft glow halo
+				nightGraphic.endFill();
+				nightGraphic.beginFill(0xFFF7CC, moonAlpha * 0.93);
+				nightGraphic.drawCircle(moonX, moonY, 38);   // moon disc
+				nightGraphic.endFill();
+			}
+		}
+	}
+	// --- End Day/Night Cycle Update ---
 
 	if (timer > (pi[decimal+1])*densityDivider) {
 
@@ -242,6 +344,8 @@ function update() {
 		}
 	}
 
+	// Z-order: night sky → clouds → shooting stars → foreground → rain
+	game.world.bringToTop(nightGraphic); // night sky behind clouds, above background
 	game.world.bringToTop(order0);
 	game.world.bringToTop(order1);
 	game.world.bringToTop(order2);
