@@ -11,15 +11,39 @@ var nuages = []; var densityDivider = 4; var velocityDivider = 0.6;
 var nuages2 = []; var field; var fond; var fond2;
 var nn = 0; var jj = 0; var sum = 0; var lock = 0;
 var decimal = -1;
+var order0, order1, order2, order3, order4, order5, order6, order7, order8, order9;
+
+// Digit-driven colour palette: cold stormy blue (0) → warm golden (9).
+// Tint is multiplied against the sprite texture, so 0xFFFFFF = no change.
+var digitTints = [
+	0x7799CC, // 0  stormy slate-blue
+	0x99AADD, // 1  cool grey-blue
+	0xAABBEE, // 2  periwinkle
+	0xBBCCFF, // 3  lavender blue
+	0xDDDDFF, // 4  pale violet
+	0xFFFFFF, // 5  pure white (no tint)
+	0xFFFFCC, // 6  warm white
+	0xFFEEAA, // 7  pale gold
+	0xFFDD88, // 8  amber
+	0xFFBB55  // 9  deep gold
+];
+
+// Rain curtains spawned on every digit-0 event.
+// Each entry: { gfx, x, drops: [{xOff, yOff, speed}] }
+var rainSystems = [];
+var RAIN_DROPS = 24;        // drops per curtain
+var RAIN_WIDTH = 340;       // horizontal spread of each curtain (px)
+var RAIN_DRIFT = 2.2;       // curtain rightward drift speed (px/frame)
+var RAIN_HEIGHT = 680;      // vertical cycling range (px)
+
 var pi = [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,8,4,1,9,7,1,6,9,3,9,9,3,7,5,1,0,5,8,2,0,9,7,4,9,4,4,5,9,2,3,0,7,8,1,6,4,0,6,2,8,6,2,0,8,9,9,8,6,2,8,0,3,4,8,2,5,3,4,2,1,1,7,0,6,7,9,8,2,1,4,8,0,8,6,5,1,3,2,8,2,3,0,6,6,4,7,0,9,3,8,4,4,6,0,9,5,5,0,5,8,2,2,3,1,7,2,5,3,5,9,4,0,8,1,2,8,4,8,1,1,1,7,4,5,0,2,8,4,1,0,2,7,0,1,9,3,8,5,2,1,1,0,5,5,5,9,6,4,4,6,2,2,9,4,8,9,5,4,9,3,0,3,8,1,9,6,4,4,2,8,8,1,0,9,7,5,6,6,5,9,3,3,4,4,6,1,2,8,4,7,5,6,4,8,2,3,3,7,8,6,7,8,3,1,6,5,2,7,1,2,0,1,9,0,9,1,4,5,6,4,8,5,6,6,9,2,3,4,6,0,3,4,8,6,1,0,4,5,4,3,2,6,6,4,8,2,1,3,3,9,3,6,0,7,2,6,0,2,4,9,1,4,1,2,7,3,7,2,4,5,8,7,0,0,6,6,0,6,3,1,5,5,8,8,1,7,4,8,8,1,5,2,0,9,2,0,9,6,2,8,2,9,2,5,4,0,9,1,7,1,5,3,6,4,3,6,7,8,9,2,5,9,0,3,6,0,0,1,1,3,3,0,5,3,0,5,4,8,8,2,0,4,6,6,5,2,1,3,8,4,1,4,6,9,5,1,9,4,1,5,1,1,6,0,9,4,3,3,0,5,7,2,7,0,3,6,5,7,5,9,5,9,1,9,5,3,0,9,2,1,8,6,1,1,7,3,8,1,9,3,2,6,1,1,7,9,3,1,0,5,1,1,8,5,4,8,0,7,4,4,6,2,3,7,9,9,6,2,7,4,9,5,6,7,3,5,1,8,8,5,7,5,2,7,2,4,8,9,1,2,2,7,9,3,8,1,8,3,0,1,1,9,4,9,1,2,9,8,3,3,6,7,3,3,6,2,4,4,0,6,5,6,6,4,3,0,8,6,0,2,1,3,9,4,9,4,6,3,9,5,2,2,4,7,3,7,1,9,0,7,0,2,1,7,9,8,6,0,9,4,3,7,0,2,7,7,0,5,3,9,2,1,7,1,7,6,2,9,3,1,7,6,7,5,2,3,8,4,6,7,4,8,1,8,4,6,7,6,6,9,4,0,5,1,3,2,0,0,0,5,6,8,1,2,7,1,4,5,2,6,3,5,6,0,8,2,7,7,8,5,7,7,1,3,4,2,7,5,7,7,8,9,6,0,9,1,7,3,6,3,7,1,7,8,7,2,1,4,6,8,4,4,0,9,0,1,2,2,4,9,5,3,4,3,0,1,4,6,5,4,9,5,8,5,3,7,1,0,5,0,7,9,2,2,7,9,6,8,9,2,5,8,9,2,3,5,4,2,0,1,9,9,5,6,1,1,2,1,2,9,0,2,1,9,6,0,8,6,4,0,3,4,4,1,8,1,5,9,8,1,3,6,2,9,7,7,4,7,7,1,3,0,9,9,6,0,5,1,8,7,0,7,2,1,1,3,4,9,9,9,9,9,9,8,3,7,2,9,7,8,0,4,9,9,5,1,0,5,9,7,3,1,7,3,2,8,1,6,0,9,6,3,1,8,5,9,5,0,2,4,4,5,9,4,5,5,3,4,6,9,0,8,3,0,2,6,4,2,5,2,2,3,0,8,2,5,3,3,4,4,6,8,5,0,3,5,2,6,1,9,3,1,1,8,8,1,7,1,0,1,0,0,0,3,1,3,7,8,3,8,7,5,2,8,8,6,5,8,7,5,3,3,2,0,8,3,8,1,4,2,0];
 
 function randInt(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-		
-for (var i = 0; i<10000; i++) {
-	pi.push(randInt(0,9));
-	console.log(pi[886+i]);
+
+for (var i = 0; i < 10000; i++) {
+	pi.push(randInt(0, 9));
 }
 
 var timer = 0;
@@ -32,6 +56,20 @@ function sleep(milliseconds) {
 		}
 	}
 }
+
+function spawnRainSystem() {
+	var gfx = game.add.graphics(0, 0);
+	var drops = [];
+	for (var d = 0; d < RAIN_DROPS; d++) {
+		drops.push({
+			xOff:  Math.random() * RAIN_WIDTH,
+			yOff:  Math.random() * RAIN_HEIGHT,
+			speed: 4 + Math.random() * 4
+		});
+	}
+	rainSystems.push({ gfx: gfx, x: -RAIN_WIDTH, drops: drops });
+}
+
 function preload() {
 	game.load.image('nuage','nuage.png');
 	game.load.image('nuage2','nuage2.png');
@@ -39,6 +77,7 @@ function preload() {
 	game.load.image('fond','fond.png');
 	game.load.image('fond2','fond2.png');
 }
+
 function create() {
 	game.time.desiredFps = 30;
 	game.stage.backgroundColor = "#4488AA";
@@ -54,12 +93,9 @@ function create() {
 	order7 = game.add.group();
 	order8 = game.add.group();
 	order9 = game.add.group();
-	//fond2.angle = 180;
 	fond2.alpha = 0.9;
-	//field = game.add.tileSprite(0, 465, 1300, 300, 'field');
-	//field.alpha = 0.2;
-
 }
+
 function update() {
 
 	timer++;
@@ -68,17 +104,27 @@ function update() {
 
 		decimal++;
 		timer = 0;
-		nuages.push(game.add.tileSprite(-200, 400-(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage'));
+
+		var digit = pi[decimal];
+
+		nuages.push(game.add.tileSprite(-200, 400-(pi[decimal]*34-15), 768, 312, 'nuage'));
 		nuages[decimal].anchor.x = 0.7;
 		nuages[decimal].anchor.y = 0.5;
-		nuages[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
+		nuages[decimal].scale.setTo((pi[decimal])/10, (pi[decimal])/10);
 		nuages[decimal].alpha = 0.9;
-		//sum += pi[decimal];
-		nuages2.push(game.add.tileSprite(-200, 400+(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage2'));
+		nuages[decimal].tint = digitTints[digit];
+
+		nuages2.push(game.add.tileSprite(-200, 400+(pi[decimal]*34-15), 768, 312, 'nuage2'));
 		nuages2[decimal].anchor.x = 0.7;
 		nuages2[decimal].anchor.y = 0.5;
-		nuages2[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
+		nuages2[decimal].scale.setTo((pi[decimal])/10, (pi[decimal])/10);
 		nuages[decimal].alpha = 0.99;
+		nuages2[decimal].tint = digitTints[digit];
+
+		// Every zero in Pi triggers a rain curtain drifting across the sky.
+		if (digit === 0) {
+			spawnRainSystem();
+		}
 
 		switch(pi[decimal]) {
 		case 0:
@@ -124,16 +170,36 @@ function update() {
 		}
 	}
 
+	// Animate rain curtains.
+	for (var rs = rainSystems.length - 1; rs >= 0; rs--) {
+		var sys = rainSystems[rs];
+		sys.x += RAIN_DRIFT;
+
+		if (sys.x > 1500) {
+			sys.gfx.destroy();
+			rainSystems.splice(rs, 1);
+			continue;
+		}
+
+		sys.gfx.clear();
+		sys.gfx.beginFill(0x99BBFF, 0.55);
+		for (var d = 0; d < sys.drops.length; d++) {
+			sys.drops[d].yOff += sys.drops[d].speed;
+			if (sys.drops[d].yOff > RAIN_HEIGHT) {
+				sys.drops[d].yOff = -Math.random() * 80;
+			}
+			sys.gfx.drawRect(sys.x + sys.drops[d].xOff, sys.drops[d].yOff, 2, 9);
+		}
+		sys.gfx.endFill();
+	}
+
 	while (jj <= decimal ) {
 		if (nuages[jj].x > 1800) {
 			nuages[jj].destroy();
 		}
 		nuages[jj].x += (pi[jj])/Math.abs(velocityDivider);
 		nuages2[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		//nuages[jj].angle += (1/(pi[jj]))*3;
 		jj++;
-		//if (nuages[jj].x > 1300) {
-		//}
 	}
 	jj = 0;
 
@@ -148,15 +214,13 @@ function update() {
 	game.world.bringToTop(order8);
 	game.world.bringToTop(order9);
 	fond2.bringToTop();
+
+	// Rain curtains render above everything, including the ground overlay.
+	for (var rs = 0; rs < rainSystems.length; rs++) {
+		rainSystems[rs].gfx.bringToTop();
+	}
 }
-
-
-
-  </script>
-
-
-
-
+	</script>
 </head>
 <body style="background-color: rgb(67,169,223);">
 	<div id="game" style="
