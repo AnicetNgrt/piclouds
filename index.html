@@ -290,6 +290,34 @@ function spawnRain() {
 }
 // =====================================================================
 
+// ── Cloud Hover / Click Interactivity ────────────────────────────────────
+// Hovering any upper cloud shows a floating π[n]=d label that tracks the
+// cloud as it drifts right each frame.  Clicking triggers a scale-pulse.
+
+var tooltipBg, tooltipText;
+var activeHoverIdx = -1;
+
+function showTooltip(idx)  { activeHoverIdx = idx; }
+
+function hideTooltip() {
+	activeHoverIdx = -1;
+	tooltipBg.clear();
+	tooltipText.visible = false;
+}
+
+function pulseCloud(cloud) {
+	if (!cloud || !cloud.alive) return;
+	var ox = cloud.scale.x, oy = cloud.scale.y;
+	game.add.tween(cloud.scale)
+		.to({ x: ox * 1.6, y: oy * 1.6 }, 160, Phaser.Easing.Quadratic.Out, true)
+		.onComplete.add(function () {
+			if (cloud.alive)
+				game.add.tween(cloud.scale)
+					.to({ x: ox, y: oy }, 270, Phaser.Easing.Quadratic.In, true);
+		});
+}
+// ─────────────────────────────────────────────────────────────────────────
+
 function preload() {
 	game.load.image('nuage','nuage.png');
 	game.load.image('nuage2','nuage2.png');
@@ -358,6 +386,16 @@ function create() {
 	game.input.onDown.add(initAudio);
 	drawKeyboard();
 	rainGraphics = game.add.graphics(0, 0);
+
+	// Tooltip overlay (bringToTop each frame keeps it above everything)
+	tooltipBg   = game.add.graphics(0, 0);
+	tooltipText = game.add.text(0, 0, '', {
+		font:            'bold 15px Courier New',
+		fill:            '#E0F4FF',
+		stroke:          '#001030',
+		strokeThickness: 3
+	});
+	tooltipText.visible = false;
 	// ──────────────────────────────────────────────────────────
 }
 
@@ -504,6 +542,14 @@ function update() {
 
 		// Play the note for this Pi digit
 		playDigitNote(pi[decimal]);
+
+		// Wire hover tooltip + click pulse (IIFE captures the right index)
+		(function (idx) {
+			nuages[idx].inputEnabled = true;
+			nuages[idx].events.onInputOver.add(function () { showTooltip(idx);       });
+			nuages[idx].events.onInputOut.add( function () { hideTooltip();           });
+			nuages[idx].events.onInputDown.add(function () { pulseCloud(nuages[idx]); });
+		})(decimal);
 	}
 
 	while (jj <= decimal ) {
@@ -518,6 +564,29 @@ function update() {
 		jj++;
 	}
 	jj = 0;
+
+	// ── Tooltip: reposition each frame to track the moving cloud ─────────
+	if (activeHoverIdx >= 0 && activeHoverIdx <= decimal) {
+		var hc = nuages[activeHoverIdx];
+		if (hc && hc.alive) {
+			var tx = Math.min(Math.max(hc.x - 60, 4), 1190);
+			var ty = Math.max(hc.y - 48, 4);
+			var label = '\u03C0[' + activeHoverIdx + '] = ' + pi[activeHoverIdx];
+			tooltipText.text    = label;
+			tooltipText.visible = true;
+			tooltipText.x       = tx + 9;
+			tooltipText.y       = ty + 6;
+			var tw = Math.max(tooltipText.width + 18, 110);
+			tooltipBg.clear();
+			tooltipBg.lineStyle(1, 0xCCEEFF, 0.75);
+			tooltipBg.beginFill(0x001030, 0.85);
+			tooltipBg.drawRoundedRect(tx, ty, tw, 30, 5);
+			tooltipBg.endFill();
+		} else {
+			hideTooltip();
+		}
+	}
+	// ─────────────────────────────────────────────────────────────────────
 
 	game.world.bringToTop(order0);
 	game.world.bringToTop(order1);
@@ -557,6 +626,10 @@ function update() {
 	// Redraw keyboard and keep it on top of everything
 	drawKeyboard();
 	uiGroup.bringToTop();
+
+	// Tooltip sits above every other layer, including the keyboard HUD
+	game.world.bringToTop(tooltipBg);
+	game.world.bringToTop(tooltipText);
 }
 
 
@@ -581,7 +654,7 @@ function update() {
 		transition: opacity 0.2s, background 0.2s;">&#9834;</button>
 
 	<div id="game" style="
-		cursor: none;
+		cursor: crosshair;
 		position: absolute;
 		TOP: 0px;
 		LEFT: 0px;
