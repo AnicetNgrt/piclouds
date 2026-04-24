@@ -9,6 +9,7 @@
 var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds', { preload: preload, create: create, update: update }, false, false);
 var nuages = []; var densityDivider = 4; var velocityDivider = 0.6;
 var nuages2 = []; var field; var fond; var fond2;
+var shootingStars = []; var starsGraphics;
 var nn = 0; var jj = 0; var sum = 0; var lock = 0;
 var decimal = -1;
 var order0, order1, order2, order3, order4, order5, order6, order7, order8, order9;
@@ -93,6 +94,7 @@ function create() {
 	order7 = game.add.group();
 	order8 = game.add.group();
 	order9 = game.add.group();
+	starsGraphics = game.add.graphics(0, 0);
 	fond2.alpha = 0.9;
 }
 
@@ -168,6 +170,19 @@ function update() {
 			order9.add(nuages2[decimal]);
 			break;
 		}
+
+		// Digit 9 fires a shooting star across the sky
+		if (pi[decimal] === 9) {
+			var nextD = (pi[decimal + 1] !== undefined ? pi[decimal + 1] : 5);
+			var prevD = (decimal > 0 && pi[decimal - 1] !== undefined ? pi[decimal - 1] : 5);
+			shootingStars.push({
+				x: 50 + Math.random() * 1100,
+				y: 10 + Math.random() * 200,
+				vx: 10 + nextD * 1.4,
+				vy: 2 + prevD * 0.7,
+				alpha: 1.0
+			});
+		}
 	}
 
 	// Animate rain curtains.
@@ -203,6 +218,30 @@ function update() {
 	}
 	jj = 0;
 
+	// Update and draw shooting stars (triggered when Pi digit equals 9)
+	starsGraphics.clear();
+	for (var si = shootingStars.length - 1; si >= 0; si--) {
+		var s = shootingStars[si];
+		// Fading trail behind the star
+		starsGraphics.lineStyle(2, 0xFFFFFF, s.alpha * 0.55);
+		starsGraphics.moveTo(s.x - s.vx * 10, s.y - s.vy * 10);
+		starsGraphics.lineTo(s.x, s.y);
+		// Bright glowing head
+		starsGraphics.beginFill(0xFFFFFF, s.alpha);
+		starsGraphics.drawCircle(s.x, s.y, 4);
+		starsGraphics.endFill();
+		// Subtle outer glow
+		starsGraphics.beginFill(0xCCEEFF, s.alpha * 0.3);
+		starsGraphics.drawCircle(s.x, s.y, 9);
+		starsGraphics.endFill();
+		s.x += s.vx;
+		s.y += s.vy;
+		s.alpha -= 0.022;
+		if (s.alpha <= 0 || s.x > 1400 || s.y > 420 || s.x < -50) {
+			shootingStars.splice(si, 1);
+		}
+	}
+
 	game.world.bringToTop(order0);
 	game.world.bringToTop(order1);
 	game.world.bringToTop(order2);
@@ -213,6 +252,7 @@ function update() {
 	game.world.bringToTop(order7);
 	game.world.bringToTop(order8);
 	game.world.bringToTop(order9);
+	game.world.bringToTop(starsGraphics);
 	fond2.bringToTop();
 
 	// Rain curtains render above everything, including the ground overlay.
