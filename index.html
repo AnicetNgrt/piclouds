@@ -142,6 +142,12 @@ for (var i = 0; i<10000; i++) {
 
 var timer = 0;
 
+// ── Shooting Stars (Pi-digit driven, night only) ───────────────────────────
+var shootingStarGfx;
+var shootingStars     = [];
+var shootingStarTimer = 0;
+var shootingStarPiIdx = 200;   // read Pi from offset 200 (independent of cloud range)
+
 // ── Pi Digit Sonification ─────────────────────────────────────────────────
 var audioCtx    = null;
 var soundEnabled = false;
@@ -227,6 +233,32 @@ function getDayNightTint(phase) {
 }
 // ──────────────────────────────────────────────────────────────────────────
 
+// Returns a new shooting-star object by consuming 6 Pi digits
+function spawnShootingStar() {
+	var i  = shootingStarPiIdx % (pi.length - 10);
+	var px = pi[i];      // x-seed
+	var py = pi[i + 1];  // y-seed
+	var pa = pi[i + 2];  // angle   (0–9)
+	var ps = pi[i + 3];  // speed   (0–9)
+	var pl = pi[i + 4];  // life    (0–9)
+	var pd = pi[i + 5];  // direction: 0–4 left, 5–9 right
+	shootingStarPiIdx += 6;
+
+	var startX = (px * 137 + i * 11) % 1300;
+	var startY = 15 + py * 22;              // 15–213 px from top of sky
+	var angle  = 0.28 + pa / 30.0;         // ~16° – ~46° below horizontal
+	var speed  = 12 + ps * 3.0;            // 12–39 px/frame
+	var dir    = (pd >= 5) ? 1 : -1;       // rightward or leftward
+	return {
+		x: startX, y: startY,
+		dx: Math.cos(angle) * speed * dir,
+		dy: Math.sin(angle) * speed,        // positive = downward in canvas
+		trail: [],
+		life: 0,
+		maxLife: 13 + (pl % 7)             // 13–19 frames ≈ 0.4–0.6 s at 30 fps
+	};
+}
+
 function preload() {
 	game.load.image('nuage','nuage.png');
 	game.load.image('nuage2','nuage2.png');
@@ -253,6 +285,9 @@ function create() {
 		starsLayer.endFill();
 	}
 	starsLayer.alpha = 0; // invisible during the day
+
+	// Shooting star trails sit above the star-dot layer
+	shootingStarGfx = game.add.graphics(0, 0);
 
 	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
 	fond2.alpha = 0.9;
@@ -319,6 +354,57 @@ function update() {
 	var bgB = Math.floor(lerp(223, 30, nightAlpha));
 	game.stage.backgroundColor = rgbToCSS(bgR, bgG, bgB);
 	// ────────────────────────────────────────────────────────────────────
+
+	// ── Shooting Stars ───────────────────────────────────────────────────────
+	// Spawn a new star only while the night phase is visible
+	if (nightAlpha > 0.05) {
+		shootingStarTimer++;
+		var spawnInterval = (pi[shootingStarPiIdx % (pi.length - 10)] + 1) * 15;
+		if (shootingStarTimer >= spawnInterval) {
+			shootingStarTimer = 0;
+			shootingStars.push(spawnShootingStar());
+		}
+	}
+
+	// Advance and draw every active shooting star
+	shootingStarGfx.clear();
+	for (var si = shootingStars.length - 1; si >= 0; si--) {
+		var star = shootingStars[si];
+		star.trail.push({ x: star.x, y: star.y });
+		if (star.trail.length > 10) { star.trail.shift(); }
+		star.x  += star.dx;
+		star.y  += star.dy;
+		star.life++;
+
+		var fadeOut = Math.max(0, 1 - star.life / star.maxLife);
+		var visible = fadeOut * nightAlpha;
+
+		if (visible > 0.02 && star.trail.length > 1) {
+			for (var ti = 1; ti < star.trail.length; ti++) {
+				var progress = ti / star.trail.length;
+				// Soft blue-white glow
+				shootingStarGfx.lineStyle(4, 0xCCE0FF, progress * visible * 0.35);
+				shootingStarGfx.moveTo(star.trail[ti - 1].x, star.trail[ti - 1].y);
+				shootingStarGfx.lineTo(star.trail[ti].x,     star.trail[ti].y);
+				// Bright white core
+				shootingStarGfx.lineStyle(1, 0xFFFFFF, progress * visible * 0.95);
+				shootingStarGfx.moveTo(star.trail[ti - 1].x, star.trail[ti - 1].y);
+				shootingStarGfx.lineTo(star.trail[ti].x,     star.trail[ti].y);
+			}
+			// Bright head dot (no stroke)
+			shootingStarGfx.lineStyle(0);
+			shootingStarGfx.beginFill(0xFFFFFF, visible);
+			shootingStarGfx.drawCircle(star.x, star.y, 3);
+			shootingStarGfx.endFill();
+		}
+
+		if (star.life >= star.maxLife ||
+			star.x > 1400 || star.x < -100 ||
+			star.y > 400  || star.y < -50) {
+			shootingStars.splice(si, 1);
+		}
+	}
+	// ─────────────────────────────────────────────────────────────────────────
 
 	timer++;
 
