@@ -24,6 +24,146 @@ for (var i = 0; i<10000; i++) {
 
 var timer = 0;
 
+// ── Storm & Rain Effects ──────────────────────────────────────────────────
+var rainGraphics;
+var lightningGraphics;
+var flashGraphics;
+var screenFlash  = 0;   // current flash overlay alpha (0-1)
+var rainClouds   = [];  // { cloudIdx, drops:[{x,y,vy}], dropTimer }
+var stormClouds  = [];  // { cloudIdx, boltPoints:null|[], boltLife, boltTimer }
+
+function updateWeather() {
+	rainGraphics.clear();
+	lightningGraphics.clear();
+
+	// ── Rain drops from digits 5-9 ──────────────────────────────────────
+	for (var ri = rainClouds.length - 1; ri >= 0; ri--) {
+		var rc = rainClouds[ri];
+		if (rc.cloudIdx > decimal) continue;
+
+		var cloud = nuages[rc.cloudIdx];
+		// remove entry when cloud has scrolled off-screen
+		if (!cloud || cloud.x > 1400) {
+			rc.drops = [];
+			rainClouds.splice(ri, 1);
+			continue;
+		}
+		if (cloud.x < -120) continue; // not visible yet
+
+		var digit    = pi[rc.cloudIdx];
+		var cloudW   = 260 * (digit / 10);                     // lateral spread of drops
+		var interval = Math.max(1, 6 - Math.floor(digit / 2)); // smaller digit = sparser rain
+
+		// spawn new drops
+		rc.dropTimer++;
+		if (rc.dropTimer >= interval) {
+			rc.dropTimer = 0;
+			var numNew = 1 + Math.floor(digit / 3);
+			for (var d = 0; d < numNew; d++) {
+				rc.drops.push({
+					x:  cloud.x + (-cloudW * 0.5 + Math.random() * cloudW),
+					y:  cloud.y + 12 + Math.random() * 15,
+					vy: 5 + Math.random() * 4
+				});
+			}
+		}
+
+		// cap memory
+		if (rc.drops.length > 200) rc.drops.splice(0, rc.drops.length - 200);
+
+		// draw and fall
+		for (var di = rc.drops.length - 1; di >= 0; di--) {
+			var dr = rc.drops[di];
+			dr.y += dr.vy;
+
+			var fadeStart = 370;
+			var alpha = dr.y < fadeStart
+				? 0.65
+				: Math.max(0, 0.65 * (1 - (dr.y - fadeStart) / 55));
+
+			if (alpha > 0.01) {
+				rainGraphics.beginFill(0xBBDDFF, alpha);
+				rainGraphics.drawRect(dr.x - 1, dr.y, 2, 10);
+				rainGraphics.endFill();
+			}
+
+			if (dr.y > 430) rc.drops.splice(di, 1);
+		}
+	}
+
+	// ── Lightning bolts from digit 9 ─────────────────────────────────────
+	for (var si = stormClouds.length - 1; si >= 0; si--) {
+		var sc = stormClouds[si];
+		if (sc.cloudIdx > decimal) continue;
+
+		var scloud = nuages[sc.cloudIdx];
+		if (!scloud || scloud.x > 1400) {
+			stormClouds.splice(si, 1);
+			continue;
+		}
+		if (scloud.x < -50) continue;
+
+		sc.boltTimer++;
+
+		// trigger a new bolt after the last one has faded
+		if (!sc.boltPoints && sc.boltTimer > 80 + Math.floor(Math.random() * 60)) {
+			sc.boltTimer = 0;
+			sc.boltLife  = 10;
+			screenFlash  = 0.45; // camera-flash feeling
+
+			// build jagged bolt points from cloud down to horizon
+			var bx     = scloud.x + (-18 + Math.random() * 36);
+			var by     = scloud.y + 6;
+			var botY   = 385;
+			var numSeg = 7;
+			var segH   = (botY - by) / numSeg;
+			var pts    = [{ x: bx, y: by }];
+			var cx     = bx;
+			for (var seg = 0; seg < numSeg; seg++) {
+				cx += (Math.random() - 0.5) * 32;
+				pts.push({ x: cx, y: by + (seg + 1) * segH });
+			}
+			sc.boltPoints = pts;
+		}
+
+		if (sc.boltPoints) {
+			sc.boltLife--;
+			var bA = sc.boltLife / 10;
+
+			// outer glow
+			lightningGraphics.lineStyle(5, 0x9999FF, bA * 0.3);
+			lightningGraphics.moveTo(sc.boltPoints[0].x, sc.boltPoints[0].y);
+			for (var bi = 1; bi < sc.boltPoints.length; bi++) {
+				lightningGraphics.lineTo(sc.boltPoints[bi].x, sc.boltPoints[bi].y);
+			}
+			// inner bright channel
+			lightningGraphics.lineStyle(2, 0xFFFFCC, bA);
+			lightningGraphics.moveTo(sc.boltPoints[0].x, sc.boltPoints[0].y);
+			for (var bi2 = 1; bi2 < sc.boltPoints.length; bi2++) {
+				lightningGraphics.lineTo(sc.boltPoints[bi2].x, sc.boltPoints[bi2].y);
+			}
+
+			if (sc.boltLife <= 0) {
+				sc.boltPoints = null;
+				sc.boltTimer  = Math.floor(Math.random() * 40);
+			}
+		}
+	}
+
+	// ── Screen flash (ambient lightning burst) ───────────────────────────
+	if (screenFlash > 0.01) {
+		flashGraphics.clear();
+		flashGraphics.beginFill(0xFFFFFF, screenFlash);
+		flashGraphics.drawRect(0, 0, 1300, 700);
+		flashGraphics.endFill();
+		screenFlash = Math.max(0, screenFlash - 0.035);
+	} else {
+		flashGraphics.clear();
+		screenFlash = 0;
+	}
+}
+// ─────────────────────────────────────────────────────────────────────────
+
 // ── Day / Night Cycle ──────────────────────────────────────────────────────
 var dayNightTimer = 0;
 var CYCLE_FRAMES  = 3600;   // one full cycle every 2 minutes at 30 fps
@@ -113,6 +253,11 @@ function create() {
 	//field = game.add.tileSprite(0, 465, 1300, 300, 'field');
 	//field.alpha = 0.2;
 
+	// Weather effect layers (drawn on top of everything each frame)
+	rainGraphics      = game.add.graphics(0, 0);
+	lightningGraphics = game.add.graphics(0, 0);
+	flashGraphics     = game.add.graphics(0, 0);
+
 }
 function update() {
 
@@ -200,6 +345,16 @@ function update() {
 			order9.add(nuages2[decimal]);
 			break;
 		}
+
+		// Register weather effects for large clouds
+		// Digits 5-9: produce rain (heavier for larger digits)
+		if (pi[decimal] >= 5) {
+			rainClouds.push({ cloudIdx: decimal, drops: [], dropTimer: 0 });
+		}
+		// Digit 9 only: also produce lightning (the biggest, fastest cloud)
+		if (pi[decimal] === 9) {
+			stormClouds.push({ cloudIdx: decimal, boltPoints: null, boltLife: 0, boltTimer: 0 });
+		}
 	}
 
 	while (jj <= decimal ) {
@@ -229,6 +384,12 @@ function update() {
 	game.world.bringToTop(order8);
 	game.world.bringToTop(order9);
 	fond2.bringToTop();
+
+	// Draw weather effects on top of the water overlay
+	updateWeather();
+	rainGraphics.bringToTop();
+	lightningGraphics.bringToTop();
+	flashGraphics.bringToTop();
 }
 
 
