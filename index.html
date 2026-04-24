@@ -5,33 +5,179 @@
 	<link href="stylesheet.css" rel="stylesheet">
 	<meta charset="utf-8"/>
 	<script type="text/javascript" src="phaser.min.js"></script>
+	<style>
+		#constant-controls {
+			position: absolute;
+			bottom: 18px;
+			left: 50%;
+			transform: translateX(-50%);
+			z-index: 100;
+			display: flex;
+			gap: 10px;
+			align-items: center;
+			pointer-events: all;
+		}
+		.const-btn {
+			background: rgba(0, 40, 90, 0.72);
+			border: 1.5px solid rgba(130, 210, 255, 0.5);
+			color: #d0eeff;
+			font-family: 'Courier New', monospace;
+			font-size: 15px;
+			font-weight: bold;
+			padding: 6px 14px;
+			cursor: pointer;
+			border-radius: 4px;
+			letter-spacing: 1px;
+			transition: background 0.15s, border-color 0.15s, color 0.15s;
+			opacity: 0.7;
+			user-select: none;
+		}
+		.const-btn:hover {
+			background: rgba(20, 80, 160, 0.85);
+			border-color: rgba(180, 230, 255, 0.9);
+			opacity: 1;
+		}
+		.const-btn.active {
+			background: rgba(0, 90, 200, 0.85);
+			border-color: #80ccff;
+			color: #ffffff;
+			opacity: 1;
+			box-shadow: 0 0 8px rgba(100, 200, 255, 0.5);
+		}
+	</style>
 	<script>
 var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds', { preload: preload, create: create, update: update }, false, false);
 var nuages = []; var densityDivider = 4; var velocityDivider = 0.6;
 var nuages2 = []; var field; var fond; var fond2;
 var nn = 0; var jj = 0; var sum = 0; var lock = 0;
 var decimal = -1;
-var pi = [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,8,4,1,9,7,1,6,9,3,9,9,3,7,5,1,0,5,8,2,0,9,7,4,9,4,4,5,9,2,3,0,7,8,1,6,4,0,6,2,8,6,2,0,8,9,9,8,6,2,8,0,3,4,8,2,5,3,4,2,1,1,7,0,6,7,9,8,2,1,4,8,0,8,6,5,1,3,2,8,2,3,0,6,6,4,7,0,9,3,8,4,4,6,0,9,5,5,0,5,8,2,2,3,1,7,2,5,3,5,9,4,0,8,1,2,8,4,8,1,1,1,7,4,5,0,2,8,4,1,0,2,7,0,1,9,3,8,5,2,1,1,0,5,5,5,9,6,4,4,6,2,2,9,4,8,9,5,4,9,3,0,3,8,1,9,6,4,4,2,8,8,1,0,9,7,5,6,6,5,9,3,3,4,4,6,1,2,8,4,7,5,6,4,8,2,3,3,7,8,6,7,8,3,1,6,5,2,7,1,2,0,1,9,0,9,1,4,5,6,4,8,5,6,6,9,2,3,4,6,0,3,4,8,6,1,0,4,5,4,3,2,6,6,4,8,2,1,3,3,9,3,6,0,7,2,6,0,2,4,9,1,4,1,2,7,3,7,2,4,5,8,7,0,0,6,6,0,6,3,1,5,5,8,8,1,7,4,8,8,1,5,2,0,9,2,0,9,6,2,8,2,9,2,5,4,0,9,1,7,1,5,3,6,4,3,6,7,8,9,2,5,9,0,3,6,0,0,1,1,3,3,0,5,3,0,5,4,8,8,2,0,4,6,6,5,2,1,3,8,4,1,4,6,9,5,1,9,4,1,5,1,1,6,0,9,4,3,3,0,5,7,2,7,0,3,6,5,7,5,9,5,9,1,9,5,3,0,9,2,1,8,6,1,1,7,3,8,1,9,3,2,6,1,1,7,9,3,1,0,5,1,1,8,5,4,8,0,7,4,4,6,2,3,7,9,9,6,2,7,4,9,5,6,7,3,5,1,8,8,5,7,5,2,7,2,4,8,9,1,2,2,7,9,3,8,1,8,3,0,1,1,9,4,9,1,2,9,8,3,3,6,7,3,3,6,2,4,4,0,6,5,6,6,4,3,0,8,6,0,2,1,3,9,4,9,4,6,3,9,5,2,2,4,7,3,7,1,9,0,7,0,2,1,7,9,8,6,0,9,4,3,7,0,2,7,7,0,5,3,9,2,1,7,1,7,6,2,9,3,1,7,6,7,5,2,3,8,4,6,7,4,8,1,8,4,6,7,6,6,9,4,0,5,1,3,2,0,0,0,5,6,8,1,2,7,1,4,5,2,6,3,5,6,0,8,2,7,7,8,5,7,7,1,3,4,2,7,5,7,7,8,9,6,0,9,1,7,3,6,3,7,1,7,8,7,2,1,4,6,8,4,4,0,9,0,1,2,2,4,9,5,3,4,3,0,1,4,6,5,4,9,5,8,5,3,7,1,0,5,0,7,9,2,2,7,9,6,8,9,2,5,8,9,2,3,5,4,2,0,1,9,9,5,6,1,1,2,1,2,9,0,2,1,9,6,0,8,6,4,0,3,4,4,1,8,1,5,9,8,1,3,6,2,9,7,7,4,7,7,1,3,0,9,9,6,0,5,1,8,7,0,7,2,1,1,3,4,9,9,9,9,9,9,8,3,7,2,9,7,8,0,4,9,9,5,1,0,5,9,7,3,1,7,3,2,8,1,6,0,9,6,3,1,8,5,9,5,0,2,4,4,5,9,4,5,5,3,4,6,9,0,8,3,0,2,6,4,2,5,2,2,3,0,8,2,5,3,3,4,4,6,8,5,0,3,5,2,6,1,9,3,1,1,8,8,1,7,1,0,1,0,0,0,3,1,3,7,8,3,8,7,5,2,8,8,6,5,8,7,5,3,3,2,0,8,3,8,1,4,2,0];
+
+// ── Mathematical Constants ─────────────────────────────────────────────────
+var CONSTANTS = {
+	pi: {
+		symbol: '\u03C0',
+		name: 'Pi',
+		digits: [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,8,4,1,9,7,1,6,9,3,9,9,3,7,5,1,0,5,8,2,0,9,7,4,9,4,4,5,9,2,3,0,7,8,1,6,4,0,6,2,8,6,2,0,8,9,9,8,6,2,8,0,3,4,8,2,5,3,4,2,1,1,7,0,6,7,9,8,2,1,4,8,0,8,6,5,1,3,2,8,2,3,0,6,6,4,7,0,9,3,8,4,4,6,0,9,5,5,0,5,8,2,2,3,1,7,2,5,3,5,9,4,0,8,1,2,8,4,8,1,1,1,7,4,5,0,2,8,4,1,0,2,7,0,1,9,3,8,5,2,1,1,0,5,5,5,9,6,4,4,6,2,2,9,4,8,9,5,4,9,3,0,3,8,1,9,6,4,4,2,8,8,1,0,9,7,5,6,6,5,9,3,3,4,4,6,1,2,8,4,7,5,6,4,8,2,3,3,7,8,6,7,8,3,1,6,5,2,7,1,2,0,1,9,0,9,1,4,5,6,4,8,5,6,6,9,2,3,4,6,0,3,4,8,6,1,0,4,5,4,3,2,6,6,4,8,2,1,3,3,9,3,6,0,7,2,6,0,2,4,9,1,4,1,2,7,3,7,2,4,5,8,7,0,0,6,6,0,6,3,1,5,5,8,8,1,7,4,8,8,1,5,2,0,9,2,0,9,6,2,8,2,9,2,5,4,0,9,1,7,1,5,3,6,4,3,6,7,8,9,2,5,9,0,3,6,0,0,1,1,3,3,0,5,3,0,5,4,8,8,2,0,4,6,6,5,2,1,3,8,4,1,4,6,9,5,1,9,4,1,5,1,1,6,0,9,4,3,3,0,5,7,2,7,0,3,6,5,7,5,9,5,9,1,9,5,3,0,9,2,1,8,6,1,1,7,3,8,1,9,3,2,6,1,1,7,9,3,1,0,5,1,1,8,5,4,8,0,7,4,4,6,2,3,7,9,9,6,2,7,4,9,5,6,7,3,5,1,8,8,5,7,5,2,7,2,4,8,9,1,2,2,7,9,3,8,1,8,3,0,1,1,9,4,9,1,2,9,8,3,3,6,7,3,3,6,2,4,4,0,6,5,6,6,4,3,0,8,6,0,2,1,3,9,4,9,4,6,3,9,5,2,2,4,7,3,7,1,9,0,7,0,2,1,7,9,8,6,0,9,4,3,7,0,2,7,7,0,5,3,9,2,1,7,1,7,6,2,9,3,1,7,6,7,5,2,3,8,4,6,7,4,8,1,8,4,6,7,6,6,9,4,0,5,1,3,2,0,0,0,5,6,8,1,2,7,1,4,5,2,6,3,5,6,0,8,2,7,7,8,5,7,7,1,3,4,2,7,5,7,7,8,9,6,0,9,1,7,3,6,3,7,1,7,8,7,2,1,4,6,8,4,4,0,9,0,1,2,2,4,9,5,3,4,3,0,1,4,6,5,4,9,5,8,5,3,7,1,0,5,0,7,9,2,2,7,9,6,8,9,2,5,8,9,2,3,5,4,2,0,1,9,9,5,6,1,1,2,1,2,9,0,2,1,9,6,0,8,6,4,0,3,4,4,1,8,1,5,9,8,1,3,6,2,9,7,7,4,7,7,1,3,0,9,9,6,0,5,1,8,7,0,7,2,1,1,3,4,9,9,9,9,9,9,8,3,7,2,9,7,8,0,4,9,9,5,1,0,5,9,7,3,1,7,3,2,8,1,6,0,9,6,3,1,8,5,9,5,0,2,4,4,5,9,4,5,5,3,4,6,9,0,8,3,0,2,6,4,2,5,2,2,3,0,8,2,5,3,3,4,4,6,8,5,0,3,5,2,6,1,9,3,1,1,8,8,1,7,1,0,1,0,0,0,3,1,3,7,8,3,8,7,5,2,8,8,6,5,8,7,5,3,3,2,0,8,3,8,1,4,2,0]
+	},
+	e: {
+		symbol: 'e',
+		name: "Euler's e",
+		digits: [2,7,1,8,2,8,1,8,2,8,4,5,9,0,4,5,2,3,5,3,6,0,2,8,7,4,7,1,3,5,2,6,6,2,4,9,7,7,5,7,2,4,7,0,9,3,6,9,9,9,5,9,5,7,4,9,6,6,9,6,7,6,2,7,7,2,4,0,7,6,6,3,0,3,5,3,5,4,7,5,9,4,5,7,1,3,8,2,1,7,8,5,2,5,1,6,6,4,2,7,4,2,7,4,6,6,3,9,1,9,3,2,0,0,3,0,5,9,9,2,1,8,1,7,4,1,3,5,9,6,6,2,9,0,4,3,5,7,2,9,0,0,3,3,4,2,9,5,2,6,0,5,9,5,6,3,0,7,3,8,1,3,2,3,2,8,6,2,7,9,4,3,4,9,0,7,6,3,2,3,3,8,2,9,8,8,0,7,5,3,1,9,5,2,5,1,0,1,9,0,1,1,5,7,3,8,3,4,1,8,7,9,3,0,7,0,2,1,5,4,0,8,9,1,4,9,9,3,4,8,8,4,1,6,7,5,0,9,2,4,4,7,6,1,4,6,0,6,6,8,0,8,2,2,6,4,8,0,0,1,6,8,4,7,7,4,1,1,8,5,3,7,4,2,3,4,5,4,4,2,4,3,7,1,0,7,5,3,9,0,7,7,7,4,4,9,9,2,0,6,9,5,5,1,7,0,2,7,6,1,8,3,8,6,0,6,2,6,1,3,3,1,3,8,4,5,8,3,0,0,0,7,5,2,0,4,4,9,3,3,8,2,6,5,6,0,2,9,7,6,0,6,7,3,7,1,1,3,2,0,0,7,0,9,3,2,8,7,0,9,1,2,7,4,4,3,7,4,7,0,4,7,2,3,0,6,9,6,9,7,7,2,0,9,3,1,0,1,4,1,6,9,2,8,3,6,8,1,9,0,2,5,5,1,5,1,0,8,6,5,7,4,6,3,7,7,2,1,1,1,2,5,2,3,8,9,7,8,4,4,2,5,0,5,6,9,5,3,6,9,6,7,7,0,7,8,5,4,4,9,9,6,9,9,6,7,9,4,6,8,6,4,4,5,4,9,0,5,9,8,7,9,3,1,6,3,6,8,8,9,2,3,0,0,9,8,7,9,3,1,2,7,7,3,6,1,7,8,2,1,5,4,2,4,9,9,9,2,2,9,5,7,6,3,5,1,4,8,2,2,0,8,2,6,9,8,9,5,1,9,3,6,6,8,0,3,3,1,8,2,5,2,8,8,6,9,3,9,8,4,9,6,4,6,5,1,0,5,8,2,0,9,3,9,2,3,9,8,2,9,4,8,8,7,9,3,3,2,0,3,6,2,5]
+	},
+	phi: {
+		symbol: '\u03C6',
+		name: 'Golden Ratio',
+		digits: [1,6,1,8,0,3,3,9,8,8,7,4,9,8,9,4,8,4,8,2,0,4,5,8,6,8,3,4,3,6,5,6,3,8,1,1,7,7,2,0,3,0,9,1,7,9,8,0,5,7,6,2,8,6,2,1,3,5,4,4,8,6,2,2,7,0,5,2,6,0,4,6,2,8,1,8,9,0,2,4,4,9,7,0,7,2,0,7,2,0,4,1,8,9,3,9,1,1,3,7,4,8,4,7,5,4,0,8,8,0,7,5,3,8,6,8,9,1,7,5,2,1,2,6,6,3,3,8,6,2,2,2,3,5,3,6,9,3,1,7,9,3,1,8,0,0,6,0,7,6,6,7,2,6,3,5,4,4,3,3,3,8,9,0,8,6,5,9,5,9,3,9,5,8,2,9,0,5,6,3,8,3,2,2,6,6,1,3,1,9,9,2,8,2,9,0,2,6,7,8,8,0,6,7,5,2,0,8,7,6,6,8,9,2,5,0,1,7,1,1,6,9,6,2,0,7,0,3,2,2,2,1,0,4,3,2,1,6,2,6,9,5,4,8,6,2,6,2,9,6,3,1,3,6,1,4,4,3,8,1,4,9,7,5,8,7,0,1,2,2,0,3,4,0,8,0,5,8,8,7,9,5,4,4,5,4,7,4,9,2,4,6,1,8,5,6,9,5,3,6,4,8,6,4,4,4,9,2,4,1,0,4,4,3,2,0,7,7,1,3,4,4,9,4,7,0,4,9,5,6,5,8,4,6,7,8,8,5,0,9,8,7,4,3,3,9,4,4,2,2,1,2,5,4,4,8,7,7,0,6,6,4,7,8,0,9,1,5,8,8,4,6,0,7,4,9,9,8,8,7,1,2,4,0,0,7,6,5,2,1,7,0,5,7,5,1,7,9,7,8,8,3,4,1,6,6,2,5,6,2,4,9,4,0,7,5,8,9,1,4,9,6,3,1,6,1,1,9,5,8,4,0,6,3,5,9,4,7,5,1,5,2,5,0,8,9,6,5,9,8,4,9,8,8,5,4,3,3,0,7,7,0,9,8,4,3,4,7,0,4,8,8,6,0,7,9,6,4,7,4,3,8,2,1,5,5,4,2,6,5,3,6,3,1,1,3,4,6,0,9,6,8,6,3,0,6,6,9,7,0,7,5,3,1,4,4,7,9,4,2,0,6]
+	},
+	sqrt2: {
+		symbol: '\u221A2',
+		name: 'Square Root of 2',
+		digits: [1,4,1,4,2,1,3,5,6,2,3,7,3,0,9,5,0,4,8,8,0,1,6,8,8,7,2,4,2,0,9,6,9,8,0,7,8,5,6,9,6,7,1,8,7,5,3,7,6,9,4,8,0,7,3,1,7,6,6,7,9,7,3,7,9,9,0,7,3,2,4,7,8,4,6,2,1,0,7,0,3,8,8,5,0,3,8,7,5,3,4,3,2,7,6,4,1,5,7,2,7,3,5,0,1,3,8,4,6,2,3,0,9,1,2,2,9,7,0,2,4,9,2,4,8,3,6,0,5,5,8,5,0,7,3,7,2,1,2,6,4,4,1,2,1,4,9,7,0,9,9,9,3,5,8,3,1,4,1,3,2,2,2,6,6,5,9,2,7,5,0,5,5,9,2,7,5,5,7,9,9,9,5,0,5,0,1,1,5,2,7,8,2,0,6,0,5,7,1,4,7,0,1,0,9,5,5,9,9,7,1,6,0,5,9,7,0,2,7,4,5,3,4,5,9,6,8,9,2,8,4,0,0,0,6,5,4,9,4,1,4,8,3,4,6,4,0,7,7,2,1,8,5,1,7,6,4,3,7,6,6,4,4,7,2,9,6,9,6,5,4,4,1,3,6,9,6,1,4,6,8,1,9,2,3,5,1,1,6,5,4,3,2,1,4,4,9,5,7,4,8,0,2,5,2,0,2,2,6,0,1,2,6,4,2,2,1,4,9,4,8,5,2,0,5,2,5,8,4,5,9,2,7,3,5,1,9,3,8,9,7,9,7,4,8,1,5,3,5,0,4,3,2,1,5,6,7,0,1,4,1,5,2,4,8,8,0,7,4,4,7,2,9,5,0,2,2,5,3,2,2,1,9,0,0,0,5,2,8,7,0,0,7,9,6,0,5,8,9,8,2,2,6,9,7,2,3,0,1,5,3,8,5,4,5,2,3,6,6,3,7,6,2,9,8,4,9,5,2,6,5,4,3,9,9,5,2,4,8,0,2,5,2,1,9,9,0,5,2,2,9,1,5,6,1,2,3,0,0,9,5,7,1,9,1,9,1,4,0,7,4,2,2,0,1,1,5,6,3,4,5,4,8,3,0,9,7,1,4,5,0,4]
+	}
+};
+
+// Active constant
+var activeConstantKey = 'pi';
+var digits = CONSTANTS.pi.digits.slice();
 
 function randInt(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-		
-for (var i = 0; i<10000; i++) {
-	pi.push(randInt(0,9));
-	console.log(pi[886+i]);
+
+// Extend each constant's digits with random noise beyond the stored sequence
+function extendDigits(arr) {
+	while (arr.length < 11000) {
+		arr.push(randInt(0, 9));
+	}
+	return arr;
 }
+
+for (var k in CONSTANTS) {
+	extendDigits(CONSTANTS[k].digits);
+}
+
+// Keep a reference to the original pi array for star positioning
+var pi = CONSTANTS.pi.digits;
 
 var timer = 0;
 
-function sleep(milliseconds) {
-	var start = new Date().getTime();
-	for (var i = 0; i < 1e7; i++) {
-		if ((new Date().getTime() - start) > milliseconds){
-		 break;
+// ── Day / Night Cycle ──────────────────────────────────────────────────────
+var dayNightTimer = 0;
+var CYCLE_FRAMES  = 3600;
+var starsLayer;
+var currentTintHex = 0xFFFFFF;
+
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+function rgbToPhaser(r, g, b) { return (r << 16) | (g << 8) | b; }
+
+function rgbToCSS(r, g, b) {
+	return '#' +
+		('0' + r.toString(16)).slice(-2) +
+		('0' + g.toString(16)).slice(-2) +
+		('0' + b.toString(16)).slice(-2);
+}
+
+var tintStops = [
+	{ r: 255, g: 255, b: 255 },
+	{ r: 255, g: 130, b: 50  },
+	{ r: 18,  g: 22,  b: 75  },
+	{ r: 255, g: 165, b: 110 },
+];
+
+function getDayNightTint(phase) {
+	var n  = tintStops.length;
+	var sc = phase * n;
+	var i  = Math.floor(sc) % n;
+	var j  = (i + 1) % n;
+	var t  = sc - Math.floor(sc);
+	return {
+		r: Math.floor(lerp(tintStops[i].r, tintStops[j].r, t)),
+		g: Math.floor(lerp(tintStops[i].g, tintStops[j].g, t)),
+		b: Math.floor(lerp(tintStops[i].b, tintStops[j].b, t))
+	};
+}
+
+// ── Constant label (Phaser text object) ───────────────────────────────────
+var constantLabel;
+
+// ── Switch constant ────────────────────────────────────────────────────────
+function switchConstant(key) {
+	if (key === activeConstantKey) return;
+	activeConstantKey = key;
+	digits = CONSTANTS[key].digits;
+
+	// Reset cloud animation state
+	decimal = -1;
+	timer = 0;
+	jj = 0;
+
+	// Destroy all live clouds
+	for (var i = 0; i < nuages.length; i++) {
+		if (nuages[i] && nuages[i].alive) { nuages[i].destroy(); }
+		if (nuages2[i] && nuages2[i].alive) { nuages2[i].destroy(); }
+	}
+	nuages  = [];
+	nuages2 = [];
+
+	// Update DOM buttons
+	var buttons = document.querySelectorAll('.const-btn');
+	for (var b = 0; b < buttons.length; b++) {
+		if (buttons[b].getAttribute('data-key') === key) {
+			buttons[b].className = 'const-btn active';
+		} else {
+			buttons[b].className = 'const-btn';
 		}
 	}
+
+	// Update Phaser label
+	if (constantLabel) {
+		var c = CONSTANTS[key];
+		constantLabel.text = c.symbol + '  ' + c.name;
+	}
 }
+// ──────────────────────────────────────────────────────────────────────────
+
 function preload() {
 	game.load.image('nuage','nuage.png');
 	game.load.image('nuage2','nuage2.png');
@@ -39,10 +185,26 @@ function preload() {
 	game.load.image('fond','fond.png');
 	game.load.image('fond2','fond2.png');
 }
+
 function create() {
 	game.time.desiredFps = 30;
 	game.stage.backgroundColor = "#4488AA";
 	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
+
+	// Stars layer – positioned using pi digits, revealed at night
+	starsLayer = game.add.graphics(0, 0);
+	for (var s = 0; s < 150; s++) {
+		var px       = s * 3;
+		var sx       = (pi[px] * 130 + pi[px+1] * 13 + pi[px+2] * 7) % 1300;
+		var sy       = (pi[px] * 33  + pi[px+1] * 4  + 5)             % 330;
+		var starSize = (pi[px] % 2) + 1;
+		var starAlpha = 0.35 + (pi[px+2] / 14.0);
+		starsLayer.beginFill(0xFFFFFF, starAlpha);
+		starsLayer.drawCircle(sx, sy, starSize * 2);
+		starsLayer.endFill();
+	}
+	starsLayer.alpha = 0;
+
 	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
 	order0 = game.add.group();
 	order1 = game.add.group();
@@ -54,33 +216,65 @@ function create() {
 	order7 = game.add.group();
 	order8 = game.add.group();
 	order9 = game.add.group();
-	//fond2.angle = 180;
 	fond2.alpha = 0.9;
-	//field = game.add.tileSprite(0, 465, 1300, 300, 'field');
-	//field.alpha = 0.2;
 
+	// Constant label: top-right corner
+	constantLabel = game.add.text(
+		1285, 12,
+		CONSTANTS[activeConstantKey].symbol + '  ' + CONSTANTS[activeConstantKey].name,
+		{
+			font: 'bold 18px Courier New',
+			fill: '#ffffff',
+			stroke: '#003366',
+			strokeThickness: 3,
+			align: 'right'
+		}
+	);
+	constantLabel.anchor.setTo(1, 0);
+	constantLabel.alpha = 0.85;
 }
+
 function update() {
+
+	// ── Day / Night Cycle ───────────────────────────────────────────────
+	dayNightTimer++;
+	var phase = (dayNightTimer % CYCLE_FRAMES) / CYCLE_FRAMES;
+	var tint  = getDayNightTint(phase);
+	currentTintHex = rgbToPhaser(tint.r, tint.g, tint.b);
+
+	fond.tint  = currentTintHex;
+	fond2.tint = currentTintHex;
+
+	var nightAlpha = 0;
+	if (phase > 0.25 && phase < 0.75) {
+		nightAlpha = Math.sin((phase - 0.25) / 0.5 * Math.PI);
+	}
+	starsLayer.alpha = nightAlpha;
+
+	var bgR = Math.floor(lerp(67,  5,  nightAlpha));
+	var bgG = Math.floor(lerp(169, 5,  nightAlpha));
+	var bgB = Math.floor(lerp(223, 30, nightAlpha));
+	game.stage.backgroundColor = rgbToCSS(bgR, bgG, bgB);
+	// ────────────────────────────────────────────────────────────────────
 
 	timer++;
 
-	if (timer > (pi[decimal+1])*densityDivider) {
+	if (timer > (digits[decimal+1]) * densityDivider) {
 
 		decimal++;
 		timer = 0;
-		nuages.push(game.add.tileSprite(-200, 400-(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage'));
+		nuages.push(game.add.tileSprite(-200, 400-(digits[decimal]*34-15), 768, 312, 'nuage'));
 		nuages[decimal].anchor.x = 0.7;
 		nuages[decimal].anchor.y = 0.5;
-		nuages[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
+		nuages[decimal].scale.setTo((digits[decimal])/10, (digits[decimal])/10);
 		nuages[decimal].alpha = 0.9;
-		//sum += pi[decimal];
-		nuages2.push(game.add.tileSprite(-200, 400+(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage2'));
+		nuages2.push(game.add.tileSprite(-200, 400+(digits[decimal]*34-15), 768, 312, 'nuage2'));
 		nuages2[decimal].anchor.x = 0.7;
 		nuages2[decimal].anchor.y = 0.5;
-		nuages2[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
+		nuages2[decimal].scale.setTo((digits[decimal])/10, (digits[decimal])/10);
 		nuages[decimal].alpha = 0.99;
 
-		switch(pi[decimal]) {
+		switch(digits[decimal]) {
 		case 0:
 			order0.add(nuages[decimal]);
 			order0.add(nuages2[decimal]);
@@ -124,16 +318,15 @@ function update() {
 		}
 	}
 
-	while (jj <= decimal ) {
+	while (jj <= decimal) {
 		if (nuages[jj].x > 1800) {
 			nuages[jj].destroy();
 		}
-		nuages[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		nuages2[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		//nuages[jj].angle += (1/(pi[jj]))*3;
+		nuages[jj].x  += (digits[jj]) / Math.abs(velocityDivider);
+		nuages2[jj].x += (digits[jj]) / Math.abs(velocityDivider);
+		nuages[jj].tint  = currentTintHex;
+		nuages2[jj].tint = currentTintHex;
 		jj++;
-		//if (nuages[jj].x > 1300) {
-		//}
 	}
 	jj = 0;
 
@@ -148,31 +341,33 @@ function update() {
 	game.world.bringToTop(order8);
 	game.world.bringToTop(order9);
 	fond2.bringToTop();
+
+	// Keep the constant label readable on top
+	game.world.bringToTop(constantLabel);
 }
-
-
-
-  </script>
-
-
-
-
+	</script>
 </head>
 <body style="background-color: rgb(67,169,223);">
-	<div id="game" style="
+	<div id="PIclouds" style="
 		cursor: none;
 		position: absolute;
 		TOP: 0px;
 		LEFT: 0px;
-
-
 		image-rendering: optimizeSpeed;
 		image-rendering: -moz-crisp-edges;
 		image-rendering: -o-crisp-edges;
 		image-rendering: -webkit-optimize-contrast;
 		image-rendering: optimize-contrast;
 		-ms-interpolation-mode: nearest-neighbor;
-		image-rendering : pixelated;">
+		image-rendering: pixelated;">
+	</div>
+
+	<!-- Constant selector buttons -->
+	<div id="constant-controls">
+		<button class="const-btn active" data-key="pi"    onclick="switchConstant('pi')"   >&pi; Pi</button>
+		<button class="const-btn"        data-key="e"     onclick="switchConstant('e')"    >e Euler</button>
+		<button class="const-btn"        data-key="phi"   onclick="switchConstant('phi')"  >&phi; Golden Ratio</button>
+		<button class="const-btn"        data-key="sqrt2" onclick="switchConstant('sqrt2')">&radic;2</button>
 	</div>
 </body>
 </html>
