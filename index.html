@@ -203,7 +203,37 @@ var currentTintHex = 0xFFFFFF;
 
 function lerp(a, b, t) { return a + (b - a) * t; }
 
-function rgbToPhaser(r, g, b) { return (r << 16) | (g << 8) | b; }
+function rgbToPhaser(r, g, b) { return (Math.round(r) << 16) | (Math.round(g) << 8) | Math.round(b); }
+
+// ── Chromatic Pi: per-digit rainbow colours ───────────────────────────────
+// Each of the 10 Pi digits maps to a distinct hue. Clouds inherit this
+// colour and it dims gracefully as the night cycle deepens, so the rainbow
+// persists visibly through dusk, becomes muted moonlit pastels at midnight,
+// and blooms back to full saturation at dawn.
+var DIGIT_COLORS = [
+	{ r: 187, g: 143, b: 206 }, // 0 – lavender
+	{ r: 126, g: 200, b: 227 }, // 1 – sky blue
+	{ r:  72, g: 201, b: 176 }, // 2 – teal
+	{ r:  88, g: 214, b: 141 }, // 3 – mint
+	{ r: 247, g: 220, b: 111 }, // 4 – yellow
+	{ r: 240, g: 165, b:   0 }, // 5 – amber
+	{ r: 235, g: 116, b:  52 }, // 6 – orange
+	{ r: 231, g:  76, b:  60 }, // 7 – tomato
+	{ r: 175, g: 122, b: 197 }, // 8 – violet
+	{ r: 241, g: 148, b: 138 }, // 9 – salmon
+];
+
+// Returns a packed tint that blends digit hue with the current night factor.
+// nightFactor 0 = full day (vivid), 1 = full night (dim but hued).
+function digitTint(digit, nightFactor) {
+	var dc = DIGIT_COLORS[digit];
+	var f  = lerp(1.0, 0.22, nightFactor);
+	return rgbToPhaser(dc.r * f, dc.g * f, dc.b * f);
+}
+
+// Live Pi digit index counter (added to uiGroup in create())
+var piCounterText;
+// ──────────────────────────────────────────────────────────────────────────
 
 function rgbToCSS(r, g, b) {
 	return '#' +
@@ -421,6 +451,14 @@ function create() {
 	}, uiGroup);
 	audioHint.anchor.setTo(1, 0);
 
+	// Pi digit counter – top-left, shows current index and value in real time
+	piCounterText = game.add.text(8, 10, '\u03C0[0] = 3', {
+		font:            'bold 14px monospace',
+		fill:            '#ffffff',
+		stroke:          '#001133',
+		strokeThickness: 3
+	}, uiGroup);
+
 	game.input.onDown.add(initAudio);
 	drawKeyboard();
 	rainGraphics = game.add.graphics(0, 0);
@@ -591,6 +629,9 @@ function update() {
 		// Play the note for this digit
 		playDigitNote(pi[decimal]);
 
+		// Update live Pi digit counter
+		piCounterText.setText('\u03C0[' + decimal + '] = ' + pi[decimal]);
+
 		switch(pi[decimal]) {
 		case 0:
 			order0.add(nuages[decimal]);
@@ -645,9 +686,10 @@ function update() {
 		}
 		nuages[jj].x  += (pi[jj])/Math.abs(velocityDivider);
 		nuages2[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		// Tint clouds to match the current time of day
-		nuages[jj].tint  = currentTintHex;
-		nuages2[jj].tint = currentTintHex;
+		// Chromatic tint: each digit's hue, dimmed by the night factor
+		var ct = digitTint(pi[jj], nightAlpha);
+		nuages[jj].tint  = ct;
+		nuages2[jj].tint = ct;
 		jj++;
 	}
 	jj = 0;
