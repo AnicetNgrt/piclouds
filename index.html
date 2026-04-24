@@ -11,18 +11,67 @@ var nuages = []; var densityDivider = 4; var velocityDivider = 0.6;
 var nuages2 = []; var field; var fond; var fond2;
 var nn = 0; var jj = 0; var sum = 0; var lock = 0;
 var decimal = -1;
+var rainSystems = []; var rainGroup;
 var pi = [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,8,4,1,9,7,1,6,9,3,9,9,3,7,5,1,0,5,8,2,0,9,7,4,9,4,4,5,9,2,3,0,7,8,1,6,4,0,6,2,8,6,2,0,8,9,9,8,6,2,8,0,3,4,8,2,5,3,4,2,1,1,7,0,6,7,9,8,2,1,4,8,0,8,6,5,1,3,2,8,2,3,0,6,6,4,7,0,9,3,8,4,4,6,0,9,5,5,0,5,8,2,2,3,1,7,2,5,3,5,9,4,0,8,1,2,8,4,8,1,1,1,7,4,5,0,2,8,4,1,0,2,7,0,1,9,3,8,5,2,1,1,0,5,5,5,9,6,4,4,6,2,2,9,4,8,9,5,4,9,3,0,3,8,1,9,6,4,4,2,8,8,1,0,9,7,5,6,6,5,9,3,3,4,4,6,1,2,8,4,7,5,6,4,8,2,3,3,7,8,6,7,8,3,1,6,5,2,7,1,2,0,1,9,0,9,1,4,5,6,4,8,5,6,6,9,2,3,4,6,0,3,4,8,6,1,0,4,5,4,3,2,6,6,4,8,2,1,3,3,9,3,6,0,7,2,6,0,2,4,9,1,4,1,2,7,3,7,2,4,5,8,7,0,0,6,6,0,6,3,1,5,5,8,8,1,7,4,8,8,1,5,2,0,9,2,0,9,6,2,8,2,9,2,5,4,0,9,1,7,1,5,3,6,4,3,6,7,8,9,2,5,9,0,3,6,0,0,1,1,3,3,0,5,3,0,5,4,8,8,2,0,4,6,6,5,2,1,3,8,4,1,4,6,9,5,1,9,4,1,5,1,1,6,0,9,4,3,3,0,5,7,2,7,0,3,6,5,7,5,9,5,9,1,9,5,3,0,9,2,1,8,6,1,1,7,3,8,1,9,3,2,6,1,1,7,9,3,1,0,5,1,1,8,5,4,8,0,7,4,4,6,2,3,7,9,9,6,2,7,4,9,5,6,7,3,5,1,8,8,5,7,5,2,7,2,4,8,9,1,2,2,7,9,3,8,1,8,3,0,1,1,9,4,9,1,2,9,8,3,3,6,7,3,3,6,2,4,4,0,6,5,6,6,4,3,0,8,6,0,2,1,3,9,4,9,4,6,3,9,5,2,2,4,7,3,7,1,9,0,7,0,2,1,7,9,8,6,0,9,4,3,7,0,2,7,7,0,5,3,9,2,1,7,1,7,6,2,9,3,1,7,6,7,5,2,3,8,4,6,7,4,8,1,8,4,6,7,6,6,9,4,0,5,1,3,2,0,0,0,5,6,8,1,2,7,1,4,5,2,6,3,5,6,0,8,2,7,7,8,5,7,7,1,3,4,2,7,5,7,7,8,9,6,0,9,1,7,3,6,3,7,1,7,8,7,2,1,4,6,8,4,4,0,9,0,1,2,2,4,9,5,3,4,3,0,1,4,6,5,4,9,5,8,5,3,7,1,0,5,0,7,9,2,2,7,9,6,8,9,2,5,8,9,2,3,5,4,2,0,1,9,9,5,6,1,1,2,1,2,9,0,2,1,9,6,0,8,6,4,0,3,4,4,1,8,1,5,9,8,1,3,6,2,9,7,7,4,7,7,1,3,0,9,9,6,0,5,1,8,7,0,7,2,1,1,3,4,9,9,9,9,9,9,8,3,7,2,9,7,8,0,4,9,9,5,1,0,5,9,7,3,1,7,3,2,8,1,6,0,9,6,3,1,8,5,9,5,0,2,4,4,5,9,4,5,5,3,4,6,9,0,8,3,0,2,6,4,2,5,2,2,3,0,8,2,5,3,3,4,4,6,8,5,0,3,5,2,6,1,9,3,1,1,8,8,1,7,1,0,1,0,0,0,3,1,3,7,8,3,8,7,5,2,8,8,6,5,8,7,5,3,3,2,0,8,3,8,1,4,2,0];
 
 function randInt(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-		
+
 for (var i = 0; i<10000; i++) {
 	pi.push(randInt(0,9));
 	console.log(pi[886+i]);
 }
 
 var timer = 0;
+
+// ── Day / Night Cycle ──────────────────────────────────────────────────────
+var dayNightTimer = 0;
+var CYCLE_FRAMES  = 3600;   // one full cycle every 2 minutes at 30 fps
+var starsLayer;
+var currentTintHex = 0xFFFFFF;
+
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+function rgbToPhaser(r, g, b) { return (r << 16) | (g << 8) | b; }
+
+function rgbToCSS(r, g, b) {
+	return '#' +
+		('0' + r.toString(16)).slice(-2) +
+		('0' + g.toString(16)).slice(-2) +
+		('0' + b.toString(16)).slice(-2);
+}
+
+// Four colour stops around the cycle (phase 0 = noon, 0.5 = midnight)
+var tintStops = [
+	{ r: 255, g: 255, b: 255 },  // 0.00 noon  – no tint
+	{ r: 255, g: 130, b: 50  },  // 0.25 dusk  – warm orange
+	{ r: 18,  g: 22,  b: 75  },  // 0.50 night – deep indigo
+	{ r: 255, g: 165, b: 110 },  // 0.75 dawn  – peach
+];
+
+function getDayNightTint(phase) {
+	var n  = tintStops.length;
+	var sc = phase * n;
+	var i  = Math.floor(sc) % n;
+	var j  = (i + 1) % n;
+	var t  = sc - Math.floor(sc);
+	return {
+		r: Math.floor(lerp(tintStops[i].r, tintStops[j].r, t)),
+		g: Math.floor(lerp(tintStops[i].g, tintStops[j].g, t)),
+		b: Math.floor(lerp(tintStops[i].b, tintStops[j].b, t))
+	};
+}
+// ──────────────────────────────────────────────────────────────────────────
+
+// Returns a darkened blue-grey tint for storm clouds (digit = 0)
+function stormTint(tintHex) {
+	var sf = 0x5566AA; // stormy blue-grey multiplier
+	var r = Math.floor(((tintHex >> 16) & 0xFF) * ((sf >> 16) & 0xFF) / 255);
+	var g = Math.floor(((tintHex >> 8)  & 0xFF) * ((sf >> 8)  & 0xFF) / 255);
+	var b = Math.floor((tintHex & 0xFF)          * (sf & 0xFF)         / 255);
+	return (r << 16) | (g << 8) | b;
+}
 
 function sleep(milliseconds) {
 	var start = new Date().getTime();
@@ -43,6 +92,21 @@ function create() {
 	game.time.desiredFps = 30;
 	game.stage.backgroundColor = "#4488AA";
 	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
+
+	// Stars layer – drawn once, positioned by Pi digits, revealed at night
+	starsLayer = game.add.graphics(0, 0);
+	for (var s = 0; s < 150; s++) {
+		var px       = s * 3;
+		var sx       = (pi[px] * 130 + pi[px+1] * 13 + pi[px+2] * 7) % 1300;
+		var sy       = (pi[px] * 33  + pi[px+1] * 4  + 5)             % 330;
+		var starSize = (pi[px] % 2) + 1;           // radius 1 or 2 px
+		var starAlpha = 0.35 + (pi[px+2] / 14.0); // 0.35 – 0.99
+		starsLayer.beginFill(0xFFFFFF, starAlpha);
+		starsLayer.drawCircle(sx, sy, starSize * 2);
+		starsLayer.endFill();
+	}
+	starsLayer.alpha = 0; // invisible during the day
+
 	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
 	order0 = game.add.group();
 	order1 = game.add.group();
@@ -56,11 +120,36 @@ function create() {
 	order9 = game.add.group();
 	//fond2.angle = 180;
 	fond2.alpha = 0.9;
+	rainGroup = game.add.group();  // holds rain Graphics for digit-0 clouds
 	//field = game.add.tileSprite(0, 465, 1300, 300, 'field');
 	//field.alpha = 0.2;
 
 }
 function update() {
+
+	// ── Day / Night Cycle ───────────────────────────────────────────────
+	dayNightTimer++;
+	var phase = (dayNightTimer % CYCLE_FRAMES) / CYCLE_FRAMES;
+	var tint  = getDayNightTint(phase);
+	currentTintHex = rgbToPhaser(tint.r, tint.g, tint.b);
+
+	// Tint the sky and water backgrounds
+	fond.tint  = currentTintHex;
+	fond2.tint = currentTintHex;
+
+	// Stars fade in during the night half of the cycle (phase 0.25 – 0.75)
+	var nightAlpha = 0;
+	if (phase > 0.25 && phase < 0.75) {
+		nightAlpha = Math.sin((phase - 0.25) / 0.5 * Math.PI);
+	}
+	starsLayer.alpha = nightAlpha;
+
+	// Darken the stage background at night
+	var bgR = Math.floor(lerp(67,  5,  nightAlpha));
+	var bgG = Math.floor(lerp(169, 5,  nightAlpha));
+	var bgB = Math.floor(lerp(223, 30, nightAlpha));
+	game.stage.backgroundColor = rgbToCSS(bgR, bgG, bgB);
+	// ────────────────────────────────────────────────────────────────────
 
 	timer++;
 
@@ -79,6 +168,28 @@ function update() {
 		nuages2[decimal].anchor.y = 0.5;
 		nuages2[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
 		nuages[decimal].alpha = 0.99;
+
+		// ── Zero-digit storm cloud + rain ────────────────────────────────
+		if (pi[decimal] === 0) {
+			// Force a small but visible scale so the storm cloud shows up
+			nuages[decimal].scale.setTo(0.35, 0.35);
+			nuages2[decimal].scale.setTo(0.35, 0.35);
+
+			// Build a set of animated rain drops for this cloud
+			var rgfx = game.add.graphics(0, 0);
+			rainGroup.add(rgfx);
+			var rdrops = [];
+			for (var ri = 0; ri < 40; ri++) {
+				rdrops.push({
+					dx:  (Math.random() - 0.5) * 320,      // x offset from cloud center
+					y:   430 + Math.random() * 230,         // current absolute y
+					spd: 5 + Math.random() * 8,             // pixels per frame
+					len: 9 + Math.random() * 14             // drop length in px
+				});
+			}
+			rainSystems.push({ gfx: rgfx, drops: rdrops, cidx: decimal });
+		}
+		// ────────────────────────────────────────────────────────────────
 
 		switch(pi[decimal]) {
 		case 0:
@@ -128,14 +239,53 @@ function update() {
 		if (nuages[jj].x > 1800) {
 			nuages[jj].destroy();
 		}
-		nuages[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		nuages2[jj].x += (pi[jj])/Math.abs(velocityDivider);
+		// Digit-0 clouds have zero native velocity; give them a slow drift
+		var cVel = (pi[jj] === 0) ? 1.5 : pi[jj];
+		nuages[jj].x  += cVel / Math.abs(velocityDivider);
+		nuages2[jj].x += cVel / Math.abs(velocityDivider);
+		// Tint: storm clouds get a darker blue-grey, others follow day/night
+		var cTint = (pi[jj] === 0) ? stormTint(currentTintHex) : currentTintHex;
+		nuages[jj].tint  = cTint;
+		nuages2[jj].tint = cTint;
 		//nuages[jj].angle += (1/(pi[jj]))*3;
 		jj++;
 		//if (nuages[jj].x > 1300) {
 		//}
 	}
 	jj = 0;
+
+	// ── Animate rain for all active digit-0 storm clouds ─────────────────
+	for (var rsi = rainSystems.length - 1; rsi >= 0; rsi--) {
+		var rsys  = rainSystems[rsi];
+		var rcld  = nuages[rsys.cidx];
+
+		// Cloud went off-screen (or was destroyed) — clean up rain
+		if (!rcld || rcld.x > 1800) {
+			rsys.gfx.destroy();
+			rainSystems.splice(rsi, 1);
+			continue;
+		}
+
+		rsys.gfx.clear();
+		// Rain colour: icy blue, slightly transparent
+		rsys.gfx.lineStyle(1.5, 0x88AADD, 0.60);
+
+		for (var rdi = 0; rdi < rsys.drops.length; rdi++) {
+			var rdrop = rsys.drops[rdi];
+			rdrop.y += rdrop.spd;
+
+			// Recycle drop from just below the cloud when it exits the canvas
+			if (rdrop.y > 695) {
+				rdrop.y  = rcld.y + 10 + Math.random() * 40;
+				rdrop.dx = (Math.random() - 0.5) * 320;
+			}
+
+			var rdX = rcld.x + rdrop.dx;
+			rsys.gfx.moveTo(rdX,     rdrop.y);
+			rsys.gfx.lineTo(rdX + 2, rdrop.y + rdrop.len); // slight rightward slant
+		}
+	}
+	// ────────────────────────────────────────────────────────────────────
 
 	game.world.bringToTop(order0);
 	game.world.bringToTop(order1);
@@ -148,6 +298,8 @@ function update() {
 	game.world.bringToTop(order8);
 	game.world.bringToTop(order9);
 	fond2.bringToTop();
+	// Rain draws above the foreground layer so drops are always visible
+	game.world.bringToTop(rainGroup);
 }
 
 
