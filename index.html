@@ -16,13 +16,199 @@ var pi = [3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,8,4,6,2,6,4,3,3,8,3,2,7,9,5,0,2,8,
 function randInt(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-		
+
 for (var i = 0; i<10000; i++) {
 	pi.push(randInt(0,9));
 	console.log(pi[886+i]);
 }
 
 var timer = 0;
+
+// ── Day / Night Cycle ──────────────────────────────────────────────────────
+var dayNightTimer = 0;
+var CYCLE_FRAMES  = 3600;   // one full cycle every 2 minutes at 30 fps
+var starsLayer;
+var currentTintHex = 0xFFFFFF;
+
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+function rgbToPhaser(r, g, b) { return (r << 16) | (g << 8) | b; }
+
+function rgbToCSS(r, g, b) {
+	return '#' +
+		('0' + r.toString(16)).slice(-2) +
+		('0' + g.toString(16)).slice(-2) +
+		('0' + b.toString(16)).slice(-2);
+}
+
+// Four colour stops around the cycle (phase 0 = noon, 0.5 = midnight)
+var tintStops = [
+	{ r: 255, g: 255, b: 255 },  // 0.00 noon  – no tint
+	{ r: 255, g: 130, b: 50  },  // 0.25 dusk  – warm orange
+	{ r: 18,  g: 22,  b: 75  },  // 0.50 night – deep indigo
+	{ r: 255, g: 165, b: 110 },  // 0.75 dawn  – peach
+];
+
+function getDayNightTint(phase) {
+	var n  = tintStops.length;
+	var sc = phase * n;
+	var i  = Math.floor(sc) % n;
+	var j  = (i + 1) % n;
+	var t  = sc - Math.floor(sc);
+	return {
+		r: Math.floor(lerp(tintStops[i].r, tintStops[j].r, t)),
+		g: Math.floor(lerp(tintStops[i].g, tintStops[j].g, t)),
+		b: Math.floor(lerp(tintStops[i].b, tintStops[j].b, t))
+	};
+}
+// ──────────────────────────────────────────────────────────────────────────
+
+// ── Pi Digit Rolling Ticker ───────────────────────────────────────────────
+// A scrolling strip at the bottom that shows the live stream of Pi digits
+// as they spawn clouds. Each digit is coloured in a vibrant 0-9 spectrum,
+// the newest entry scales up with a pulse animation.
+
+var TICKER_MAX      = 20;    // how many digits are visible at once
+var TICKER_CHAR_W   = 34;    // px between digit centres
+var TICKER_Y        = 666;   // vertical centre of the ticker strip
+var TICKER_TOTAL_W  = TICKER_MAX * TICKER_CHAR_W;
+var TICKER_X0       = Math.floor((1300 - TICKER_TOTAL_W) / 2) + TICKER_CHAR_W / 2;
+
+// Vibrant spectrum: blue→cyan→green→lime→yellow→orange→red→magenta
+var DIGIT_TINTS = [
+	0x5599FF,  // 0 – blue
+	0x33BBFF,  // 1 – sky blue
+	0x22DDEE,  // 2 – cyan
+	0x22EE99,  // 3 – teal
+	0x55DD33,  // 4 – green
+	0xBBEE22,  // 5 – lime
+	0xFFDD11,  // 6 – yellow
+	0xFF9922,  // 7 – orange
+	0xFF4433,  // 8 – red
+	0xEE22CC   // 9 – magenta
+];
+
+var tickerGroup     = null;
+var tickerBg        = null;
+var tickerTexts     = [];    // Phaser.Text objects, index 0 = oldest slot
+var tickerSepLine   = null;  // hairline graphic above strip
+var tickerDigits    = [];    // digit values in the visible window
+var tickerPulse     = 0;     // frame counter for newest-digit pulse
+var tickerVisible   = true;
+
+function initTicker() {
+	tickerGroup = game.add.group();
+
+	// Dark translucent background panel
+	tickerBg = new Phaser.Graphics(game, 0, 0);
+	tickerBg.beginFill(0x000A22, 0.60);
+	tickerBg.drawRoundedRect(
+		TICKER_X0 - TICKER_CHAR_W / 2 - 14,
+		TICKER_Y - 20,
+		TICKER_TOTAL_W + 28,
+		40,
+		10
+	);
+	tickerBg.endFill();
+	tickerGroup.add(tickerBg);
+
+	// Hairline separator above the strip
+	tickerSepLine = new Phaser.Graphics(game, 0, 0);
+	tickerSepLine.lineStyle(1, 0x88AACC, 0.35);
+	tickerSepLine.moveTo(TICKER_X0 - TICKER_CHAR_W / 2 - 14, TICKER_Y - 20);
+	tickerSepLine.lineTo(TICKER_X0 - TICKER_CHAR_W / 2 + TICKER_TOTAL_W + 14, TICKER_Y - 20);
+	tickerGroup.add(tickerSepLine);
+
+	// Pi label on the left
+	var piLabel = new Phaser.Text(game,
+		TICKER_X0 - TICKER_CHAR_W / 2 - 10,
+		TICKER_Y,
+		'\u03C0',
+		{ font: 'bold 17px serif', fill: '#99BBDD', stroke: '#000A22', strokeThickness: 2 }
+	);
+	piLabel.anchor.setTo(1.0, 0.5);
+	tickerGroup.add(piLabel);
+
+	// "cursor" marker: vertical highlight on the rightmost (newest) slot
+	var cursorGfx = new Phaser.Graphics(game, 0, 0);
+	cursorGfx.beginFill(0xFFFFFF, 0.12);
+	cursorGfx.drawRoundedRect(
+		TICKER_X0 + (TICKER_MAX - 1) * TICKER_CHAR_W - TICKER_CHAR_W / 2,
+		TICKER_Y - 18,
+		TICKER_CHAR_W,
+		36,
+		6
+	);
+	cursorGfx.endFill();
+	tickerGroup.add(cursorGfx);
+
+	// One Phaser.Text per slot
+	for (var s = 0; s < TICKER_MAX; s++) {
+		var tx = new Phaser.Text(game,
+			TICKER_X0 + s * TICKER_CHAR_W,
+			TICKER_Y,
+			'',
+			{ font: 'bold 22px monospace', fill: '#FFFFFF', stroke: '#001133', strokeThickness: 3 }
+		);
+		tx.anchor.setTo(0.5, 0.5);
+		tx.alpha = 0;
+		tickerGroup.add(tx);
+		tickerTexts.push(tx);
+	}
+}
+
+// Called each time a new Pi digit spawns a cloud
+function pushToTicker(digit) {
+	tickerDigits.push(digit);
+	if (tickerDigits.length > TICKER_MAX) {
+		tickerDigits.shift();
+	}
+	tickerPulse = 0;
+	refreshTickerDisplay();
+}
+
+// Redraws all text slots from tickerDigits[]
+function refreshTickerDisplay() {
+	var offset = TICKER_MAX - tickerDigits.length; // empty leading slots
+	for (var s = 0; s < TICKER_MAX; s++) {
+		var dataIdx = s - offset;
+		if (dataIdx < 0) {
+			tickerTexts[s].text  = '';
+			tickerTexts[s].alpha = 0;
+		} else {
+			var d = tickerDigits[dataIdx];
+			tickerTexts[s].text  = d.toString();
+			tickerTexts[s].tint  = DIGIT_TINTS[d];
+			// Older digits are subtler; newest is full brightness
+			tickerTexts[s].alpha = 0.35 + 0.65 * ((dataIdx + 1) / tickerDigits.length);
+			tickerTexts[s].scale.setTo(1.0, 1.0);
+		}
+	}
+}
+
+// Called every frame to animate the newest digit's pulse
+function updateTicker() {
+	if (!tickerVisible) return;
+	if (tickerDigits.length === 0) return;
+
+	tickerPulse++;
+	// Pulse decays over ~40 frames
+	var t = Math.max(0, 1.0 - tickerPulse / 40);
+	var scale = 1.0 + 0.40 * t;
+	var newestSlot = TICKER_MAX - 1;
+	if (tickerTexts[newestSlot].text !== '') {
+		tickerTexts[newestSlot].scale.setTo(scale, scale);
+		// Extra alpha punch on newest entry
+		tickerTexts[newestSlot].alpha = 1.0;
+	}
+}
+
+function toggleTicker() {
+	tickerVisible = !tickerVisible;
+	tickerGroup.visible = tickerVisible;
+	document.getElementById('tickerBtn').textContent = tickerVisible ? 'Ticker: ON' : 'Ticker: OFF';
+}
+// ── End Pi Digit Rolling Ticker ───────────────────────────────────────────
 
 function sleep(milliseconds) {
 	var start = new Date().getTime();
@@ -43,6 +229,21 @@ function create() {
 	game.time.desiredFps = 30;
 	game.stage.backgroundColor = "#4488AA";
 	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
+
+	// Stars layer – drawn once, positioned by Pi digits, revealed at night
+	starsLayer = game.add.graphics(0, 0);
+	for (var s = 0; s < 150; s++) {
+		var px       = s * 3;
+		var sx       = (pi[px] * 130 + pi[px+1] * 13 + pi[px+2] * 7) % 1300;
+		var sy       = (pi[px] * 33  + pi[px+1] * 4  + 5)             % 330;
+		var starSize = (pi[px] % 2) + 1;           // radius 1 or 2 px
+		var starAlpha = 0.35 + (pi[px+2] / 14.0); // 0.35 – 0.99
+		starsLayer.beginFill(0xFFFFFF, starAlpha);
+		starsLayer.drawCircle(sx, sy, starSize * 2);
+		starsLayer.endFill();
+	}
+	starsLayer.alpha = 0; // invisible during the day
+
 	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
 	order0 = game.add.group();
 	order1 = game.add.group();
@@ -54,13 +255,36 @@ function create() {
 	order7 = game.add.group();
 	order8 = game.add.group();
 	order9 = game.add.group();
-	//fond2.angle = 180;
 	fond2.alpha = 0.9;
-	//field = game.add.tileSprite(0, 465, 1300, 300, 'field');
-	//field.alpha = 0.2;
 
+	// Initialise the Pi digit rolling ticker (added last so it starts on top)
+	initTicker();
 }
 function update() {
+
+	// ── Day / Night Cycle ───────────────────────────────────────────────
+	dayNightTimer++;
+	var phase = (dayNightTimer % CYCLE_FRAMES) / CYCLE_FRAMES;
+	var tint  = getDayNightTint(phase);
+	currentTintHex = rgbToPhaser(tint.r, tint.g, tint.b);
+
+	// Tint the sky and water backgrounds
+	fond.tint  = currentTintHex;
+	fond2.tint = currentTintHex;
+
+	// Stars fade in during the night half of the cycle (phase 0.25 – 0.75)
+	var nightAlpha = 0;
+	if (phase > 0.25 && phase < 0.75) {
+		nightAlpha = Math.sin((phase - 0.25) / 0.5 * Math.PI);
+	}
+	starsLayer.alpha = nightAlpha;
+
+	// Darken the stage background at night
+	var bgR = Math.floor(lerp(67,  5,  nightAlpha));
+	var bgG = Math.floor(lerp(169, 5,  nightAlpha));
+	var bgB = Math.floor(lerp(223, 30, nightAlpha));
+	game.stage.backgroundColor = rgbToCSS(bgR, bgG, bgB);
+	// ────────────────────────────────────────────────────────────────────
 
 	timer++;
 
@@ -68,16 +292,15 @@ function update() {
 
 		decimal++;
 		timer = 0;
-		nuages.push(game.add.tileSprite(-200, 400-(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage'));
+		nuages.push(game.add.tileSprite(-200, 400-(pi[decimal]*34-15), 768, 312, 'nuage'));
 		nuages[decimal].anchor.x = 0.7;
 		nuages[decimal].anchor.y = 0.5;
-		nuages[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
+		nuages[decimal].scale.setTo((pi[decimal])/10, (pi[decimal])/10);
 		nuages[decimal].alpha = 0.9;
-		//sum += pi[decimal];
-		nuages2.push(game.add.tileSprite(-200, 400+(pi[decimal]*34-15)/*+(((pi[decimal]-pi[decimal+pi[decimal]])*pi[decimal]))/2)*/, 768, 312, 'nuage2'));
+		nuages2.push(game.add.tileSprite(-200, 400+(pi[decimal]*34-15), 768, 312, 'nuage2'));
 		nuages2[decimal].anchor.x = 0.7;
 		nuages2[decimal].anchor.y = 0.5;
-		nuages2[decimal].scale.setTo((pi[decimal])/10/*+Math.abs(((pi[decimal]-pi[decimal+1])/9))*/, (pi[decimal])/10);
+		nuages2[decimal].scale.setTo((pi[decimal])/10, (pi[decimal])/10);
 		nuages[decimal].alpha = 0.99;
 
 		switch(pi[decimal]) {
@@ -122,18 +345,21 @@ function update() {
 			order9.add(nuages2[decimal]);
 			break;
 		}
+
+		// Feed the new digit into the rolling ticker
+		pushToTicker(pi[decimal]);
 	}
 
 	while (jj <= decimal ) {
 		if (nuages[jj].x > 1800) {
 			nuages[jj].destroy();
 		}
-		nuages[jj].x += (pi[jj])/Math.abs(velocityDivider);
+		nuages[jj].x  += (pi[jj])/Math.abs(velocityDivider);
 		nuages2[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		//nuages[jj].angle += (1/(pi[jj]))*3;
+		// Tint clouds to match the current time of day
+		nuages[jj].tint  = currentTintHex;
+		nuages2[jj].tint = currentTintHex;
 		jj++;
-		//if (nuages[jj].x > 1300) {
-		//}
 	}
 	jj = 0;
 
@@ -148,13 +374,14 @@ function update() {
 	game.world.bringToTop(order8);
 	game.world.bringToTop(order9);
 	fond2.bringToTop();
+
+	// Keep the ticker on top of everything, then animate it
+	game.world.bringToTop(tickerGroup);
+	updateTicker();
 }
 
 
-
   </script>
-
-
 
 
 </head>
@@ -174,5 +401,21 @@ function update() {
 		-ms-interpolation-mode: nearest-neighbor;
 		image-rendering : pixelated;">
 	</div>
+
+	<!-- Pi Digit Ticker toggle button -->
+	<button id="tickerBtn" onclick="toggleTicker()" style="
+		position: absolute;
+		bottom: 12px;
+		right: 12px;
+		z-index: 100;
+		font-family: monospace;
+		font-size: 13px;
+		background: rgba(0, 10, 34, 0.65);
+		color: #99CCFF;
+		border: 1px solid rgba(100, 160, 255, 0.4);
+		border-radius: 5px;
+		padding: 5px 11px;
+		cursor: pointer;
+		letter-spacing: 0.04em;">Ticker: ON</button>
 </body>
 </html>
