@@ -24,6 +24,12 @@ for (var i = 0; i<10000; i++) {
 
 var timer = 0;
 
+// === RAIN SYSTEM globals ===
+var rainGraphics;           // Phaser.Graphics for drawing rain lines
+var rainDrops = [];         // active drops: {x, y, vy}
+var rainSourceIndices = []; // indices into nuages[] whose digit is 0
+// ===========================
+
 function sleep(milliseconds) {
 	var start = new Date().getTime();
 	for (var i = 0; i < 1e7; i++) {
@@ -59,6 +65,9 @@ function create() {
 	//field = game.add.tileSprite(0, 465, 1300, 300, 'field');
 	//field.alpha = 0.2;
 
+	// === RAIN SYSTEM ===
+	rainGraphics = game.add.graphics(0, 0);
+	// ===================
 }
 function update() {
 
@@ -122,6 +131,18 @@ function update() {
 			order9.add(nuages2[decimal]);
 			break;
 		}
+
+		// === RAIN SYSTEM: digit-0 clouds become visible dark storm clouds ===
+		if (pi[decimal] === 0) {
+			nuages[decimal].tint = 0x223355;      // deep storm blue
+			nuages[decimal].scale.setTo(0.75, 0.75);
+			nuages[decimal].alpha = 0.9;
+			nuages2[decimal].tint = 0x223355;
+			nuages2[decimal].scale.setTo(0.75, 0.75);
+			nuages2[decimal].alpha = 0.9;
+			rainSourceIndices.push(decimal);
+		}
+		// =====================================================================
 	}
 
 	while (jj <= decimal ) {
@@ -137,6 +158,40 @@ function update() {
 	}
 	jj = 0;
 
+	// === RAIN SYSTEM: spawn new drops and render all active drops ===
+	rainGraphics.clear();
+	rainGraphics.lineStyle(1, 0xAADDFF, 0.75);
+
+	for (var ri = 0; ri < rainSourceIndices.length; ri++) {
+		var si = rainSourceIndices[ri];
+		var cx = nuages[si].x;
+		var cy = nuages[si].y;
+		// Only emit drops when cloud is in or near the visible area
+		if (cx > -120 && cx < 1420 && rainDrops.length < 500) {
+			for (var nd = 0; nd < 3; nd++) {
+				rainDrops.push({
+					x: cx + (Math.random() - 0.5) * 200,
+					y: cy + 18 + Math.random() * 22,
+					vy: 9 + Math.random() * 5
+				});
+			}
+		}
+	}
+
+	var aliveDrops = [];
+	for (var rdi = 0; rdi < rainDrops.length; rdi++) {
+		var drop = rainDrops[rdi];
+		drop.y += drop.vy;
+		if (drop.y < 397) {
+			// Draw each drop as a short angled streak in direction of fall
+			rainGraphics.moveTo(drop.x - 1, drop.y - 9);
+			rainGraphics.lineTo(drop.x,     drop.y);
+			aliveDrops.push(drop);
+		}
+	}
+	rainDrops = aliveDrops;
+	// ================================================================
+
 	game.world.bringToTop(order0);
 	game.world.bringToTop(order1);
 	game.world.bringToTop(order2);
@@ -147,7 +202,8 @@ function update() {
 	game.world.bringToTop(order7);
 	game.world.bringToTop(order8);
 	game.world.bringToTop(order9);
-	fond2.bringToTop();
+	game.world.bringToTop(rainGraphics); // rain streaks above clouds
+	fond2.bringToTop();                  // landscape covers the rain base
 }
 
 
