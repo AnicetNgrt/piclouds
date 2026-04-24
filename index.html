@@ -14,6 +14,15 @@ var nn = 0; var jj = 0; var sum = 0; var lock = 0;
 var decimal = -1;
 var order0, order1, order2, order3, order4, order5, order6, order7, order8, order9;
 
+// --- Floating Digit Labels ---
+// Each time a Pi digit is consumed a glowing numeral drifts up from the
+// cloud spawn point, coloured by the existing digitTints palette and sized
+// proportionally to the digit value.  Labels persist for LABEL_LIFE frames
+// before fully fading out.
+var digitLabels  = [];   // active label objects: {obj, life}
+var labelsGroup;         // Phaser Group so one bringToTop call covers all
+var LABEL_LIFE   = 90;   // frames (~3 s at 30 fps)
+
 // Digit-driven colour palette: cold stormy blue (0) → warm golden (9).
 // Tint is multiplied against the sprite texture, so 0xFFFFFF = no change.
 var digitTints = [
@@ -148,6 +157,7 @@ function create() {
 	order8 = game.add.group();
 	order9 = game.add.group();
 	starsGraphics = game.add.graphics(0, 0);
+	labelsGroup = game.add.group();
 	fond2.alpha = 0.9;
 }
 
@@ -229,6 +239,24 @@ function update() {
 		if (digit === 0) {
 			spawnRainSystem();
 		}
+
+		// Spawn a floating digit label above the cloud entry point.
+		// Font size scales with digit (digit 0 → 18 px, digit 9 → 63 px).
+		// Fill colour matches the existing digit tint palette.
+		var lblCol = digitTints[digit];
+		var lblColStr = '#' + ('000000' + lblCol.toString(16)).slice(-6);
+		var lblFontPx = 18 + digit * 5;
+		var lblY = 400 - (digit * 34 - 15) - 60;   // just above the cloud spawn Y
+		var lbl = game.add.text(80, lblY, '' + digit, {
+			font: 'bold ' + lblFontPx + 'px monospace',
+			fill: lblColStr,
+			stroke: '#0a0a2a',
+			strokeThickness: 2
+		});
+		lbl.anchor.setTo(0.5, 0.5);
+		lbl.alpha = 0.92;
+		labelsGroup.add(lbl);
+		digitLabels.push({ obj: lbl, life: LABEL_LIFE });
 
 		switch(pi[decimal]) {
 		case 0:
@@ -344,6 +372,19 @@ function update() {
 		}
 	}
 
+	// Animate floating digit labels: drift upward-right and fade out.
+	for (var li = digitLabels.length - 1; li >= 0; li--) {
+		var dl = digitLabels[li];
+		dl.obj.y  -= 0.55;
+		dl.obj.x  += 0.35;
+		dl.life--;
+		dl.obj.alpha = Math.max(0, (dl.life / LABEL_LIFE) * 0.92);
+		if (dl.life <= 0) {
+			dl.obj.destroy();
+			digitLabels.splice(li, 1);
+		}
+	}
+
 	// Z-order: night sky → clouds → shooting stars → foreground → rain
 	game.world.bringToTop(nightGraphic); // night sky behind clouds, above background
 	game.world.bringToTop(order0);
@@ -356,6 +397,7 @@ function update() {
 	game.world.bringToTop(order7);
 	game.world.bringToTop(order8);
 	game.world.bringToTop(order9);
+	game.world.bringToTop(labelsGroup);    // digit labels float above clouds
 	game.world.bringToTop(starsGraphics);
 	fond2.bringToTop();
 
