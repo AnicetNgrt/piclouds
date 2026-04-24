@@ -38,6 +38,37 @@ var digitTints = [
 	0xFFBB55  // 9  deep gold
 ];
 
+// ── Aurora Borealis ──────────────────────────────────────────────────────
+// Sinusoidal curtains of light appear during the night portion of the
+// day/night cycle.  Hue drifts slowly over time and is nudged by the
+// running Pi digit, so the colours encode the mathematical sequence.
+var auroraGfx;
+var auroraBands = [];   // {yBase, amp, speed, phaseOff, hueOff}
+var AURORA_N    = 4;    // number of light bands
+
+// Minimal HSL → {r,g,b} (0-255) helper used only for aurora colours
+function hslToRgb(h, s, l) {
+	var r, g, b;
+	if (s === 0) {
+		r = g = b = l;
+	} else {
+		var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+		var p = 2 * l - q;
+		var hu = function(t) {
+			t = ((t % 1) + 1) % 1;
+			if (t < 1/6) return p + (q - p) * 6 * t;
+			if (t < 1/2) return q;
+			if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+			return p;
+		};
+		r = hu(h + 1/3);
+		g = hu(h);
+		b = hu(h - 1/3);
+	}
+	return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) };
+}
+// ─────────────────────────────────────────────────────────────────────────
+
 // Rain curtains spawned on every digit-0 event.
 // Each entry: { gfx, x, drops: [{xOff, yOff, speed}] }
 var rainSystems = [];
@@ -158,6 +189,21 @@ function create() {
 	order9 = game.add.group();
 	starsGraphics = game.add.graphics(0, 0);
 	labelsGroup = game.add.group();
+
+	// Aurora graphics layer — above night sky, below cloud groups
+	auroraGfx = game.add.graphics(0, 0);
+	// Initialise aurora bands with Pi-seeded variety
+	for (var ab = 0; ab < AURORA_N; ab++) {
+		var pi0 = ab * 13;
+		auroraBands.push({
+			yBase:    28 + ab * 40,                          // top of band (px)
+			amp:      10 + pi[pi0 % pi.length] * 3.2,        // wave amplitude
+			speed:    0.006 + pi[(pi0+1) % pi.length] * 0.002, // wave speed
+			phaseOff: pi[(pi0+2) % pi.length] * 0.63,        // wave phase offset
+			hueOff:   ab * 25                                 // hue offset between bands
+		});
+	}
+
 	fond2.alpha = 0.9;
 }
 
@@ -385,8 +431,52 @@ function update() {
 		}
 	}
 
-	// Z-order: night sky → clouds → shooting stars → foreground → rain
+	// ── Aurora Borealis ────────────────────────────────────────────────
+	auroraGfx.clear();
+	if (nightness > 0.2) {
+		var auroraStrength = (nightness - 0.2) / 0.8;  // 0 → 1 as night deepens
+		// Base hue slowly drifts and is nudged by the current Pi digit
+		var piHueNudge = (decimal >= 0) ? pi[decimal] * 4 : 0;
+		var baseHue = ((frameCount * 0.18 + piHueNudge) % 360) / 360; // 0-1
+
+		for (var ab = 0; ab < AURORA_N; ab++) {
+			var bnd  = auroraBands[ab];
+			var hue  = ((baseHue + bnd.hueOff / 360) % 1 + 1) % 1;
+			var sat  = 0.75 + 0.15 * Math.sin(frameCount * 0.011 + ab);
+			var lit  = 0.50 + 0.12 * Math.sin(frameCount * 0.007 + ab * 1.3);
+			var rgb  = hslToRgb(hue, sat, lit);
+			var col  = (rgb.r << 16) | (rgb.g << 8) | rgb.b;
+			var bandH = 22 + bnd.amp * 0.6; // band height adapts to amplitude
+
+			// Build top and bottom wave points
+			var NX = 32;
+			var topPts = [];
+			var botPts = [];
+			for (var ax = 0; ax <= NX; ax++) {
+				var wx = ax * (1300 / NX);
+				var wy = bnd.yBase + Math.sin(frameCount * bnd.speed + ax * 0.45 + bnd.phaseOff) * bnd.amp;
+				topPts.push({ x: wx, y: wy });
+				botPts.push({ x: wx, y: wy + bandH });
+			}
+
+			// Fill the sinusoidal band polygon
+			auroraGfx.beginFill(col, auroraStrength * 0.28);
+			auroraGfx.moveTo(topPts[0].x, topPts[0].y);
+			for (var ap = 1; ap <= NX; ap++) { auroraGfx.lineTo(topPts[ap].x, topPts[ap].y); }
+			for (var ap = NX; ap >= 0; ap--) { auroraGfx.lineTo(botPts[ap].x, botPts[ap].y); }
+			auroraGfx.endFill();
+
+			// Bright inner edge along the top of each band (glow line)
+			auroraGfx.lineStyle(2, col, auroraStrength * 0.55);
+			auroraGfx.moveTo(topPts[0].x, topPts[0].y);
+			for (var ap = 1; ap <= NX; ap++) { auroraGfx.lineTo(topPts[ap].x, topPts[ap].y); }
+		}
+	}
+	// ───────────────────────────────────────────────────────────────────
+
+	// Z-order: night sky → aurora → clouds → labels → shooting stars → foreground → rain
 	game.world.bringToTop(nightGraphic); // night sky behind clouds, above background
+	game.world.bringToTop(auroraGfx);   // aurora above night sky, below clouds
 	game.world.bringToTop(order0);
 	game.world.bringToTop(order1);
 	game.world.bringToTop(order2);
