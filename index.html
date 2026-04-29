@@ -82,9 +82,10 @@ function playDigitNote(digit) {
 
 function drawKeyboard() {
     keyGfx.clear();
+    var tk = THEMES[currentThemeId].keyboard;
 
     // Subtle separator line above the strip
-    keyGfx.lineStyle(1, 0xFFFFFF, 0.18);
+    keyGfx.lineStyle(1, tk.border, 0.25);
     keyGfx.moveTo(KX0 - 8, KY - 8);
     keyGfx.lineTo(KX0 + 10 * (KW + KGAP) - KGAP + 8, KY - 8);
 
@@ -95,25 +96,25 @@ function drawKeyboard() {
         // Glow halo behind lit key
         if (lit) {
             keyGfx.lineStyle(0);
-            keyGfx.beginFill(0xFFDD22, 0.28);
+            keyGfx.beginFill(tk.litGlow, 0.28);
             keyGfx.drawRoundedRect(x - 5, KY - 5, KW + 10, KH + 10, 9);
             keyGfx.endFill();
         }
 
         // Key body
-        keyGfx.lineStyle(1, 0x4466AA, 0.55);
+        keyGfx.lineStyle(1, tk.border, 0.55);
         if (lit) {
-            keyGfx.beginFill(0xFFEE77, 0.97);
+            keyGfx.beginFill(tk.lit, 0.97);
         } else if (i % 2 === 1) {
-            keyGfx.beginFill(0x7A9DBB, 0.72);   // alternate shade
+            keyGfx.beginFill(tk.odd, 0.72);
         } else {
-            keyGfx.beginFill(0xCCE0F0, 0.72);
+            keyGfx.beginFill(tk.even, 0.72);
         }
         keyGfx.drawRoundedRect(x, KY, KW, KH, 5);
         keyGfx.endFill();
 
         // Update label colour to match key state
-        keyLabels[i].fill = lit ? '#221100' : '#335577';
+        keyLabels[i].fill = lit ? tk.litLabel : tk.unlitLabel;
         if (activeKeyTimer[i] > 0) activeKeyTimer[i]--;
     }
 }
@@ -250,16 +251,201 @@ var tintStops = [
 	{ r: 255, g: 165, b: 110 },  // 0.75 dawn  – peach
 ];
 
+// ─────────────────────────────────────────────────────────────────────
+//  THEME SYSTEM  ·  press T to cycle, 1-5 to jump to a specific theme
+// ─────────────────────────────────────────────────────────────────────
+var THEMES = {
+	default: {
+		name: 'Pi Sky',
+		digitColors: [
+			{ r: 187, g: 143, b: 206 }, { r: 126, g: 200, b: 227 },
+			{ r:  72, g: 201, b: 176 }, { r:  88, g: 214, b: 141 },
+			{ r: 247, g: 220, b: 111 }, { r: 240, g: 165, b:   0 },
+			{ r: 235, g: 116, b:  52 }, { r: 231, g:  76, b:  60 },
+			{ r: 175, g: 122, b: 197 }, { r: 241, g: 148, b: 138 },
+		],
+		digitCssColors:    ['#FF5252','#FF9100','#FFD740','#69F0AE','#40C4FF','#00E5FF','#7C4DFF','#FF4081','#CCFF90','#FF6D00'],
+		digitPhaserColors: [0xFF5252, 0xFF9100, 0xFFD740, 0x69F0AE, 0x40C4FF, 0x00E5FF, 0x7C4DFF, 0xFF4081, 0xCCFF90, 0xFF6D00],
+		tintStops: [
+			{ r: 255, g: 255, b: 255 }, { r: 255, g: 130, b:  50 },
+			{ r:  18, g:  22, b:  75 }, { r: 255, g: 165, b: 110 },
+		],
+		bgDay:  { r: 67,  g: 169, b: 223 },
+		bgNight:{ r: 5,   g: 5,   b: 30  },
+		sun:  { halo: 0xFFEE88, haloA: 0.22, haloR: 90,  core: 0xFFDD44, coreR: 46 },
+		moon: { glow: 0xCCDDFF, glowS: 0.18, glowR: 62,  core: 0xF0F5FF, coreR: 30 },
+		rain: { color: 0xAADDFF, lineW: 1.5, vyMin: 5,   vyMax: 10,  vxMin: -0.6, vxMax: -0.2, count: 28 },
+		lightning:    { glow: 0xFFFF99, core: 0xFFFFFF },
+		flash:        { color: 0xFFFFFF },
+		shootingStar: { glow: 0xCCE0FF, core: 0xFFFFFF },
+		stars:        { color: 0xFFFFFF },
+		keyboard: { even: 0xCCE0F0, odd: 0x7A9DBB, lit: 0xFFEE77, litGlow: 0xFFDD22, border: 0x4466AA, litLabel: '#221100', unlitLabel: '#335577' },
+		hist:     { bg: 0x000000, bgA: 0.48, border: 0xFFFFFF },
+	},
+
+	arctic: {
+		name: 'Arctic Tundra',
+		digitColors: [
+			{ r: 220, g: 240, b: 255 }, { r: 155, g: 210, b: 245 },
+			{ r: 185, g: 230, b: 250 }, { r: 170, g: 215, b: 245 },
+			{ r: 200, g: 235, b: 255 }, { r: 140, g: 195, b: 235 },
+			{ r: 195, g: 220, b: 245 }, { r: 210, g: 230, b: 250 },
+			{ r: 165, g: 205, b: 240 }, { r: 205, g: 225, b: 252 },
+		],
+		digitCssColors:    ['#DCF0FF','#9BD2F5','#B9E6FA','#AAD7F5','#C8EBFF','#8CC3EB','#C3DCF5','#D2E6FA','#A5CDF0','#CDE1FC'],
+		digitPhaserColors: [0xDCF0FF, 0x9BD2F5, 0xB9E6FA, 0xAAD7F5, 0xC8EBFF, 0x8CC3EB, 0xC3DCF5, 0xD2E6FA, 0xA5CDF0, 0xCDE1FC],
+		tintStops: [
+			{ r: 200, g: 228, b: 252 }, { r: 170, g: 140, b: 220 },
+			{ r:   8, g:  12, b:  55 }, { r: 155, g: 205, b: 240 },
+		],
+		bgDay:  { r: 160, g: 210, b: 245 },
+		bgNight:{ r: 5,   g: 8,   b: 45  },
+		sun:  { halo: 0xDDEEFF, haloA: 0.15, haloR: 70,  core: 0xFFFFF8, coreR: 26 },
+		moon: { glow: 0xAAEEFF, glowS: 0.38, glowR: 85,  core: 0xFFFFFF, coreR: 42 },
+		rain: { color: 0xEEF6FF, lineW: 1.0, vyMin: 1.5, vyMax: 3.5, vxMin: -0.2, vxMax: 0.2, count: 42 },
+		lightning:    { glow: 0x99CCFF, core: 0xDDEEFF },
+		flash:        { color: 0xBBDDFF },
+		shootingStar: { glow: 0x88CCFF, core: 0xEEFFFF },
+		stars:        { color: 0xBBDDFF },
+		keyboard: { even: 0xBBDDEE, odd: 0x7799AA, lit: 0x99DDFF, litGlow: 0x66AADD, border: 0x336688, litLabel: '#001122', unlitLabel: '#224455' },
+		hist:     { bg: 0x001122, bgA: 0.55, border: 0x7799BB },
+	},
+
+	desert: {
+		name: 'Desert Storm',
+		digitColors: [
+			{ r: 220, g: 175, b: 110 }, { r: 205, g: 145, b:  75 },
+			{ r: 238, g: 200, b: 125 }, { r: 195, g: 128, b:  65 },
+			{ r: 245, g: 205, b:  75 }, { r: 232, g: 158, b:  45 },
+			{ r: 215, g: 108, b:  38 }, { r: 200, g:  95, b:  55 },
+			{ r: 242, g: 188, b:  95 }, { r: 225, g: 165, b:  85 },
+		],
+		digitCssColors:    ['#DCAF6E','#CD9150','#EEC87D','#C38042','#F5CD4B','#E89E2D','#D76C26','#C85F37','#F2BC5F','#E1A555'],
+		digitPhaserColors: [0xDCAF6E, 0xCD9150, 0xEEC87D, 0xC38042, 0xF5CD4B, 0xE89E2D, 0xD76C26, 0xC85F37, 0xF2BC5F, 0xE1A555],
+		tintStops: [
+			{ r: 240, g: 195, b: 130 }, { r: 215, g:  75, b:  25 },
+			{ r:  38, g:  18, b:   8 }, { r: 235, g: 130, b:  50 },
+		],
+		bgDay:  { r: 195, g: 148, b: 80  },
+		bgNight:{ r: 22,  g: 10,  b: 5   },
+		sun:  { halo: 0xFF8800, haloA: 0.42, haloR: 118, core: 0xFF5500, coreR: 60 },
+		moon: { glow: 0xFFAA44, glowS: 0.28, glowR: 70,  core: 0xFFBB66, coreR: 33 },
+		rain: { color: 0xD4AA66, lineW: 1.0, vyMin: 7,   vyMax: 13,  vxMin: -4.0, vxMax: -1.5, count: 24 },
+		lightning:    { glow: 0xFF8833, core: 0xFFDD88 },
+		flash:        { color: 0xFFCC55 },
+		shootingStar: { glow: 0xFFCC66, core: 0xFFEEBB },
+		stars:        { color: 0xFFDDAA },
+		keyboard: { even: 0xCCA870, odd: 0x886040, lit: 0xFFCC44, litGlow: 0xFF9900, border: 0x885522, litLabel: '#221100', unlitLabel: '#664422' },
+		hist:     { bg: 0x221100, bgA: 0.55, border: 0xAA7733 },
+	},
+
+	volcanic: {
+		name: 'Volcanic Fury',
+		digitColors: [
+			{ r: 185, g:  58, b:  18 }, { r: 222, g:  88, b:  28 },
+			{ r: 105, g: 100, b:  98 }, { r: 205, g:  48, b:  18 },
+			{ r: 242, g: 128, b:  28 }, { r: 148, g: 148, b: 148 },
+			{ r: 222, g:  78, b:   0 }, { r: 182, g:  28, b:   8 },
+			{ r: 205, g:  98, b:  18 }, { r: 122, g:  78, b:  78 },
+		],
+		digitCssColors:    ['#B93A12','#DE581C','#696462','#CD3012','#F2801C','#949494','#DE4E00','#B61C08','#CD6212','#7A4E4E'],
+		digitPhaserColors: [0xB93A12, 0xDE581C, 0x696462, 0xCD3012, 0xF2801C, 0x949494, 0xDE4E00, 0xB61C08, 0xCD6212, 0x7A4E4E],
+		tintStops: [
+			{ r:  95, g:  68, b:  58 }, { r: 195, g:  45, b:   8 },
+			{ r:  12, g:   4, b:   4 }, { r: 178, g:  55, b:   0 },
+		],
+		bgDay:  { r: 75,  g: 48,  b: 38  },
+		bgNight:{ r: 8,   g: 3,   b: 3   },
+		sun:  { halo: 0xFF4400, haloA: 0.45, haloR: 108, core: 0xFF1100, coreR: 54 },
+		moon: { glow: 0xFF3300, glowS: 0.32, glowR: 65,  core: 0xFF6644, coreR: 28 },
+		rain: { color: 0xFF6622, lineW: 2.0, vyMin: 6,   vyMax: 14,  vxMin: -0.5, vxMax: 0.5, count: 22 },
+		lightning:    { glow: 0xFF4400, core: 0xFF9922 },
+		flash:        { color: 0xFF3300 },
+		shootingStar: { glow: 0xFF7722, core: 0xFFAA44 },
+		stars:        { color: 0xFF9966 },
+		keyboard: { even: 0x440E08, odd: 0x220808, lit: 0xFF4400, litGlow: 0xFF2200, border: 0x661111, litLabel: '#FFAA44', unlitLabel: '#AA4422' },
+		hist:     { bg: 0x220000, bgA: 0.62, border: 0xAA2200 },
+	},
+
+	nebula: {
+		name: 'Cosmic Nebula',
+		digitColors: [
+			{ r: 255, g:  75, b: 200 }, { r:  75, g: 255, b: 240 },
+			{ r: 175, g:  75, b: 255 }, { r:  75, g: 225, b: 180 },
+			{ r: 255, g: 255, b:  75 }, { r: 255, g: 115, b: 220 },
+			{ r:  75, g: 155, b: 255 }, { r: 200, g:  75, b: 255 },
+			{ r:  75, g: 255, b: 145 }, { r: 255, g: 155, b:  75 },
+		],
+		digitCssColors:    ['#FF4BC8','#4BFFF0','#AF4BFF','#4BE1B4','#FFFF4B','#FF73DC','#4B9BFF','#C84BFF','#4BFF91','#FF9B4B'],
+		digitPhaserColors: [0xFF4BC8, 0x4BFFF0, 0xAF4BFF, 0x4BE1B4, 0xFFFF4B, 0xFF73DC, 0x4B9BFF, 0xC84BFF, 0x4BFF91, 0xFF9B4B],
+		tintStops: [
+			{ r:  18, g:   8, b:  55 }, { r:  75, g:  18, b:  80 },
+			{ r:   4, g:   2, b:  18 }, { r:  18, g:  55, b:  78 },
+		],
+		bgDay:  { r: 14,  g: 6,   b: 45  },
+		bgNight:{ r: 3,   g: 1,   b: 14  },
+		sun:  { halo: 0xFFFFBB, haloA: 0.32, haloR: 55,  core: 0xFFFFFF, coreR: 16 },
+		moon: { glow: 0xFF55FF, glowS: 0.42, glowR: 58,  core: 0x55FFFF, coreR: 24 },
+		rain: { color: 0xFF55FF, lineW: 1.0, vyMin: 1.5, vyMax: 5.5, vxMin: -1.5, vxMax: 1.5, count: 44 },
+		lightning:    { glow: 0x8844FF, core: 0xCCABFF },
+		flash:        { color: 0x4400FF },
+		shootingStar: { glow: 0x55FFFF, core: 0xFFFFFF },
+		stars:        { color: 0xFFFFFF },
+		keyboard: { even: 0x220044, odd: 0x110033, lit: 0xFF55C8, litGlow: 0x8844FF, border: 0x6644AA, litLabel: '#FFD0FF', unlitLabel: '#9966CC' },
+		hist:     { bg: 0x080018, bgA: 0.68, border: 0x6644AA },
+	}
+};
+
+var THEME_ORDER    = ['default', 'arctic', 'desert', 'volcanic', 'nebula'];
+var currentThemeId = 'default';
+
+function applyTheme(id) {
+	currentThemeId  = id;
+	var t           = THEMES[id];
+	DIGIT_COLORS        = t.digitColors;
+	DIGIT_CSS_COLORS    = t.digitCssColors;
+	DIGIT_PHASER_COLORS = t.digitPhaserColors;
+	// Recolour already-created histogram digit labels
+	if (histLabels && histLabels.length) {
+		for (var i = 0; i < histLabels.length; i++) {
+			histLabels[i].fill = DIGIT_CSS_COLORS[i];
+		}
+	}
+	// Tint the static star layer to theme colour
+	if (starsLayer) starsLayer.tint = t.stars.color;
+	// Highlight active button
+	for (var bi = 0; bi < THEME_ORDER.length; bi++) {
+		var btn = document.getElementById('themeBtn_' + THEME_ORDER[bi]);
+		if (btn) btn.style.opacity = (THEME_ORDER[bi] === id) ? '1' : '0.5';
+	}
+}
+
+function cycleTheme() {
+	var idx = THEME_ORDER.indexOf(currentThemeId);
+	applyTheme(THEME_ORDER[(idx + 1) % THEME_ORDER.length]);
+}
+
+document.addEventListener('keydown', function(e) {
+	if (e.key === 't' || e.key === 'T') cycleTheme();
+	if (e.key === '1') applyTheme('default');
+	if (e.key === '2') applyTheme('arctic');
+	if (e.key === '3') applyTheme('desert');
+	if (e.key === '4') applyTheme('volcanic');
+	if (e.key === '5') applyTheme('nebula');
+});
+// ─────────────────────────────────────────────────────────────────────
+
 function getDayNightTint(phase) {
-	var n  = tintStops.length;
+	var stops = THEMES[currentThemeId].tintStops;
+	var n  = stops.length;
 	var sc = phase * n;
 	var i  = Math.floor(sc) % n;
 	var j  = (i + 1) % n;
 	var t  = sc - Math.floor(sc);
 	return {
-		r: Math.floor(lerp(tintStops[i].r, tintStops[j].r, t)),
-		g: Math.floor(lerp(tintStops[i].g, tintStops[j].g, t)),
-		b: Math.floor(lerp(tintStops[i].b, tintStops[j].b, t))
+		r: Math.floor(lerp(stops[i].r, stops[j].r, t)),
+		g: Math.floor(lerp(stops[i].g, stops[j].g, t)),
+		b: Math.floor(lerp(stops[i].b, stops[j].b, t))
 	};
 }
 // ──────────────────────────────────────────────────────────────────────────
@@ -307,10 +493,11 @@ var HBARBASE  = HY + HH - 14;      // y-baseline just above digit labels
 
 function drawHistogram() {
 	histGfx.clear();
+	var th = THEMES[currentThemeId].hist;
 
 	// Semi-transparent panel background
-	histGfx.lineStyle(1, 0xFFFFFF, 0.18);
-	histGfx.beginFill(0x000000, 0.48);
+	histGfx.lineStyle(1, th.border, 0.18);
+	histGfx.beginFill(th.bg, th.bgA);
 	histGfx.drawRoundedRect(HX, HY, HW, HH, 5);
 	histGfx.endFill();
 
@@ -326,7 +513,7 @@ function drawHistogram() {
 		var expectedH = Math.min(HBARMAXH,
 			Math.round((total / 10 / maxCount) * HBARMAXH));
 		var expectedY = HBARBASE - expectedH;
-		histGfx.lineStyle(1, 0xFFFFFF, 0.38);
+		histGfx.lineStyle(1, th.border, 0.38);
 		histGfx.moveTo(HX + 5, expectedY);
 		histGfx.lineTo(HX + HW - 5, expectedY);
 	}
@@ -450,14 +637,15 @@ function buildBolt(pidx) {
 function drawBolt() {
 	lightningGraphics.clear();
 	if (boltPoints.length < 2) { return; }
-	// Glow pass — thick soft yellow-white halo
-	lightningGraphics.lineStyle(5, 0xFFFF99, 0.35);
+	var tl = THEMES[currentThemeId].lightning;
+	// Glow pass — thick soft halo
+	lightningGraphics.lineStyle(5, tl.glow, 0.35);
 	lightningGraphics.moveTo(boltPoints[0].x, boltPoints[0].y);
 	for (var k = 1; k < boltPoints.length; k++) {
 		lightningGraphics.lineTo(boltPoints[k].x, boltPoints[k].y);
 	}
-	// Core pass — thin bright white
-	lightningGraphics.lineStyle(2, 0xFFFFFF, 1.0);
+	// Core pass — thin bright line
+	lightningGraphics.lineStyle(2, tl.core, 1.0);
 	lightningGraphics.moveTo(boltPoints[0].x, boltPoints[0].y);
 	for (var k = 1; k < boltPoints.length; k++) {
 		lightningGraphics.lineTo(boltPoints[k].x, boltPoints[k].y);
@@ -473,20 +661,21 @@ function triggerLightning(pidx) {
 // ──────────────────────────────────────────────────────────────────────────
 
 function spawnRain() {
-	var NUM_DROPS = 28;
+	var tr        = THEMES[currentThemeId].rain;
+	var NUM_DROPS = tr.count;
 	var centreX   = 60 + Math.random() * 1180;
 	var centreY   = 10 + Math.random() * 120;
 	for (var d = 0; d < NUM_DROPS; d++) {
-		var vy = 5 + Math.random() * 5;
+		var vy = tr.vyMin + Math.random() * (tr.vyMax - tr.vyMin);
 		rainDrops.push({
 			x:       centreX + (Math.random() - 0.5) * 420,
 			y:       centreY + Math.random() * 80,
-			vx:      -0.6 + Math.random() * 0.4,
+			vx:      tr.vxMin + Math.random() * (tr.vxMax - tr.vxMin),
 			vy:      vy,
 			alpha:   0.45 + Math.random() * 0.45,
 			len:     6 + Math.random() * 10,
 			life:    0,
-			maxLife: Math.floor((393 - centreY) / vy) + 10
+			maxLife: Math.floor((393 - centreY) / Math.max(0.5, vy)) + 10
 		});
 	}
 }
@@ -569,6 +758,7 @@ function create() {
 	}, uiGroup);
 
 	game.input.onDown.add(initAudio);
+	applyTheme(currentThemeId);   // initialise theme colours (stars tint etc.)
 	drawKeyboard();
 	rainGraphics      = game.add.graphics(0, 0);
 	lightningGraphics = game.add.graphics(0, 0);
@@ -629,10 +819,11 @@ function update() {
 	}
 	starsLayer.alpha = nightAlpha;
 
-	// Darken the stage background at night
-	var bgR = Math.floor(lerp(67,  5,  nightAlpha));
-	var bgG = Math.floor(lerp(169, 5,  nightAlpha));
-	var bgB = Math.floor(lerp(223, 30, nightAlpha));
+	// Darken the stage background at night (theme-specific day/night colours)
+	var td  = THEMES[currentThemeId];
+	var bgR = Math.floor(lerp(td.bgDay.r, td.bgNight.r, nightAlpha));
+	var bgG = Math.floor(lerp(td.bgDay.g, td.bgNight.g, nightAlpha));
+	var bgB = Math.floor(lerp(td.bgDay.b, td.bgNight.b, nightAlpha));
 	game.stage.backgroundColor = rgbToCSS(bgR, bgG, bgB);
 	// ────────────────────────────────────────────────────────────────────
 
@@ -661,20 +852,21 @@ function update() {
 		var visible = fadeOut * nightAlpha;
 
 		if (visible > 0.02 && star.trail.length > 1) {
+			var tss = THEMES[currentThemeId].shootingStar;
 			for (var ti = 1; ti < star.trail.length; ti++) {
 				var progress = ti / star.trail.length;
-				// Soft blue-white glow
-				shootingStarGfx.lineStyle(4, 0xCCE0FF, progress * visible * 0.35);
+				// Soft glow trail
+				shootingStarGfx.lineStyle(4, tss.glow, progress * visible * 0.35);
 				shootingStarGfx.moveTo(star.trail[ti - 1].x, star.trail[ti - 1].y);
 				shootingStarGfx.lineTo(star.trail[ti].x,     star.trail[ti].y);
-				// Bright white core
-				shootingStarGfx.lineStyle(1, 0xFFFFFF, progress * visible * 0.95);
+				// Bright core trail
+				shootingStarGfx.lineStyle(1, tss.core, progress * visible * 0.95);
 				shootingStarGfx.moveTo(star.trail[ti - 1].x, star.trail[ti - 1].y);
 				shootingStarGfx.lineTo(star.trail[ti].x,     star.trail[ti].y);
 			}
 			// Bright head dot (no stroke)
 			shootingStarGfx.lineStyle(0);
-			shootingStarGfx.beginFill(0xFFFFFF, visible);
+			shootingStarGfx.beginFill(tss.core, visible);
 			shootingStarGfx.drawCircle(star.x, star.y, 3);
 			shootingStarGfx.endFill();
 		}
@@ -701,12 +893,13 @@ function update() {
 		// Fade in/out near horizons
 		var sunVis  = Math.min(dayNorm / 0.12, (1.0 - dayNorm) / 0.12, 1.0);
 		// Outer halo
-		celestialLayer.beginFill(0xFFEE88, sunVis * 0.22);
-		celestialLayer.drawCircle(sunX, sunY, 90);
+		var ts = THEMES[currentThemeId].sun;
+		celestialLayer.beginFill(ts.halo, sunVis * ts.haloA);
+		celestialLayer.drawCircle(sunX, sunY, ts.haloR);
 		celestialLayer.endFill();
 		// Core disc
-		celestialLayer.beginFill(0xFFDD44, sunVis);
-		celestialLayer.drawCircle(sunX, sunY, 46);
+		celestialLayer.beginFill(ts.core, sunVis);
+		celestialLayer.drawCircle(sunX, sunY, ts.coreR);
 		celestialLayer.endFill();
 	} else {
 		// moonNorm: 0 = moonrise (left), 0.5 = midnight (zenith), 1 = moonset (right)
@@ -714,12 +907,13 @@ function update() {
 		var moonX    = moonNorm * 1200 + 50;
 		var moonY    = 370 - Math.sin(moonNorm * Math.PI) * 290;
 		// Soft outer glow
-		celestialLayer.beginFill(0xCCDDFF, nightAlpha * 0.18);
-		celestialLayer.drawCircle(moonX, moonY, 62);
+		var tm = THEMES[currentThemeId].moon;
+		celestialLayer.beginFill(tm.glow, nightAlpha * tm.glowS);
+		celestialLayer.drawCircle(moonX, moonY, tm.glowR);
 		celestialLayer.endFill();
 		// Core disc
-		celestialLayer.beginFill(0xF0F5FF, nightAlpha);
-		celestialLayer.drawCircle(moonX, moonY, 30);
+		celestialLayer.beginFill(tm.core, nightAlpha);
+		celestialLayer.drawCircle(moonX, moonY, tm.coreR);
 		celestialLayer.endFill();
 	}
 	// ─────────────────────────────────────────────────────────────────────────
@@ -852,8 +1046,9 @@ function update() {
 	rainGraphics.bringToTop();   // rain in front of clouds
 	fond2.bringToTop();          // ground always on top of rain
 
-	// ── Rain rendering ────────────────────────────────────────────────
+	// ── Rain / weather-particle rendering ────────────────────────────
 	rainGraphics.clear();
+	var trRain = THEMES[currentThemeId].rain;
 	for (var ri = rainDrops.length - 1; ri >= 0; ri--) {
 		var drop = rainDrops[ri];
 		drop.x  += drop.vx;
@@ -868,7 +1063,7 @@ function update() {
 		if (drop.life > fadeStart) {
 			dropAlpha *= 1 - (drop.life - fadeStart) / (drop.maxLife - fadeStart);
 		}
-		rainGraphics.lineStyle(1.5, 0xAADDFF, dropAlpha);
+		rainGraphics.lineStyle(trRain.lineW, trRain.color, dropAlpha);
 		rainGraphics.moveTo(drop.x, drop.y);
 		rainGraphics.lineTo(drop.x - drop.vx * drop.len * 0.4, drop.y - drop.len);
 	}
@@ -901,7 +1096,7 @@ function update() {
 	if (flashAlpha > 0) {
 		flashAlpha = Math.max(0, flashAlpha - 0.055);
 		flashGraphics.clear();
-		flashGraphics.beginFill(0xFFFFFF, flashAlpha);
+		flashGraphics.beginFill(THEMES[currentThemeId].flash.color, flashAlpha);
 		flashGraphics.drawRect(0, 0, 1300, 700);
 		flashGraphics.endFill();
 	} else {
@@ -932,6 +1127,22 @@ function update() {
 		backdrop-filter: blur(4px);
 		opacity: 0.55;
 		transition: opacity 0.2s, background 0.2s;">&#9834;</button>
+
+	<!-- Theme selector panel -->
+	<div id="themeButtons" style="
+		position: fixed; bottom: 60px; right: 14px;
+		display: flex; flex-direction: column; gap: 5px;
+		z-index: 999; align-items: flex-end;">
+		<div style="
+			font-size: 9px; color: rgba(255,255,255,0.55);
+			font-family: monospace; letter-spacing: 1px;
+			text-align: right; margin-bottom: 2px;">THEME [T / 1-5]</div>
+		<button id="themeBtn_default"  onclick="applyTheme('default')"  style="background:rgba(100,180,230,0.22);border:1px solid rgba(255,255,255,0.4);color:#fff;font-size:11px;cursor:pointer;padding:4px 10px;border-radius:6px;font-family:monospace;opacity:1;transition:opacity 0.2s;">1 Pi Sky</button>
+		<button id="themeBtn_arctic"   onclick="applyTheme('arctic')"   style="background:rgba(140,200,250,0.22);border:1px solid rgba(200,230,255,0.4);color:#cef;font-size:11px;cursor:pointer;padding:4px 10px;border-radius:6px;font-family:monospace;opacity:0.5;transition:opacity 0.2s;">2 Arctic</button>
+		<button id="themeBtn_desert"   onclick="applyTheme('desert')"   style="background:rgba(180,120,40,0.22);border:1px solid rgba(220,160,60,0.4);color:#fda;font-size:11px;cursor:pointer;padding:4px 10px;border-radius:6px;font-family:monospace;opacity:0.5;transition:opacity 0.2s;">3 Desert</button>
+		<button id="themeBtn_volcanic" onclick="applyTheme('volcanic')" style="background:rgba(180,40,10,0.22);border:1px solid rgba(220,80,20,0.4);color:#f96;font-size:11px;cursor:pointer;padding:4px 10px;border-radius:6px;font-family:monospace;opacity:0.5;transition:opacity 0.2s;">4 Volcanic</button>
+		<button id="themeBtn_nebula"   onclick="applyTheme('nebula')"   style="background:rgba(80,20,140,0.22);border:1px solid rgba(150,80,255,0.4);color:#c8f;font-size:11px;cursor:pointer;padding:4px 10px;border-radius:6px;font-family:monospace;opacity:0.5;transition:opacity 0.2s;">5 Nebula</button>
+	</div>
 
 	<div id="game" style="
 		cursor: none;
