@@ -2,8 +2,110 @@
 <html>
 <head>
 	<title>Nuages de Pi</title>
-	<link href="stylesheet.css" rel="stylesheet">
 	<meta charset="utf-8"/>
+	<style>
+		:root {
+			--chrome-bg: #06101d;
+			--chrome-glow: rgba(124, 160, 220, 0.18);
+			--chrome-panel: rgba(10, 20, 36, 0.78);
+			--chrome-border: rgba(182, 212, 255, 0.24);
+			--chrome-text: #dcecff;
+			--chrome-muted: #9cb6d9;
+			--button-bg: rgba(16, 31, 51, 0.82);
+			--button-border: rgba(198, 220, 255, 0.32);
+			--button-shadow: rgba(10, 20, 36, 0.45);
+		}
+
+		html, body {
+			margin: 0;
+			min-height: 100%;
+		}
+
+		body {
+			background:
+				radial-gradient(circle at top, rgba(93, 122, 175, 0.28), transparent 42%),
+				linear-gradient(180deg, #08111d 0%, var(--chrome-bg) 58%, #040811 100%);
+			color: var(--chrome-text);
+			font-family: "Trebuchet MS", Verdana, sans-serif;
+			overflow: hidden;
+			transition: background 0.6s ease, color 0.35s ease;
+		}
+
+		#PIclouds {
+			position: relative;
+			width: 1300px;
+			height: 700px;
+			margin: 0 auto;
+			box-shadow:
+				0 30px 80px rgba(0, 0, 0, 0.45),
+				0 0 0 1px rgba(176, 210, 255, 0.08),
+				0 0 48px var(--chrome-glow);
+		}
+
+		#PIclouds canvas {
+			display: block;
+			cursor: none;
+			image-rendering: optimizeSpeed;
+			image-rendering: -moz-crisp-edges;
+			image-rendering: -o-crisp-edges;
+			image-rendering: -webkit-optimize-contrast;
+			image-rendering: optimize-contrast;
+			-ms-interpolation-mode: nearest-neighbor;
+			image-rendering: pixelated;
+		}
+
+		.chrome-panel {
+			position: fixed;
+			z-index: 999;
+			padding: 8px 12px;
+			border-radius: 999px;
+			border: 1px solid var(--chrome-border);
+			background: var(--chrome-panel);
+			box-shadow: 0 10px 30px rgba(0, 0, 0, 0.24);
+			backdrop-filter: blur(10px);
+			color: var(--chrome-text);
+			font-size: 11px;
+			letter-spacing: 0.18em;
+			text-transform: uppercase;
+		}
+
+		#themeBadge {
+			top: 14px;
+			left: 14px;
+			color: var(--chrome-muted);
+		}
+
+		#soundBtn {
+			position: fixed;
+			right: 14px;
+			bottom: 14px;
+			z-index: 999;
+			padding: 9px 14px;
+			border-radius: 999px;
+			border: 1px solid var(--button-border);
+			background: var(--button-bg);
+			box-shadow:
+				0 10px 30px var(--button-shadow),
+				inset 0 1px 0 rgba(255, 255, 255, 0.06);
+			color: var(--chrome-text);
+			font: 600 13px/1 "Trebuchet MS", Verdana, sans-serif;
+			letter-spacing: 0.12em;
+			text-transform: uppercase;
+			cursor: pointer;
+			opacity: 0.88;
+			transition: opacity 0.2s ease, transform 0.2s ease, background 0.35s ease, border-color 0.35s ease;
+		}
+
+		#soundBtn:hover {
+			transform: translateY(-1px);
+			opacity: 1;
+		}
+
+		#soundBtn[data-enabled="true"] {
+			background: rgba(28, 52, 83, 0.92);
+			border-color: rgba(238, 246, 255, 0.52);
+		}
+	</style>
 	<script type="text/javascript" src="phaser.min.js"></script>
 	<script>
 
@@ -13,6 +115,7 @@
 var audioCtx      = null;
 var audioEnabled  = false;
 var uiGroup, keyGfx, audioHint;
+var themeBadgeEl  = null;
 var keyLabels       = [];
 var activeKeyTimer  = [0,0,0,0,0,0,0,0,0,0];
 var KEY_LIT_FRAMES  = 22;
@@ -32,9 +135,12 @@ function initAudio() {
     try {
         audioCtx     = new (window.AudioContext || window.webkitAudioContext)();
         audioEnabled = true;
-        audioHint.text = '\u266a sound on';
-        game.add.tween(audioHint).to({ alpha: 0 }, 1200,
-            Phaser.Easing.Linear.None, true, 700);
+        syncSoundButton();
+        if (audioHint) {
+            audioHint.text = '\u266a sound on';
+            game.add.tween(audioHint).to({ alpha: 0 }, 1200,
+                Phaser.Easing.Linear.None, true, 700);
+        }
     } catch (e) {
         if (audioHint) audioHint.text = 'audio n/a';
     }
@@ -80,11 +186,63 @@ function playDigitNote(digit) {
     activeKeyTimer[digit] = KEY_LIT_FRAMES;
 }
 
+function syncSoundButton() {
+	var btn = document.getElementById('soundBtn');
+	if (!btn) return;
+	btn.dataset.enabled = audioEnabled ? 'true' : 'false';
+	btn.innerHTML = audioEnabled ? '&#9835; sound on' : '&#9834; sound off';
+	btn.title = audioEnabled ? 'Disable Pi sonification' : 'Enable Pi sonification';
+	btn.style.opacity = audioEnabled ? '1' : '0.78';
+}
+
+function toggleSound() {
+	if (!audioCtx) {
+		initAudio();
+		return;
+	} else if (audioCtx.state === 'suspended') {
+		audioCtx.resume();
+	}
+	audioEnabled = !audioEnabled;
+	syncSoundButton();
+	if (audioHint) {
+		audioHint.alpha = 1;
+		audioHint.text = audioEnabled ? '\u266a sound on' : '\u266a sound off';
+	}
+}
+
+function setNightChrome(nightAlpha, phase, isDaytime) {
+	var shellNight = Math.max(0.52, nightAlpha);
+	var topR = Math.floor(lerp(20, 8, shellNight));
+	var topG = Math.floor(lerp(36, 14, shellNight));
+	var topB = Math.floor(lerp(56, 28, shellNight));
+	var midR = Math.floor(lerp(13, 5, shellNight));
+	var midG = Math.floor(lerp(29, 10, shellNight));
+	var midB = Math.floor(lerp(46, 18, shellNight));
+	var glow = 0.12 + nightAlpha * 0.22;
+	document.body.style.background =
+		'radial-gradient(circle at top, rgba(112, 142, 194,' + glow.toFixed(2) + '), transparent 42%), ' +
+		'linear-gradient(180deg, ' + rgbToCSS(topR, topG, topB) + ' 0%, ' + rgbToCSS(midR, midG, midB) + ' 58%, #040811 100%)';
+
+	if (themeBadgeEl) {
+		var label;
+		if (!isDaytime) {
+			label = nightAlpha > 0.82 ? 'midnight tide' : 'moonrise drift';
+		} else if (phase < 0.08 || phase > 0.92) {
+			label = 'dawn hush';
+		} else if (phase > 0.42 && phase < 0.58) {
+			label = 'sunlit break';
+		} else {
+			label = 'dusk return';
+		}
+		themeBadgeEl.textContent = label;
+	}
+}
+
 function drawKeyboard() {
     keyGfx.clear();
 
     // Subtle separator line above the strip
-    keyGfx.lineStyle(1, 0xFFFFFF, 0.18);
+    keyGfx.lineStyle(1, 0xC9DAF6, 0.18);
     keyGfx.moveTo(KX0 - 8, KY - 8);
     keyGfx.lineTo(KX0 + 10 * (KW + KGAP) - KGAP + 8, KY - 8);
 
@@ -95,33 +253,39 @@ function drawKeyboard() {
         // Glow halo behind lit key
         if (lit) {
             keyGfx.lineStyle(0);
-            keyGfx.beginFill(0xFFDD22, 0.28);
+            keyGfx.beginFill(0xF8DC8A, 0.30);
             keyGfx.drawRoundedRect(x - 5, KY - 5, KW + 10, KH + 10, 9);
             keyGfx.endFill();
         }
 
         // Key body
-        keyGfx.lineStyle(1, 0x4466AA, 0.55);
+        keyGfx.lineStyle(1, 0x6E8DB8, 0.48);
         if (lit) {
-            keyGfx.beginFill(0xFFEE77, 0.97);
+            keyGfx.beginFill(0xF3DA8B, 0.97);
         } else if (i % 2 === 1) {
-            keyGfx.beginFill(0x7A9DBB, 0.72);   // alternate shade
+            keyGfx.beginFill(0x2A3E57, 0.92);   // alternate shade
         } else {
-            keyGfx.beginFill(0xCCE0F0, 0.72);
+            keyGfx.beginFill(0x1E2E43, 0.92);
         }
         keyGfx.drawRoundedRect(x, KY, KW, KH, 5);
         keyGfx.endFill();
 
         // Update label colour to match key state
-        keyLabels[i].fill = lit ? '#221100' : '#335577';
+        keyLabels[i].fill = lit ? '#211400' : '#C9DAF6';
         if (activeKeyTimer[i] > 0) activeKeyTimer[i]--;
     }
 }
 
 // ─────────────────────────────────────────────────────────────────────
 
-var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds',
-    { preload: preload, create: create, update: update }, false, false);
+var game = null;
+
+window.addEventListener('load', function() {
+	themeBadgeEl = document.getElementById('themeBadge');
+	syncSoundButton();
+	game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds',
+		{ preload: preload, create: create, update: update }, false, false);
+});
 
 var nuages = []; var densityDivider = 4; var velocityDivider = 0.6;
 var nuages2 = []; var field; var fond; var fond2;
@@ -148,55 +312,9 @@ var shootingStars     = [];
 var shootingStarTimer = 0;
 var shootingStarPiIdx = 200;   // read Pi from offset 200 (independent of cloud range)
 
-// ── Pi Digit Sonification ─────────────────────────────────────────────────
-var audioCtx    = null;
-var soundEnabled = false;
-
-// Two-octave pentatonic scale: digits 0–9 → C4 D4 E4 G4 A4 C5 D5 E5 G5 A5
-var noteFreqs = [261.63, 293.66, 329.63, 392.00, 440.00,
-                 523.25, 587.33, 659.25, 783.99, 880.00];
-
-function initAudio() {
-	if (!audioCtx) {
-		audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-	}
-}
-
-function toggleSound() {
-	initAudio();
-	soundEnabled = !soundEnabled;
-	var btn = document.getElementById('soundBtn');
-	btn.textContent   = soundEnabled ? '\u266B' : '\u266A';
-	btn.style.opacity = soundEnabled ? '1' : '0.55';
-}
-
-function playDigitNote(digit) {
-	if (!soundEnabled || !audioCtx) return;
-
-	var freq     = noteFreqs[digit];
-	var volume   = 0.04 + digit * 0.018;   // 0.04–0.202
-	var duration = 0.4  + digit * 0.07;    // 0.4–1.03 s
-
-	var osc  = audioCtx.createOscillator();
-	var gain = audioCtx.createGain();
-
-	osc.type = 'sine';
-	osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-
-	gain.gain.setValueAtTime(volume, audioCtx.currentTime);
-	gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
-
-	osc.connect(gain);
-	gain.connect(audioCtx.destination);
-
-	osc.start(audioCtx.currentTime);
-	osc.stop(audioCtx.currentTime + duration);
-}
-// ──────────────────────────────────────────────────────────────────────────────
-
 // ── Day / Night Cycle ──────────────────────────────────────────────────────
-var dayNightTimer = 0;
 var CYCLE_FRAMES  = 3600;   // one full cycle every 2 minutes at 30 fps
+var dayNightTimer = CYCLE_FRAMES / 2; // start in a deliberate night state
 var starsLayer;
 var celestialLayer; // sun and moon
 var currentTintHex = 0xFFFFFF;
@@ -309,8 +427,8 @@ function drawHistogram() {
 	histGfx.clear();
 
 	// Semi-transparent panel background
-	histGfx.lineStyle(1, 0xFFFFFF, 0.18);
-	histGfx.beginFill(0x000000, 0.48);
+	histGfx.lineStyle(1, 0xC9DAF6, 0.24);
+	histGfx.beginFill(0x071321, 0.72);
 	histGfx.drawRoundedRect(HX, HY, HW, HH, 5);
 	histGfx.endFill();
 
@@ -326,7 +444,7 @@ function drawHistogram() {
 		var expectedH = Math.min(HBARMAXH,
 			Math.round((total / 10 / maxCount) * HBARMAXH));
 		var expectedY = HBARBASE - expectedH;
-		histGfx.lineStyle(1, 0xFFFFFF, 0.38);
+		histGfx.lineStyle(1, 0xD7E6FF, 0.38);
 		histGfx.moveTo(HX + 5, expectedY);
 		histGfx.lineTo(HX + HW - 5, expectedY);
 	}
@@ -354,7 +472,7 @@ function addTickerItem(digit) {
 	var item = game.add.text(startX, TICKER_Y, '' + digit, {
 		font: 'bold 15px monospace',
 		fill: DIGIT_CSS_COLORS[digit],
-		stroke: '#111111',
+		stroke: '#06101d',
 		strokeThickness: 3
 	});
 	item.anchor.setTo(0.5, 0.5);
@@ -372,8 +490,8 @@ function showDigitPopup(x, y, digit, index) {
 	bigLabel.anchor.setTo(0.5, 0.5);
 	var subLabel = game.add.text(x, y + 55, '\u03C0[' + index + ']', {
 		font: 'bold 18px monospace',
-		fill: '#FFFFFF',
-		stroke: '#000000',
+		fill: '#E2ECFF',
+		stroke: '#040811',
 		strokeThickness: 3
 	});
 	subLabel.anchor.setTo(0.5, 0.5);
@@ -502,7 +620,7 @@ function preload() {
 
 function create() {
 	game.time.desiredFps = 30;
-	game.stage.backgroundColor = "#4488AA";
+	game.stage.backgroundColor = "#08111d";
 	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
 
 	// Stars layer – drawn once, positioned by Pi digits, revealed at night
@@ -526,7 +644,7 @@ function create() {
 	celestialLayer = game.add.graphics(0, 0);
 
 	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
-	fond2.alpha = 0.9;
+	fond2.alpha = 0.96;
 
 	order0 = game.add.group();
 	order1 = game.add.group();
@@ -547,16 +665,16 @@ function create() {
 		var kx  = KX0 + ki * (KW + KGAP) + Math.floor(KW / 2);
 		var lbl = game.add.text(kx, KY + 9, ki + '\n' + noteNames[ki], {
 			font:  'bold 10px monospace',
-			fill:  '#335577',
+			fill:  '#C9DAF6',
 			align: 'center'
 		}, uiGroup);
 		lbl.anchor.setTo(0.5, 0);
 		keyLabels.push(lbl);
 	}
 
-	audioHint = game.add.text(1285, 10, '\u266a click for sound', {
+	audioHint = game.add.text(1285, 10, '\u266a click or tap for sound', {
 		font:  '13px monospace',
-		fill:  '#FFFFFF'
+		fill:  '#E2ECFF'
 	}, uiGroup);
 	audioHint.anchor.setTo(1, 0);
 
@@ -564,11 +682,12 @@ function create() {
 	piCounterText = game.add.text(8, 10, '\u03C0[0] = 3', {
 		font:            'bold 14px monospace',
 		fill:            '#ffffff',
-		stroke:          '#001133',
+		stroke:          '#05101d',
 		strokeThickness: 3
 	}, uiGroup);
 
 	game.input.onDown.add(initAudio);
+	syncSoundButton();
 	drawKeyboard();
 	rainGraphics      = game.add.graphics(0, 0);
 	lightningGraphics = game.add.graphics(0, 0);
@@ -582,7 +701,7 @@ function create() {
 			HBARBASE + 2,
 			'' + hd,
 			{ font: 'bold 8px monospace', fill: DIGIT_CSS_COLORS[hd],
-			  stroke: '#000000', strokeThickness: 1 }
+			  stroke: '#05101d', strokeThickness: 1 }
 		);
 		hlabel.anchor.setTo(0.5, 0);
 		histLabels.push(hlabel);
@@ -591,7 +710,7 @@ function create() {
 
 	// Dark band at the very top behind the ticker
 	tickerBgGfx = game.add.graphics(0, 0);
-	tickerBgGfx.beginFill(0x000000, 0.42);
+	tickerBgGfx.beginFill(0x06101D, 0.72);
 	tickerBgGfx.drawRect(0, 0, 1300, 28);
 	tickerBgGfx.endFill();
 
@@ -602,7 +721,7 @@ function create() {
 	hudText = game.add.text(8, TICKER_Y, '\u03C0[0] = 3', {
 		font: 'bold 13px monospace',
 		fill: '#FFFFFF',
-		stroke: '#000000',
+		stroke: '#05101d',
 		strokeThickness: 2
 	});
 	hudText.anchor.setTo(0, 0.5);
@@ -692,6 +811,7 @@ function update() {
 	// Night = phase 0.25 → 0.75
 	celestialLayer.clear();
 	var isDaytime = (phase < 0.25 || phase > 0.75);
+	setNightChrome(nightAlpha, phase, isDaytime);
 
 	if (isDaytime) {
 		// dayNorm: 0 = sunrise (left), 0.5 = noon (zenith), 1 = sunset (right)
@@ -720,6 +840,10 @@ function update() {
 		// Core disc
 		celestialLayer.beginFill(0xF0F5FF, nightAlpha);
 		celestialLayer.drawCircle(moonX, moonY, 30);
+		celestialLayer.endFill();
+		// Crescent cutout for a more deliberate moon shape
+		celestialLayer.beginFill(0x23324D, nightAlpha * 0.92);
+		celestialLayer.drawCircle(moonX + 10, moonY - 4, 24);
 		celestialLayer.endFill();
 	}
 	// ─────────────────────────────────────────────────────────────────────────
@@ -804,8 +928,6 @@ function update() {
 			break;
 		}
 
-		// Play the note for this Pi digit
-		playDigitNote(pi[decimal]);
 	}
 
 	while (jj <= decimal ) {
@@ -919,34 +1041,13 @@ function update() {
 
 
 </head>
-<body style="background-color: rgb(67,169,223);">
+<body>
+
+	<div id="themeBadge" class="chrome-panel">midnight tide</div>
 
 	<!-- Sound toggle -->
-	<button id="soundBtn" onclick="toggleSound()" title="Toggle Pi sonification" style="
-		position: fixed; bottom: 14px; right: 14px;
-		background: rgba(255,255,255,0.15);
-		border: 1px solid rgba(255,255,255,0.45);
-		color: #fff; font-size: 20px; cursor: pointer;
-		padding: 6px 11px; border-radius: 7px;
-		font-family: sans-serif; z-index: 999;
-		backdrop-filter: blur(4px);
-		opacity: 0.55;
-		transition: opacity 0.2s, background 0.2s;">&#9834;</button>
+	<button id="soundBtn" onclick="toggleSound()" title="Enable Pi sonification">&#9834; sound off</button>
 
-	<div id="game" style="
-		cursor: none;
-		position: absolute;
-		TOP: 0px;
-		LEFT: 0px;
-
-
-		image-rendering: optimizeSpeed;
-		image-rendering: -moz-crisp-edges;
-		image-rendering: -o-crisp-edges;
-		image-rendering: -webkit-optimize-contrast;
-		image-rendering: optimize-contrast;
-		-ms-interpolation-mode: nearest-neighbor;
-		image-rendering : pixelated;">
-	</div>
+	<div id="PIclouds"></div>
 </body>
 </html>
