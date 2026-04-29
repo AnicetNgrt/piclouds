@@ -5,6 +5,10 @@
 	<link href="stylesheet.css" rel="stylesheet">
 	<meta charset="utf-8"/>
 	<script type="text/javascript" src="phaser.min.js"></script>
+	<script src="themes/desert.js"></script>
+	<script src="themes/arctic.js"></script>
+	<script src="themes/volcanic.js"></script>
+	<script src="themes/ocean.js"></script>
 	<script>
 
 // ─────────────────────────────────────────────────────────────────────
@@ -141,6 +145,53 @@ for (var i = 0; i<10000; i++) {
 }
 
 var timer = 0;
+
+// ── Theme System ──────────────────────────────────────────────────────────
+var currentTheme         = null;
+var currentLightningGlow = 0xFFFF99;
+var currentLightningCore = 0xFFFFFF;
+var currentFlashFill     = 0xFFFFFF;
+
+function applyTheme(theme) {
+	if (!theme) return;
+	currentTheme         = theme;
+	tintStops            = theme.tintStops;
+	DIGIT_COLORS         = theme.digitColors;
+	DIGIT_CSS_COLORS     = theme.digitCssColors;
+	DIGIT_PHASER_COLORS  = theme.digitColors.map(function(c) {
+		return rgbToPhaser(c.r, c.g, c.b);
+	});
+	currentLightningGlow = theme.lightningGlow;
+	currentLightningCore = theme.lightningCore;
+	// Parse CSS rgba prefix → Phaser packed int for the screen flash
+	var m = theme.flashColor.match(/rgba\((\d+),\s*(\d+),\s*(\d+),/);
+	currentFlashFill = m
+		? rgbToPhaser(parseInt(m[1]), parseInt(m[2]), parseInt(m[3]))
+		: 0xFFFFFF;
+	// Refresh histogram digit labels if the game has already started
+	if (histLabels && histLabels.length) {
+		for (var i = 0; i < 10; i++) {
+			histLabels[i].fill = DIGIT_CSS_COLORS[i];
+		}
+	}
+}
+
+function switchTheme(key) {
+	if (!window.THEMES || !window.THEMES[key]) return;
+	applyTheme(window.THEMES[key]);
+	// Update active-state styling on the switcher buttons
+	['desert', 'arctic', 'volcanic', 'ocean'].forEach(function(k) {
+		var btn = document.getElementById('themeBtn-' + k);
+		if (!btn) return;
+		var isActive   = (k === key);
+		var isAvailable = !!(window.THEMES && window.THEMES[k]);
+		btn.style.opacity     = isActive ? '1' : (isAvailable ? '0.6' : '0.3');
+		btn.style.borderColor = isActive
+			? 'rgba(255,255,255,0.9)'
+			: 'rgba(255,255,255,0.35)';
+	});
+}
+// ──────────────────────────────────────────────────────────────────────────
 
 // ── Shooting Stars (Pi-digit driven, night only) ───────────────────────────
 var shootingStarGfx;
@@ -450,14 +501,14 @@ function buildBolt(pidx) {
 function drawBolt() {
 	lightningGraphics.clear();
 	if (boltPoints.length < 2) { return; }
-	// Glow pass — thick soft yellow-white halo
-	lightningGraphics.lineStyle(5, 0xFFFF99, 0.35);
+	// Glow pass — thick soft halo (colour from active theme)
+	lightningGraphics.lineStyle(5, currentLightningGlow, 0.35);
 	lightningGraphics.moveTo(boltPoints[0].x, boltPoints[0].y);
 	for (var k = 1; k < boltPoints.length; k++) {
 		lightningGraphics.lineTo(boltPoints[k].x, boltPoints[k].y);
 	}
-	// Core pass — thin bright white
-	lightningGraphics.lineStyle(2, 0xFFFFFF, 1.0);
+	// Core pass — thin bright core (colour from active theme)
+	lightningGraphics.lineStyle(2, currentLightningCore, 1.0);
 	lightningGraphics.moveTo(boltPoints[0].x, boltPoints[0].y);
 	for (var k = 1; k < boltPoints.length; k++) {
 		lightningGraphics.lineTo(boltPoints[k].x, boltPoints[k].y);
@@ -901,7 +952,7 @@ function update() {
 	if (flashAlpha > 0) {
 		flashAlpha = Math.max(0, flashAlpha - 0.055);
 		flashGraphics.clear();
-		flashGraphics.beginFill(0xFFFFFF, flashAlpha);
+		flashGraphics.beginFill(currentFlashFill, flashAlpha);
 		flashGraphics.drawRect(0, 0, 1300, 700);
 		flashGraphics.endFill();
 	} else {
@@ -912,6 +963,10 @@ function update() {
 	// ──────────────────────────────────────────────────────────────────────
 }
 
+// Apply the default theme before Phaser renders its first frame
+if (window.THEMES && window.THEMES.desert) {
+	applyTheme(window.THEMES.desert);
+}
 
   </script>
 
@@ -932,6 +987,42 @@ function update() {
 		backdrop-filter: blur(4px);
 		opacity: 0.55;
 		transition: opacity 0.2s, background 0.2s;">&#9834;</button>
+
+	<!-- Theme switcher — 4 small buttons top-right, below the ticker strip -->
+	<div id="themeSwitcher" style="
+		position: fixed; top: 36px; right: 12px;
+		display: flex; gap: 5px;
+		z-index: 998;">
+		<button id="themeBtn-desert" onclick="switchTheme('desert')" title="Desert Sunset" style="
+			background: rgba(255,200,80,0.18);
+			border: 1px solid rgba(255,255,255,0.9);
+			color: #fff; font-size: 11px; font-weight: bold;
+			cursor: pointer; padding: 5px 9px; border-radius: 5px;
+			font-family: monospace; opacity: 1;
+			backdrop-filter: blur(4px);
+			transition: opacity 0.2s, border-color 0.2s;">Desert</button>
+		<button id="themeBtn-arctic" onclick="switchTheme('arctic')" title="Arctic (coming soon)" disabled style="
+			background: rgba(255,255,255,0.06);
+			border: 1px solid rgba(255,255,255,0.35);
+			color: #aaa; font-size: 11px; font-weight: bold;
+			cursor: not-allowed; padding: 5px 9px; border-radius: 5px;
+			font-family: monospace; opacity: 0.3;
+			backdrop-filter: blur(4px);">Arctic</button>
+		<button id="themeBtn-volcanic" onclick="switchTheme('volcanic')" title="Volcanic (coming soon)" disabled style="
+			background: rgba(255,255,255,0.06);
+			border: 1px solid rgba(255,255,255,0.35);
+			color: #aaa; font-size: 11px; font-weight: bold;
+			cursor: not-allowed; padding: 5px 9px; border-radius: 5px;
+			font-family: monospace; opacity: 0.3;
+			backdrop-filter: blur(4px);">Volcanic</button>
+		<button id="themeBtn-ocean" onclick="switchTheme('ocean')" title="Ocean (coming soon)" disabled style="
+			background: rgba(255,255,255,0.06);
+			border: 1px solid rgba(255,255,255,0.35);
+			color: #aaa; font-size: 11px; font-weight: bold;
+			cursor: not-allowed; padding: 5px 9px; border-radius: 5px;
+			font-family: monospace; opacity: 0.3;
+			backdrop-filter: blur(4px);">Ocean</button>
+	</div>
 
 	<div id="game" style="
 		cursor: none;
