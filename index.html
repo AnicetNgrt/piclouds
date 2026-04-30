@@ -1064,7 +1064,7 @@ function update() {
 	jj = 0;
 
 	// Place celestial layer above stars but below all cloud groups
-	celestialLayer.bringToTop();
+	game.world.bringToTop(celestialLayer);
 
 	// Scroll ticker items leftward; remove those that exit the canvas
 	for (var ti = tickerItems.length - 1; ti >= 0; ti--) {
@@ -1090,9 +1090,9 @@ function update() {
 	game.world.bringToTop(order7);
 	game.world.bringToTop(order8);
 	game.world.bringToTop(order9);
-	rainGraphics.bringToTop();   // rain in front of clouds
-	fond2.bringToTop();          // ground always on top of rain
-	gridLayer.bringToTop();      // SW grid drawn on top of ground
+	game.world.bringToTop(rainGraphics);   // rain in front of clouds
+	fond2.bringToTop();                    // ground always on top of rain
+	game.world.bringToTop(gridLayer);      // SW grid drawn on top of ground
 
 	// ── Rain rendering ────────────────────────────────────────────────
 	var rainColor = SYNTHWAVE_MODE ? 0xFF44CC : 0xAADDFF;
@@ -1117,18 +1117,18 @@ function update() {
 	}
 	// ─────────────────────────────────────────────────────────────────
 	// Ticker band sits above the water layer
-	tickerBgGfx.bringToTop();
-	tickerGroup.bringToTop();
+	game.world.bringToTop(tickerBgGfx);
+	game.world.bringToTop(tickerGroup);
 
 	// Redraw keyboard and keep it on top of everything
 	drawKeyboard();
-	uiGroup.bringToTop();
+	game.world.bringToTop(uiGroup);
 	// HUD on the very top so it's always readable
 	hudText.bringToTop();
 
 	// ── Histogram: redraw and raise above everything ───────────────────────
 	drawHistogram();
-	histGfx.bringToTop();
+	game.world.bringToTop(histGfx);
 	for (var hl = 0; hl < histLabels.length; hl++) {
 		histLabels[hl].bringToTop();
 	}
@@ -1152,8 +1152,8 @@ function update() {
 	} else {
 		flashGraphics.clear();
 	}
-	lightningGraphics.bringToTop();
-	flashGraphics.bringToTop();
+	game.world.bringToTop(lightningGraphics);
+	game.world.bringToTop(flashGraphics);
 	// ──────────────────────────────────────────────────────────────────────
 }
 
