@@ -95,25 +95,25 @@ function drawKeyboard() {
         // Glow halo behind lit key
         if (lit) {
             keyGfx.lineStyle(0);
-            keyGfx.beginFill(0xFFDD22, 0.28);
+            keyGfx.beginFill(0xFF99BB, 0.32);  // pink glow
             keyGfx.drawRoundedRect(x - 5, KY - 5, KW + 10, KH + 10, 9);
             keyGfx.endFill();
         }
 
         // Key body
-        keyGfx.lineStyle(1, 0x4466AA, 0.55);
+        keyGfx.lineStyle(1, 0xBB6688, 0.55);  // rose border
         if (lit) {
-            keyGfx.beginFill(0xFFEE77, 0.97);
+            keyGfx.beginFill(0xFFCCDD, 0.97);  // lit: soft pink
         } else if (i % 2 === 1) {
-            keyGfx.beginFill(0x7A9DBB, 0.72);   // alternate shade
+            keyGfx.beginFill(0xE8B0C4, 0.72);  // alternate: blush
         } else {
-            keyGfx.beginFill(0xCCE0F0, 0.72);
+            keyGfx.beginFill(0xF8E0E8, 0.72);  // main: very light pink
         }
         keyGfx.drawRoundedRect(x, KY, KW, KH, 5);
         keyGfx.endFill();
 
         // Update label colour to match key state
-        keyLabels[i].fill = lit ? '#221100' : '#335577';
+        keyLabels[i].fill = lit ? '#550022' : '#774455';
         if (activeKeyTimer[i] > 0) activeKeyTimer[i]--;
     }
 }
@@ -211,16 +211,16 @@ function rgbToPhaser(r, g, b) { return (Math.round(r) << 16) | (Math.round(g) <<
 // persists visibly through dusk, becomes muted moonlit pastels at midnight,
 // and blooms back to full saturation at dawn.
 var DIGIT_COLORS = [
-	{ r: 187, g: 143, b: 206 }, // 0 – lavender
-	{ r: 126, g: 200, b: 227 }, // 1 – sky blue
-	{ r:  72, g: 201, b: 176 }, // 2 – teal
-	{ r:  88, g: 214, b: 141 }, // 3 – mint
-	{ r: 247, g: 220, b: 111 }, // 4 – yellow
-	{ r: 240, g: 165, b:   0 }, // 5 – amber
-	{ r: 235, g: 116, b:  52 }, // 6 – orange
-	{ r: 231, g:  76, b:  60 }, // 7 – tomato
-	{ r: 175, g: 122, b: 197 }, // 8 – violet
-	{ r: 241, g: 148, b: 138 }, // 9 – salmon
+	{ r: 255, g: 182, b: 193 }, // 0 – light pink
+	{ r: 255, g: 133, b: 161 }, // 1 – rose pink
+	{ r: 144, g: 200, b: 144 }, // 2 – spring green
+	{ r: 104, g: 187, b:  89 }, // 3 – sage green
+	{ r: 255, g: 240, b: 160 }, // 4 – cream
+	{ r: 255, g: 208, b: 128 }, // 5 – warm gold
+	{ r: 255, g: 170, b: 136 }, // 6 – soft peach
+	{ r: 240, g:  96, b: 160 }, // 7 – cherry blossom
+	{ r: 204, g: 136, b: 221 }, // 8 – soft lavender
+	{ r: 255, g: 153, b: 153 }, // 9 – coral blush
 ];
 
 // Returns a packed tint that blends digit hue with the current night factor.
@@ -242,12 +242,13 @@ function rgbToCSS(r, g, b) {
 		('0' + b.toString(16)).slice(-2);
 }
 
-// Four colour stops around the cycle (phase 0 = noon, 0.5 = midnight)
+// Four colour stops around the cycle — Cherry Blossom palette
+// (phase 0 = noon, 0.5 = midnight)
 var tintStops = [
-	{ r: 255, g: 255, b: 255 },  // 0.00 noon  – no tint
-	{ r: 255, g: 130, b: 50  },  // 0.25 dusk  – warm orange
-	{ r: 18,  g: 22,  b: 75  },  // 0.50 night – deep indigo
-	{ r: 255, g: 165, b: 110 },  // 0.75 dawn  – peach
+	{ r: 255, g: 245, b: 248 },  // 0.00 noon  – pale pink-white
+	{ r: 255, g: 200, b: 185 },  // 0.25 dusk  – rose-peach
+	{ r: 140, g: 120, b: 180 },  // 0.50 night – soft periwinkle
+	{ r: 255, g: 220, b: 228 },  // 0.75 dawn  – blush pink
 ];
 
 function getDayNightTint(phase) {
@@ -267,16 +268,16 @@ function getDayNightTint(phase) {
 // ── Pi Digit Ticker & Click-to-Reveal ─────────────────────────────────────
 // 10 vivid colours, one per digit 0-9
 var DIGIT_CSS_COLORS = [
-	'#FF5252', // 0  red
-	'#FF9100', // 1  orange
-	'#FFD740', // 2  yellow
-	'#69F0AE', // 3  green
-	'#40C4FF', // 4  sky-blue
-	'#00E5FF', // 5  cyan
-	'#7C4DFF', // 6  purple
-	'#FF4081', // 7  pink
-	'#CCFF90', // 8  lime
-	'#FF6D00'  // 9  deep-orange
+	'#FFB6C1', // 0  light pink
+	'#FF85A1', // 1  hot rose
+	'#90C890', // 2  spring green
+	'#68BB59', // 3  sage green
+	'#FFF0A0', // 4  cream yellow
+	'#FFD080', // 5  warm gold
+	'#FFAA88', // 6  soft peach
+	'#F060A0', // 7  cherry blossom
+	'#CC88DD', // 8  soft lavender
+	'#FF9999'  // 9  coral blush
 ];
 
 var tickerItems  = [];   // Phaser.Text refs for the scrolling ticker
@@ -295,8 +296,8 @@ var histLabels = [];     // 10 static Phaser.Text labels ("0".."9") below bars
 
 // Phaser integer colours matching DIGIT_CSS_COLORS above
 var DIGIT_PHASER_COLORS = [
-	0xFF5252, 0xFF9100, 0xFFD740, 0x69F0AE, 0x40C4FF,
-	0x00E5FF, 0x7C4DFF, 0xFF4081, 0xCCFF90, 0xFF6D00
+	0xFFB6C1, 0xFF85A1, 0x90C890, 0x68BB59, 0xFFF0A0,
+	0xFFD080, 0xFFAA88, 0xF060A0, 0xCC88DD, 0xFF9999
 ];
 
 // Panel geometry (bottom-right, clear of keyboard strip which starts at y=626)
@@ -450,14 +451,14 @@ function buildBolt(pidx) {
 function drawBolt() {
 	lightningGraphics.clear();
 	if (boltPoints.length < 2) { return; }
-	// Glow pass — thick soft yellow-white halo
-	lightningGraphics.lineStyle(5, 0xFFFF99, 0.35);
+	// Glow pass — thick soft lavender halo
+	lightningGraphics.lineStyle(6, 0xDDB8FF, 0.30);
 	lightningGraphics.moveTo(boltPoints[0].x, boltPoints[0].y);
 	for (var k = 1; k < boltPoints.length; k++) {
 		lightningGraphics.lineTo(boltPoints[k].x, boltPoints[k].y);
 	}
-	// Core pass — thin bright white
-	lightningGraphics.lineStyle(2, 0xFFFFFF, 1.0);
+	// Core pass — thin pale lavender
+	lightningGraphics.lineStyle(2, 0xEECCFF, 0.80);
 	lightningGraphics.moveTo(boltPoints[0].x, boltPoints[0].y);
 	for (var k = 1; k < boltPoints.length; k++) {
 		lightningGraphics.lineTo(boltPoints[k].x, boltPoints[k].y);
@@ -468,8 +469,19 @@ function triggerLightning(pidx) {
 	buildBolt(pidx);
 	drawBolt();
 	lightningTimer = LIGHTNING_FRAMES;
-	flashAlpha = Math.max(flashAlpha, 0.55);
+	flashAlpha = Math.max(flashAlpha, 0.22);  // gentle lavender flash, not blinding
 }
+// ──────────────────────────────────────────────────────────────────────────
+
+// ── Cherry Blossom Petals ──────────────────────────────────────────────────
+// Tiny petals drift slowly downward across the sky, swaying gently.
+var petals        = [];
+var petalGraphics;
+var petalTimer    = 0;
+var PETAL_SPAWN_INTERVAL = 5;  // new petal every 5 frames
+var PETAL_MAX    = 70;         // cap active petals
+// Petal colours: pale pinks and near-whites
+var PETAL_COLORS = [0xFFCCDD, 0xFFEEF0, 0xFFB8C8, 0xFFDDEE, 0xFFF0F4];
 // ──────────────────────────────────────────────────────────────────────────
 
 function spawnRain() {
@@ -502,7 +514,7 @@ function preload() {
 
 function create() {
 	game.time.desiredFps = 30;
-	game.stage.backgroundColor = "#4488AA";
+	game.stage.backgroundColor = "#C8D8EE";  // soft blush-blue spring sky
 	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
 
 	// Stars layer – drawn once, positioned by Pi digits, revealed at night
@@ -570,6 +582,7 @@ function create() {
 
 	game.input.onDown.add(initAudio);
 	drawKeyboard();
+	petalGraphics     = game.add.graphics(0, 0);
 	rainGraphics      = game.add.graphics(0, 0);
 	lightningGraphics = game.add.graphics(0, 0);
 	flashGraphics     = game.add.graphics(0, 0);
@@ -629,10 +642,10 @@ function update() {
 	}
 	starsLayer.alpha = nightAlpha;
 
-	// Darken the stage background at night
-	var bgR = Math.floor(lerp(67,  5,  nightAlpha));
-	var bgG = Math.floor(lerp(169, 5,  nightAlpha));
-	var bgB = Math.floor(lerp(223, 30, nightAlpha));
+	// Transition stage background: spring sky day → soft lavender night
+	var bgR = Math.floor(lerp(200, 72,  nightAlpha));
+	var bgG = Math.floor(lerp(216, 60,  nightAlpha));
+	var bgB = Math.floor(lerp(238, 110, nightAlpha));
 	game.stage.backgroundColor = rgbToCSS(bgR, bgG, bgB);
 	// ────────────────────────────────────────────────────────────────────
 
@@ -700,13 +713,21 @@ function update() {
 		var sunY    = 370 - Math.sin(dayNorm * Math.PI) * 300;
 		// Fade in/out near horizons
 		var sunVis  = Math.min(dayNorm / 0.12, (1.0 - dayNorm) / 0.12, 1.0);
-		// Outer halo
-		celestialLayer.beginFill(0xFFEE88, sunVis * 0.22);
-		celestialLayer.drawCircle(sunX, sunY, 90);
+		// Outermost soft aura (very large, very faint)
+		celestialLayer.beginFill(0xFFEECC, sunVis * 0.08);
+		celestialLayer.drawCircle(sunX, sunY, 140);
 		celestialLayer.endFill();
-		// Core disc
-		celestialLayer.beginFill(0xFFDD44, sunVis);
-		celestialLayer.drawCircle(sunX, sunY, 46);
+		// Outer halo (soft warm gold glow)
+		celestialLayer.beginFill(0xFFE8B0, sunVis * 0.18);
+		celestialLayer.drawCircle(sunX, sunY, 88);
+		celestialLayer.endFill();
+		// Mid glow
+		celestialLayer.beginFill(0xFFD890, sunVis * 0.26);
+		celestialLayer.drawCircle(sunX, sunY, 64);
+		celestialLayer.endFill();
+		// Core disc — warm pale gold, no harsh edge
+		celestialLayer.beginFill(0xFFD080, sunVis * 0.92);
+		celestialLayer.drawCircle(sunX, sunY, 40);
 		celestialLayer.endFill();
 	} else {
 		// moonNorm: 0 = moonrise (left), 0.5 = midnight (zenith), 1 = moonset (right)
@@ -849,8 +870,59 @@ function update() {
 	game.world.bringToTop(order7);
 	game.world.bringToTop(order8);
 	game.world.bringToTop(order9);
-	rainGraphics.bringToTop();   // rain in front of clouds
+	petalGraphics.bringToTop();  // petals above clouds
+	rainGraphics.bringToTop();   // rain in front of petals
 	fond2.bringToTop();          // ground always on top of rain
+
+	// ── Cherry Blossom Petal rendering ───────────────────────────────────
+	petalTimer++;
+	if (petalTimer >= PETAL_SPAWN_INTERVAL && petals.length < PETAL_MAX) {
+		petalTimer = 0;
+		var numNew = (Math.random() < 0.35) ? 2 : 1;
+		for (var pp = 0; pp < numNew; pp++) {
+			petals.push({
+				x:        Math.random() * 1340 - 20,
+				y:        -10,
+				vx:       (Math.random() - 0.5) * 0.6,
+				vy:       0.45 + Math.random() * 0.75,
+				swingAmp: 0.35 + Math.random() * 0.5,
+				phase:    Math.random() * Math.PI * 2,
+				angle:    Math.random() * Math.PI,
+				size:     3.5 + Math.random() * 3.5,
+				alpha:    0.55 + Math.random() * 0.35,
+				colorIdx: Math.floor(Math.random() * PETAL_COLORS.length)
+			});
+		}
+	}
+
+	petalGraphics.clear();
+	for (var petalIdx = petals.length - 1; petalIdx >= 0; petalIdx--) {
+		var pt = petals[petalIdx];
+		pt.phase += 0.028;
+		pt.vx = Math.max(-1.2, Math.min(1.2, pt.vx));
+		pt.x  += pt.vx + Math.sin(pt.phase) * pt.swingAmp;
+		pt.y  += pt.vy;
+		pt.angle += 0.018;
+
+		if (pt.y > 400 || pt.x < -25 || pt.x > 1325) {
+			petals.splice(petalIdx, 1);
+			continue;
+		}
+
+		// Fade in near top, fade out near horizon
+		var fadeTop = Math.min(1, pt.y / 30);
+		var fadeBot = Math.min(1, (400 - pt.y) / 40);
+		var drawAlpha = pt.alpha * fadeTop * fadeBot;
+
+		// Draw a petal as two overlapping circles, offset along angle
+		var ox = Math.cos(pt.angle) * pt.size * 0.55;
+		var oy = Math.sin(pt.angle) * pt.size * 0.55;
+		petalGraphics.beginFill(PETAL_COLORS[pt.colorIdx], drawAlpha * 0.88);
+		petalGraphics.drawCircle(pt.x - ox, pt.y - oy, pt.size);
+		petalGraphics.drawCircle(pt.x + ox, pt.y + oy, pt.size * 0.65);
+		petalGraphics.endFill();
+	}
+	// ─────────────────────────────────────────────────────────────────────
 
 	// ── Rain rendering ────────────────────────────────────────────────
 	rainGraphics.clear();
@@ -868,7 +940,7 @@ function update() {
 		if (drop.life > fadeStart) {
 			dropAlpha *= 1 - (drop.life - fadeStart) / (drop.maxLife - fadeStart);
 		}
-		rainGraphics.lineStyle(1.5, 0xAADDFF, dropAlpha);
+		rainGraphics.lineStyle(1.2, 0xFFCCDD, dropAlpha * 0.75);  // soft pink rain
 		rainGraphics.moveTo(drop.x, drop.y);
 		rainGraphics.lineTo(drop.x - drop.vx * drop.len * 0.4, drop.y - drop.len);
 	}
@@ -899,9 +971,9 @@ function update() {
 		}
 	}
 	if (flashAlpha > 0) {
-		flashAlpha = Math.max(0, flashAlpha - 0.055);
+		flashAlpha = Math.max(0, flashAlpha - 0.038);  // slower, gentler fade
 		flashGraphics.clear();
-		flashGraphics.beginFill(0xFFFFFF, flashAlpha);
+		flashGraphics.beginFill(0xEECCFF, flashAlpha);  // soft lavender flash
 		flashGraphics.drawRect(0, 0, 1300, 700);
 		flashGraphics.endFill();
 	} else {
@@ -919,7 +991,7 @@ function update() {
 
 
 </head>
-<body style="background-color: rgb(67,169,223);">
+<body style="background-color: rgb(200,216,238);">
 
 	<!-- Sound toggle -->
 	<button id="soundBtn" onclick="toggleSound()" title="Toggle Pi sonification" style="
