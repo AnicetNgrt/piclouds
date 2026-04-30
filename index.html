@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Nuages de Pi</title>
+	<title>Nuages de Pi — Deep Ocean</title>
 	<link href="stylesheet.css" rel="stylesheet">
 	<meta charset="utf-8"/>
 	<script type="text/javascript" src="phaser.min.js"></script>
@@ -84,7 +84,7 @@ function drawKeyboard() {
     keyGfx.clear();
 
     // Subtle separator line above the strip
-    keyGfx.lineStyle(1, 0xFFFFFF, 0.18);
+    keyGfx.lineStyle(1, 0x00FFCC, 0.18);
     keyGfx.moveTo(KX0 - 8, KY - 8);
     keyGfx.lineTo(KX0 + 10 * (KW + KGAP) - KGAP + 8, KY - 8);
 
@@ -92,28 +92,28 @@ function drawKeyboard() {
         var x   = KX0 + i * (KW + KGAP);
         var lit = activeKeyTimer[i] > 0;
 
-        // Glow halo behind lit key
+        // Glow halo behind lit key – bioluminescent cyan pulse
         if (lit) {
             keyGfx.lineStyle(0);
-            keyGfx.beginFill(0xFFDD22, 0.28);
+            keyGfx.beginFill(0x00FFCC, 0.28);
             keyGfx.drawRoundedRect(x - 5, KY - 5, KW + 10, KH + 10, 9);
             keyGfx.endFill();
         }
 
         // Key body
-        keyGfx.lineStyle(1, 0x4466AA, 0.55);
+        keyGfx.lineStyle(1, 0x003355, 0.55);
         if (lit) {
-            keyGfx.beginFill(0xFFEE77, 0.97);
+            keyGfx.beginFill(0x00DDCC, 0.97);
         } else if (i % 2 === 1) {
-            keyGfx.beginFill(0x7A9DBB, 0.72);   // alternate shade
+            keyGfx.beginFill(0x003044, 0.72);   // alternate dark shade
         } else {
-            keyGfx.beginFill(0xCCE0F0, 0.72);
+            keyGfx.beginFill(0x004055, 0.72);
         }
         keyGfx.drawRoundedRect(x, KY, KW, KH, 5);
         keyGfx.endFill();
 
         // Update label colour to match key state
-        keyLabels[i].fill = lit ? '#221100' : '#335577';
+        keyLabels[i].fill = lit ? '#001122' : '#00AACC';
         if (activeKeyTimer[i] > 0) activeKeyTimer[i]--;
     }
 }
@@ -211,16 +211,16 @@ function rgbToPhaser(r, g, b) { return (Math.round(r) << 16) | (Math.round(g) <<
 // persists visibly through dusk, becomes muted moonlit pastels at midnight,
 // and blooms back to full saturation at dawn.
 var DIGIT_COLORS = [
-	{ r: 187, g: 143, b: 206 }, // 0 – lavender
-	{ r: 126, g: 200, b: 227 }, // 1 – sky blue
-	{ r:  72, g: 201, b: 176 }, // 2 – teal
-	{ r:  88, g: 214, b: 141 }, // 3 – mint
-	{ r: 247, g: 220, b: 111 }, // 4 – yellow
-	{ r: 240, g: 165, b:   0 }, // 5 – amber
-	{ r: 235, g: 116, b:  52 }, // 6 – orange
-	{ r: 231, g:  76, b:  60 }, // 7 – tomato
-	{ r: 175, g: 122, b: 197 }, // 8 – violet
-	{ r: 241, g: 148, b: 138 }, // 9 – salmon
+	{ r:   0, g: 255, b: 212 }, // 0 – electric cyan-green (bioluminescent)
+	{ r:   0, g: 200, b: 255 }, // 1 – aquamarine glow
+	{ r:  80, g: 255, b: 200 }, // 2 – sea-green phosphor
+	{ r: 140, g: 240, b: 255 }, // 3 – pale aqua shimmer
+	{ r:   0, g: 180, b: 220 }, // 4 – deep blue-cyan
+	{ r: 180, g: 100, b: 255 }, // 5 – violet bioluminescence
+	{ r: 100, g: 220, b: 255 }, // 6 – ice-blue glow
+	{ r:  60, g: 255, b: 180 }, // 7 – phosphorescent mint
+	{ r: 200, g: 150, b: 255 }, // 8 – pale purple jellyfish
+	{ r:   0, g: 230, b: 200 }, // 9 – teal deep-sea glow
 ];
 
 // Returns a packed tint that blends digit hue with the current night factor.
@@ -242,12 +242,12 @@ function rgbToCSS(r, g, b) {
 		('0' + b.toString(16)).slice(-2);
 }
 
-// Four colour stops around the cycle (phase 0 = noon, 0.5 = midnight)
+// Four colour stops around the cycle — deep ocean: always dark abyssal blue
 var tintStops = [
-	{ r: 255, g: 255, b: 255 },  // 0.00 noon  – no tint
-	{ r: 255, g: 130, b: 50  },  // 0.25 dusk  – warm orange
-	{ r: 18,  g: 22,  b: 75  },  // 0.50 night – deep indigo
-	{ r: 255, g: 165, b: 110 },  // 0.75 dawn  – peach
+	{ r: 12,  g: 28,  b: 65  },  // 0.00 – deep ocean blue
+	{ r:  8,  g: 18,  b: 48  },  // 0.25 – darker abyss
+	{ r:  4,  g:  8,  b: 32  },  // 0.50 – abyssal dark
+	{ r:  8,  g: 18,  b: 48  },  // 0.75 – darker abyss
 ];
 
 function getDayNightTint(phase) {
@@ -265,18 +265,18 @@ function getDayNightTint(phase) {
 // ──────────────────────────────────────────────────────────────────────────
 
 // ── Pi Digit Ticker & Click-to-Reveal ─────────────────────────────────────
-// 10 vivid colours, one per digit 0-9
+// Deep ocean bioluminescent palette, one per digit 0-9
 var DIGIT_CSS_COLORS = [
-	'#FF5252', // 0  red
-	'#FF9100', // 1  orange
-	'#FFD740', // 2  yellow
-	'#69F0AE', // 3  green
-	'#40C4FF', // 4  sky-blue
-	'#00E5FF', // 5  cyan
-	'#7C4DFF', // 6  purple
-	'#FF4081', // 7  pink
-	'#CCFF90', // 8  lime
-	'#FF6D00'  // 9  deep-orange
+	'#00FFD4', // 0  electric cyan-green
+	'#00C8FF', // 1  aquamarine
+	'#50FFC8', // 2  sea-green phosphor
+	'#8CF0FF', // 3  pale aqua
+	'#00B4DC', // 4  deep blue-cyan
+	'#B464FF', // 5  violet glow
+	'#64DCFF', // 6  ice blue
+	'#3CFFB4', // 7  phosphorescent mint
+	'#C896FF', // 8  pale purple
+	'#00E6C8'  // 9  teal glow
 ];
 
 var tickerItems  = [];   // Phaser.Text refs for the scrolling ticker
@@ -293,10 +293,10 @@ var digitCounts = [0,0,0,0,0,0,0,0,0,0];
 var histGfx;             // Graphics layer, cleared & redrawn each frame
 var histLabels = [];     // 10 static Phaser.Text labels ("0".."9") below bars
 
-// Phaser integer colours matching DIGIT_CSS_COLORS above
+// Phaser integer colours matching DIGIT_CSS_COLORS above (bioluminescent)
 var DIGIT_PHASER_COLORS = [
-	0xFF5252, 0xFF9100, 0xFFD740, 0x69F0AE, 0x40C4FF,
-	0x00E5FF, 0x7C4DFF, 0xFF4081, 0xCCFF90, 0xFF6D00
+	0x00FFD4, 0x00C8FF, 0x50FFC8, 0x8CF0FF, 0x00B4DC,
+	0xB464FF, 0x64DCFF, 0x3CFFB4, 0xC896FF, 0x00E6C8
 ];
 
 // Panel geometry (bottom-right, clear of keyboard strip which starts at y=626)
@@ -309,7 +309,7 @@ function drawHistogram() {
 	histGfx.clear();
 
 	// Semi-transparent panel background
-	histGfx.lineStyle(1, 0xFFFFFF, 0.18);
+	histGfx.lineStyle(1, 0x00FFCC, 0.22);
 	histGfx.beginFill(0x000000, 0.48);
 	histGfx.drawRoundedRect(HX, HY, HW, HH, 5);
 	histGfx.endFill();
@@ -326,7 +326,7 @@ function drawHistogram() {
 		var expectedH = Math.min(HBARMAXH,
 			Math.round((total / 10 / maxCount) * HBARMAXH));
 		var expectedY = HBARBASE - expectedH;
-		histGfx.lineStyle(1, 0xFFFFFF, 0.38);
+		histGfx.lineStyle(1, 0x00FFCC, 0.38);
 		histGfx.moveTo(HX + 5, expectedY);
 		histGfx.lineTo(HX + HW - 5, expectedY);
 	}
@@ -450,14 +450,14 @@ function buildBolt(pidx) {
 function drawBolt() {
 	lightningGraphics.clear();
 	if (boltPoints.length < 2) { return; }
-	// Glow pass — thick soft yellow-white halo
-	lightningGraphics.lineStyle(5, 0xFFFF99, 0.35);
+	// Electric eel glow — thick soft cyan halo
+	lightningGraphics.lineStyle(5, 0x00EEFF, 0.35);
 	lightningGraphics.moveTo(boltPoints[0].x, boltPoints[0].y);
 	for (var k = 1; k < boltPoints.length; k++) {
 		lightningGraphics.lineTo(boltPoints[k].x, boltPoints[k].y);
 	}
-	// Core pass — thin bright white
-	lightningGraphics.lineStyle(2, 0xFFFFFF, 1.0);
+	// Core pass — thin bright cyan-white
+	lightningGraphics.lineStyle(2, 0xCCFFFF, 1.0);
 	lightningGraphics.moveTo(boltPoints[0].x, boltPoints[0].y);
 	for (var k = 1; k < boltPoints.length; k++) {
 		lightningGraphics.lineTo(boltPoints[k].x, boltPoints[k].y);
@@ -472,21 +472,23 @@ function triggerLightning(pidx) {
 }
 // ──────────────────────────────────────────────────────────────────────────
 
-function spawnRain() {
+function spawnRain() {  // bioluminescent plankton bloom triggered by digit 0
 	var NUM_DROPS = 28;
 	var centreX   = 60 + Math.random() * 1180;
-	var centreY   = 10 + Math.random() * 120;
+	var centreY   = 280 + Math.random() * 100;   // start mid-lower, drift upward
+	var BLOOM_COLORS = [0x00FFD4, 0x00CCFF, 0x80FFE0, 0xCC88FF, 0x00FFAA];
 	for (var d = 0; d < NUM_DROPS; d++) {
-		var vy = 5 + Math.random() * 5;
+		var vy = -(0.4 + Math.random() * 1.2);   // upward drift
 		rainDrops.push({
-			x:       centreX + (Math.random() - 0.5) * 420,
-			y:       centreY + Math.random() * 80,
-			vx:      -0.6 + Math.random() * 0.4,
+			x:       centreX + (Math.random() - 0.5) * 380,
+			y:       centreY + Math.random() * 60,
+			vx:      -0.4 + Math.random() * 0.8,
 			vy:      vy,
-			alpha:   0.45 + Math.random() * 0.45,
-			len:     6 + Math.random() * 10,
+			alpha:   0.55 + Math.random() * 0.45,
+			len:     2 + Math.random() * 3,       // small glowing dot size
 			life:    0,
-			maxLife: Math.floor((393 - centreY) / vy) + 10
+			maxLife: Math.floor(350 / Math.abs(vy)) + 20,
+			color:   BLOOM_COLORS[Math.floor(Math.random() * BLOOM_COLORS.length)]
 		});
 	}
 }
@@ -502,22 +504,27 @@ function preload() {
 
 function create() {
 	game.time.desiredFps = 30;
-	game.stage.backgroundColor = "#4488AA";
+	game.stage.backgroundColor = "#040B1E";
 	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
 
-	// Stars layer – drawn once, positioned by Pi digits, revealed at night
+	// Bioluminescent plankton layer – drawn once, always glowing in deep ocean
 	starsLayer = game.add.graphics(0, 0);
+	var PLANKTON_COLORS = [0x00FFD4, 0x00CCFF, 0x80FFE0, 0xCC88FF, 0x00FFAA, 0x40E8FF];
 	for (var s = 0; s < 150; s++) {
 		var px       = s * 3;
 		var sx       = (pi[px] * 130 + pi[px+1] * 13 + pi[px+2] * 7) % 1300;
 		var sy       = (pi[px] * 33  + pi[px+1] * 4  + 5)             % 330;
 		var starSize = (pi[px] % 2) + 1;           // radius 1 or 2 px
 		var starAlpha = 0.35 + (pi[px+2] / 14.0); // 0.35 – 0.99
-		starsLayer.beginFill(0xFFFFFF, starAlpha);
-		starsLayer.drawCircle(sx, sy, starSize * 2);
+		var pColor = PLANKTON_COLORS[pi[px+1] % PLANKTON_COLORS.length];
+		starsLayer.beginFill(pColor, starAlpha * 0.4);   // soft halo
+		starsLayer.drawCircle(sx, sy, (starSize + 1) * 2);
+		starsLayer.endFill();
+		starsLayer.beginFill(pColor, starAlpha);          // bright core
+		starsLayer.drawCircle(sx, sy, starSize);
 		starsLayer.endFill();
 	}
-	starsLayer.alpha = 0; // invisible during the day
+	starsLayer.alpha = 0.85; // bioluminescent plankton always visible
 
 	// Shooting star trails sit above the star-dot layer
 	shootingStarGfx = game.add.graphics(0, 0);
@@ -622,17 +629,15 @@ function update() {
 	fond.tint  = currentTintHex;
 	fond2.tint = currentTintHex;
 
-	// Stars fade in during the night half of the cycle (phase 0.25 – 0.75)
-	var nightAlpha = 0;
-	if (phase > 0.25 && phase < 0.75) {
-		nightAlpha = Math.sin((phase - 0.25) / 0.5 * Math.PI);
-	}
-	starsLayer.alpha = nightAlpha;
+	// Deep ocean: bioluminescence always active, gently pulsing with depth
+	var nightAlpha = 0.35 + 0.25 * Math.sin(phase * Math.PI * 2);
+	// Plankton layer pulses independently for a living-ocean feel
+	starsLayer.alpha = 0.6 + 0.35 * Math.sin(phase * Math.PI * 4 + 0.8);
 
-	// Darken the stage background at night
-	var bgR = Math.floor(lerp(67,  5,  nightAlpha));
-	var bgG = Math.floor(lerp(169, 5,  nightAlpha));
-	var bgB = Math.floor(lerp(223, 30, nightAlpha));
+	// Stage background: always abyssal deep blue, slight variation
+	var bgR = Math.floor(lerp(6,  3, nightAlpha));
+	var bgG = Math.floor(lerp(14, 7, nightAlpha));
+	var bgB = Math.floor(lerp(45, 25, nightAlpha));
 	game.stage.backgroundColor = rgbToCSS(bgR, bgG, bgB);
 	// ────────────────────────────────────────────────────────────────────
 
@@ -663,18 +668,18 @@ function update() {
 		if (visible > 0.02 && star.trail.length > 1) {
 			for (var ti = 1; ti < star.trail.length; ti++) {
 				var progress = ti / star.trail.length;
-				// Soft blue-white glow
-				shootingStarGfx.lineStyle(4, 0xCCE0FF, progress * visible * 0.35);
+				// Bioluminescent creature streak – soft cyan glow
+				shootingStarGfx.lineStyle(4, 0x00EEDD, progress * visible * 0.35);
 				shootingStarGfx.moveTo(star.trail[ti - 1].x, star.trail[ti - 1].y);
 				shootingStarGfx.lineTo(star.trail[ti].x,     star.trail[ti].y);
-				// Bright white core
-				shootingStarGfx.lineStyle(1, 0xFFFFFF, progress * visible * 0.95);
+				// Bright cyan-white core
+				shootingStarGfx.lineStyle(1, 0x80FFF0, progress * visible * 0.95);
 				shootingStarGfx.moveTo(star.trail[ti - 1].x, star.trail[ti - 1].y);
 				shootingStarGfx.lineTo(star.trail[ti].x,     star.trail[ti].y);
 			}
 			// Bright head dot (no stroke)
 			shootingStarGfx.lineStyle(0);
-			shootingStarGfx.beginFill(0xFFFFFF, visible);
+			shootingStarGfx.beginFill(0x00FFEE, visible);
 			shootingStarGfx.drawCircle(star.x, star.y, 3);
 			shootingStarGfx.endFill();
 		}
@@ -687,39 +692,28 @@ function update() {
 	}
 	// ─────────────────────────────────────────────────────────────────────────
 
-	// ── Sun & Moon ───────────────────────────────────────────────────────────
-	// Day  = phase 0.75 → 1.0 → 0.0 → 0.25 (wraps through 0)
-	// Night = phase 0.25 → 0.75
+	// ── Surface Light Shimmer ────────────────────────────────────────────────
+	// Deep ocean: no sun or moon. A diffuse shimmer at the top simulates
+	// sunlight filtering down through deep water above.
 	celestialLayer.clear();
-	var isDaytime = (phase < 0.25 || phase > 0.75);
 
-	if (isDaytime) {
-		// dayNorm: 0 = sunrise (left), 0.5 = noon (zenith), 1 = sunset (right)
-		var dayNorm = phase > 0.75 ? (phase - 0.75) / 0.5 : (phase + 0.25) / 0.5;
-		var sunX    = dayNorm * 1200 + 50;
-		var sunY    = 370 - Math.sin(dayNorm * Math.PI) * 300;
-		// Fade in/out near horizons
-		var sunVis  = Math.min(dayNorm / 0.12, (1.0 - dayNorm) / 0.12, 1.0);
-		// Outer halo
-		celestialLayer.beginFill(0xFFEE88, sunVis * 0.22);
-		celestialLayer.drawCircle(sunX, sunY, 90);
-		celestialLayer.endFill();
-		// Core disc
-		celestialLayer.beginFill(0xFFDD44, sunVis);
-		celestialLayer.drawCircle(sunX, sunY, 46);
-		celestialLayer.endFill();
-	} else {
-		// moonNorm: 0 = moonrise (left), 0.5 = midnight (zenith), 1 = moonset (right)
-		var moonNorm = (phase - 0.25) / 0.5;
-		var moonX    = moonNorm * 1200 + 50;
-		var moonY    = 370 - Math.sin(moonNorm * Math.PI) * 290;
-		// Soft outer glow
-		celestialLayer.beginFill(0xCCDDFF, nightAlpha * 0.18);
-		celestialLayer.drawCircle(moonX, moonY, 62);
-		celestialLayer.endFill();
-		// Core disc
-		celestialLayer.beginFill(0xF0F5FF, nightAlpha);
-		celestialLayer.drawCircle(moonX, moonY, 30);
+	// Broad ambient glow across the top — like the ocean surface above
+	var shimmerBase = 0.06 + 0.04 * Math.sin(phase * Math.PI * 6);
+	celestialLayer.beginFill(0x60D8F8, shimmerBase);
+	celestialLayer.drawRect(0, 0, 1300, 90);
+	celestialLayer.endFill();
+	// Stronger luminous band right at the top edge
+	celestialLayer.beginFill(0x90EEFF, shimmerBase * 0.9);
+	celestialLayer.drawRect(0, 0, 1300, 28);
+	celestialLayer.endFill();
+	// Animated caustic light shafts drifting across
+	var numShafts = 6;
+	for (var ci = 0; ci < numShafts; ci++) {
+		var shaftX = ((ci * 217 + phase * 500) % 1350) - 50;
+		var shaftW = 40 + (pi[(ci * 7 + 80) % pi.length] % 5) * 18;
+		var shaftA = shimmerBase * (0.5 + 0.5 * Math.sin(phase * Math.PI * 10 + ci * 2.1));
+		celestialLayer.beginFill(0xBBF4FF, shaftA);
+		celestialLayer.drawRect(shaftX, 0, shaftW, 55);
 		celestialLayer.endFill();
 	}
 	// ─────────────────────────────────────────────────────────────────────────
@@ -814,8 +808,8 @@ function update() {
 		}
 		nuages[jj].x  += (pi[jj])/Math.abs(velocityDivider);
 		nuages2[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		// Chromatic tint: each digit's hue, dimmed by the night factor
-		var ct = digitTint(pi[jj], nightAlpha);
+		// Bioluminescent tint: each digit's hue at near-full vivid glow
+		var ct = digitTint(pi[jj], Math.max(0, nightAlpha - 0.4));
 		nuages[jj].tint  = ct;
 		nuages2[jj].tint = ct;
 		jj++;
@@ -852,14 +846,31 @@ function update() {
 	rainGraphics.bringToTop();   // rain in front of clouds
 	fond2.bringToTop();          // ground always on top of rain
 
-	// ── Rain rendering ────────────────────────────────────────────────
+	// ── Ambient bioluminescent plankton (continuous gentle drift upward) ──
+	if (Math.random() < 0.35) {
+		var AMBIENT_COLORS = [0x00FFD4, 0x00CCFF, 0x80FFE0, 0xCC88FF, 0x00FFAA];
+		var avy = -(0.3 + Math.random() * 0.8);
+		rainDrops.push({
+			x:       Math.random() * 1300,
+			y:       380 + Math.random() * 15,
+			vx:      -0.3 + Math.random() * 0.6,
+			vy:      avy,
+			alpha:   0.35 + Math.random() * 0.45,
+			len:     1.2 + Math.random() * 2,
+			life:    0,
+			maxLife: Math.floor(420 / Math.abs(avy)) + 30,
+			color:   AMBIENT_COLORS[Math.floor(Math.random() * AMBIENT_COLORS.length)]
+		});
+	}
+
+	// ── Bioluminescent plankton rendering (upward drift, glowing dots) ────
 	rainGraphics.clear();
 	for (var ri = rainDrops.length - 1; ri >= 0; ri--) {
 		var drop = rainDrops[ri];
 		drop.x  += drop.vx;
 		drop.y  += drop.vy;
 		drop.life++;
-		if (drop.life >= drop.maxLife || drop.y > 393) {
+		if (drop.life >= drop.maxLife || drop.y < -10) {
 			rainDrops.splice(ri, 1);
 			continue;
 		}
@@ -868,11 +879,18 @@ function update() {
 		if (drop.life > fadeStart) {
 			dropAlpha *= 1 - (drop.life - fadeStart) / (drop.maxLife - fadeStart);
 		}
-		rainGraphics.lineStyle(1.5, 0xAADDFF, dropAlpha);
-		rainGraphics.moveTo(drop.x, drop.y);
-		rainGraphics.lineTo(drop.x - drop.vx * drop.len * 0.4, drop.y - drop.len);
+		var pCol = drop.color || 0x00FFD4;
+		// Soft outer halo
+		rainGraphics.lineStyle(0);
+		rainGraphics.beginFill(pCol, dropAlpha * 0.25);
+		rainGraphics.drawCircle(drop.x, drop.y, drop.len + 2.5);
+		rainGraphics.endFill();
+		// Bright core dot
+		rainGraphics.beginFill(pCol, dropAlpha);
+		rainGraphics.drawCircle(drop.x, drop.y, drop.len * 0.6);
+		rainGraphics.endFill();
 	}
-	// ─────────────────────────────────────────────────────────────────
+	// ─────────────────────────────────────────────────────────────────────
 	// Ticker band sits above the water layer
 	tickerBgGfx.bringToTop();
 	tickerGroup.bringToTop();
@@ -901,7 +919,7 @@ function update() {
 	if (flashAlpha > 0) {
 		flashAlpha = Math.max(0, flashAlpha - 0.055);
 		flashGraphics.clear();
-		flashGraphics.beginFill(0xFFFFFF, flashAlpha);
+		flashGraphics.beginFill(0x80FFFF, flashAlpha * 0.6);  // pale cyan electric eel discharge
 		flashGraphics.drawRect(0, 0, 1300, 700);
 		flashGraphics.endFill();
 	} else {
@@ -919,7 +937,7 @@ function update() {
 
 
 </head>
-<body style="background-color: rgb(67,169,223);">
+<body style="background-color: rgb(4,11,30);">
 
 	<!-- Sound toggle -->
 	<button id="soundBtn" onclick="toggleSound()" title="Toggle Pi sonification" style="
