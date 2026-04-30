@@ -83,38 +83,66 @@ function playDigitNote(digit) {
 function drawKeyboard() {
     keyGfx.clear();
 
-    // Subtle separator line above the strip
-    keyGfx.lineStyle(1, 0xFFFFFF, 0.18);
-    keyGfx.moveTo(KX0 - 8, KY - 8);
-    keyGfx.lineTo(KX0 + 10 * (KW + KGAP) - KGAP + 8, KY - 8);
+    if (SYNTHWAVE_MODE) {
+        keyGfx.lineStyle(1, 0xFF14B4, 0.5);
+        keyGfx.moveTo(KX0 - 8, KY - 8);
+        keyGfx.lineTo(KX0 + 10 * (KW + KGAP) - KGAP + 8, KY - 8);
 
-    for (var i = 0; i < 10; i++) {
-        var x   = KX0 + i * (KW + KGAP);
-        var lit = activeKeyTimer[i] > 0;
+        for (var i = 0; i < 10; i++) {
+            var x   = KX0 + i * (KW + KGAP);
+            var lit = activeKeyTimer[i] > 0;
 
-        // Glow halo behind lit key
-        if (lit) {
-            keyGfx.lineStyle(0);
-            keyGfx.beginFill(0xFFDD22, 0.28);
-            keyGfx.drawRoundedRect(x - 5, KY - 5, KW + 10, KH + 10, 9);
+            if (lit) {
+                keyGfx.lineStyle(0);
+                keyGfx.beginFill(SW_DIGIT_PHASER_COLORS[i], 0.35);
+                keyGfx.drawRoundedRect(x - 6, KY - 6, KW + 12, KH + 12, 10);
+                keyGfx.endFill();
+            }
+
+            keyGfx.lineStyle(1, lit ? SW_DIGIT_PHASER_COLORS[i] : 0xFF14B4, 0.7);
+            if (lit) {
+                keyGfx.beginFill(SW_DIGIT_PHASER_COLORS[i], 0.9);
+            } else if (i % 2 === 1) {
+                keyGfx.beginFill(0x2A0A3A, 0.85);
+            } else {
+                keyGfx.beginFill(0x1A0528, 0.85);
+            }
+            keyGfx.drawRoundedRect(x, KY, KW, KH, 5);
             keyGfx.endFill();
-        }
 
-        // Key body
-        keyGfx.lineStyle(1, 0x4466AA, 0.55);
-        if (lit) {
-            keyGfx.beginFill(0xFFEE77, 0.97);
-        } else if (i % 2 === 1) {
-            keyGfx.beginFill(0x7A9DBB, 0.72);   // alternate shade
-        } else {
-            keyGfx.beginFill(0xCCE0F0, 0.72);
+            keyLabels[i].fill = lit ? '#110022' : '#CC44EE';
+            if (activeKeyTimer[i] > 0) activeKeyTimer[i]--;
         }
-        keyGfx.drawRoundedRect(x, KY, KW, KH, 5);
-        keyGfx.endFill();
+    } else {
+        keyGfx.lineStyle(1, 0xFFFFFF, 0.18);
+        keyGfx.moveTo(KX0 - 8, KY - 8);
+        keyGfx.lineTo(KX0 + 10 * (KW + KGAP) - KGAP + 8, KY - 8);
 
-        // Update label colour to match key state
-        keyLabels[i].fill = lit ? '#221100' : '#335577';
-        if (activeKeyTimer[i] > 0) activeKeyTimer[i]--;
+        for (var i = 0; i < 10; i++) {
+            var x   = KX0 + i * (KW + KGAP);
+            var lit = activeKeyTimer[i] > 0;
+
+            if (lit) {
+                keyGfx.lineStyle(0);
+                keyGfx.beginFill(0xFFDD22, 0.28);
+                keyGfx.drawRoundedRect(x - 5, KY - 5, KW + 10, KH + 10, 9);
+                keyGfx.endFill();
+            }
+
+            keyGfx.lineStyle(1, 0x4466AA, 0.55);
+            if (lit) {
+                keyGfx.beginFill(0xFFEE77, 0.97);
+            } else if (i % 2 === 1) {
+                keyGfx.beginFill(0x7A9DBB, 0.72);
+            } else {
+                keyGfx.beginFill(0xCCE0F0, 0.72);
+            }
+            keyGfx.drawRoundedRect(x, KY, KW, KH, 5);
+            keyGfx.endFill();
+
+            keyLabels[i].fill = lit ? '#221100' : '#335577';
+            if (activeKeyTimer[i] > 0) activeKeyTimer[i]--;
+        }
     }
 }
 
@@ -201,6 +229,43 @@ var starsLayer;
 var celestialLayer; // sun and moon
 var currentTintHex = 0xFFFFFF;
 
+// ── Synthwave Theme ────────────────────────────────────────────────────────
+var SYNTHWAVE_MODE = false;
+
+var SW_DIGIT_COLORS = [
+	{ r: 255, g: 20,  b: 180 }, // 0 – hot pink
+	{ r: 0,   g: 230, b: 255 }, // 1 – electric cyan
+	{ r: 180, g: 0,   b: 255 }, // 2 – violet
+	{ r: 255, g: 80,  b: 220 }, // 3 – magenta
+	{ r: 20,  g: 200, b: 255 }, // 4 – azure cyan
+	{ r: 255, g: 50,  b: 100 }, // 5 – rose
+	{ r: 80,  g: 255, b: 220 }, // 6 – neon mint
+	{ r: 210, g: 0,   b: 255 }, // 7 – neon purple
+	{ r: 255, g: 160, b: 20  }, // 8 – neon amber
+	{ r: 100, g: 255, b: 130 }, // 9 – neon green
+];
+
+var SW_DIGIT_CSS_COLORS = [
+	'#FF14B4', // 0 hot pink
+	'#00E6FF', // 1 electric cyan
+	'#B400FF', // 2 violet
+	'#FF50DC', // 3 magenta
+	'#14C8FF', // 4 azure
+	'#FF3264', // 5 rose
+	'#50FFDC', // 6 mint
+	'#D200FF', // 7 purple
+	'#FFA014', // 8 amber
+	'#64FF82'  // 9 green
+];
+
+var SW_DIGIT_PHASER_COLORS = [
+	0xFF14B4, 0x00E6FF, 0xB400FF, 0xFF50DC, 0x14C8FF,
+	0xFF3264, 0x50FFDC, 0xD200FF, 0xFFA014, 0x64FF82
+];
+
+var gridLayer; // perspective grid drawn on the ground in SW mode
+// ──────────────────────────────────────────────────────────────────────────
+
 function lerp(a, b, t) { return a + (b - a) * t; }
 
 function rgbToPhaser(r, g, b) { return (Math.round(r) << 16) | (Math.round(g) << 8) | Math.round(b); }
@@ -226,8 +291,8 @@ var DIGIT_COLORS = [
 // Returns a packed tint that blends digit hue with the current night factor.
 // nightFactor 0 = full day (vivid), 1 = full night (dim but hued).
 function digitTint(digit, nightFactor) {
-	var dc = DIGIT_COLORS[digit];
-	var f  = lerp(1.0, 0.22, nightFactor);
+	var dc = SYNTHWAVE_MODE ? SW_DIGIT_COLORS[digit] : DIGIT_COLORS[digit];
+	var f  = SYNTHWAVE_MODE ? lerp(1.0, 0.55, nightFactor) : lerp(1.0, 0.22, nightFactor);
 	return rgbToPhaser(dc.r * f, dc.g * f, dc.b * f);
 }
 
@@ -308,37 +373,45 @@ var HBARBASE  = HY + HH - 14;      // y-baseline just above digit labels
 function drawHistogram() {
 	histGfx.clear();
 
-	// Semi-transparent panel background
-	histGfx.lineStyle(1, 0xFFFFFF, 0.18);
-	histGfx.beginFill(0x000000, 0.48);
+	var dColors  = SYNTHWAVE_MODE ? SW_DIGIT_PHASER_COLORS : DIGIT_PHASER_COLORS;
+	var panelBg  = SYNTHWAVE_MODE ? 0x110022 : 0x000000;
+	var panelBdr = SYNTHWAVE_MODE ? 0xFF14B4 : 0xFFFFFF;
+	var panelAlp = SYNTHWAVE_MODE ? 0.72     : 0.48;
+	var bdrAlp   = SYNTHWAVE_MODE ? 0.55     : 0.18;
+
+	histGfx.lineStyle(1, panelBdr, bdrAlp);
+	histGfx.beginFill(panelBg, panelAlp);
 	histGfx.drawRoundedRect(HX, HY, HW, HH, 5);
 	histGfx.endFill();
 
-	// Find the tallest bar for relative scaling
 	var maxCount = 1;
 	for (var i = 0; i < 10; i++) {
 		if (digitCounts[i] > maxCount) maxCount = digitCounts[i];
 	}
 
-	// Dashed reference line at the "expected" equal-share height
 	var total = decimal + 1;
 	if (total > 0) {
 		var expectedH = Math.min(HBARMAXH,
 			Math.round((total / 10 / maxCount) * HBARMAXH));
 		var expectedY = HBARBASE - expectedH;
-		histGfx.lineStyle(1, 0xFFFFFF, 0.38);
+		histGfx.lineStyle(1, SYNTHWAVE_MODE ? 0x00E6FF : 0xFFFFFF, 0.5);
 		histGfx.moveTo(HX + 5, expectedY);
 		histGfx.lineTo(HX + HW - 5, expectedY);
 	}
 
-	// One coloured bar per digit
 	histGfx.lineStyle(0);
 	for (var d = 0; d < 10; d++) {
 		var barH = maxCount > 0
 			? Math.max(1, Math.round((digitCounts[d] / maxCount) * HBARMAXH))
 			: 1;
 		var barX = HX + 7 + d * (HBARW + HBARGAP);
-		histGfx.beginFill(DIGIT_PHASER_COLORS[d], 0.85);
+		// In SW mode draw a glow behind each bar
+		if (SYNTHWAVE_MODE) {
+			histGfx.beginFill(dColors[d], 0.18);
+			histGfx.drawRect(barX - 2, HBARBASE - barH - 2, HBARW + 4, barH + 4);
+			histGfx.endFill();
+		}
+		histGfx.beginFill(dColors[d], SYNTHWAVE_MODE ? 1.0 : 0.85);
 		histGfx.drawRect(barX, HBARBASE - barH, HBARW, barH);
 		histGfx.endFill();
 	}
@@ -351,11 +424,13 @@ function addTickerItem(digit) {
 		var prev = tickerItems[tickerItems.length - 1];
 		if (prev.x + 26 > startX) { startX = prev.x + 26; }
 	}
+	var fillColor  = SYNTHWAVE_MODE ? SW_DIGIT_CSS_COLORS[digit] : DIGIT_CSS_COLORS[digit];
+	var strokeColor = SYNTHWAVE_MODE ? '#110022' : '#111111';
 	var item = game.add.text(startX, TICKER_Y, '' + digit, {
 		font: 'bold 15px monospace',
-		fill: DIGIT_CSS_COLORS[digit],
-		stroke: '#111111',
-		strokeThickness: 3
+		fill: fillColor,
+		stroke: strokeColor,
+		strokeThickness: SYNTHWAVE_MODE ? 4 : 3
 	});
 	item.anchor.setTo(0.5, 0.5);
 	tickerGroup.add(item);
@@ -363,17 +438,20 @@ function addTickerItem(digit) {
 }
 
 function showDigitPopup(x, y, digit, index) {
+	var fillColor   = SYNTHWAVE_MODE ? SW_DIGIT_CSS_COLORS[digit] : DIGIT_CSS_COLORS[digit];
+	var strokeColor = SYNTHWAVE_MODE ? '#110022' : '#000000';
+	var subFill     = SYNTHWAVE_MODE ? '#00E6FF' : '#FFFFFF';
 	var bigLabel = game.add.text(x, y, '' + digit, {
 		font: 'bold 80px monospace',
-		fill: DIGIT_CSS_COLORS[digit],
-		stroke: '#000000',
+		fill: fillColor,
+		stroke: strokeColor,
 		strokeThickness: 6
 	});
 	bigLabel.anchor.setTo(0.5, 0.5);
 	var subLabel = game.add.text(x, y + 55, '\u03C0[' + index + ']', {
 		font: 'bold 18px monospace',
-		fill: '#FFFFFF',
-		stroke: '#000000',
+		fill: subFill,
+		stroke: strokeColor,
 		strokeThickness: 3
 	});
 	subLabel.anchor.setTo(0.5, 0.5);
@@ -450,17 +528,38 @@ function buildBolt(pidx) {
 function drawBolt() {
 	lightningGraphics.clear();
 	if (boltPoints.length < 2) { return; }
-	// Glow pass — thick soft yellow-white halo
-	lightningGraphics.lineStyle(5, 0xFFFF99, 0.35);
-	lightningGraphics.moveTo(boltPoints[0].x, boltPoints[0].y);
-	for (var k = 1; k < boltPoints.length; k++) {
-		lightningGraphics.lineTo(boltPoints[k].x, boltPoints[k].y);
-	}
-	// Core pass — thin bright white
-	lightningGraphics.lineStyle(2, 0xFFFFFF, 1.0);
-	lightningGraphics.moveTo(boltPoints[0].x, boltPoints[0].y);
-	for (var k = 1; k < boltPoints.length; k++) {
-		lightningGraphics.lineTo(boltPoints[k].x, boltPoints[k].y);
+	if (SYNTHWAVE_MODE) {
+		// Wide hot-pink glow
+		lightningGraphics.lineStyle(8, 0xFF0099, 0.3);
+		lightningGraphics.moveTo(boltPoints[0].x, boltPoints[0].y);
+		for (var k = 1; k < boltPoints.length; k++) {
+			lightningGraphics.lineTo(boltPoints[k].x, boltPoints[k].y);
+		}
+		// Mid hot-pink halo
+		lightningGraphics.lineStyle(4, 0xFF14B4, 0.55);
+		lightningGraphics.moveTo(boltPoints[0].x, boltPoints[0].y);
+		for (var k = 1; k < boltPoints.length; k++) {
+			lightningGraphics.lineTo(boltPoints[k].x, boltPoints[k].y);
+		}
+		// Core — electric cyan
+		lightningGraphics.lineStyle(2, 0x00FFEE, 1.0);
+		lightningGraphics.moveTo(boltPoints[0].x, boltPoints[0].y);
+		for (var k = 1; k < boltPoints.length; k++) {
+			lightningGraphics.lineTo(boltPoints[k].x, boltPoints[k].y);
+		}
+	} else {
+		// Classic: thick soft yellow-white halo
+		lightningGraphics.lineStyle(5, 0xFFFF99, 0.35);
+		lightningGraphics.moveTo(boltPoints[0].x, boltPoints[0].y);
+		for (var k = 1; k < boltPoints.length; k++) {
+			lightningGraphics.lineTo(boltPoints[k].x, boltPoints[k].y);
+		}
+		// Core pass — thin bright white
+		lightningGraphics.lineStyle(2, 0xFFFFFF, 1.0);
+		lightningGraphics.moveTo(boltPoints[0].x, boltPoints[0].y);
+		for (var k = 1; k < boltPoints.length; k++) {
+			lightningGraphics.lineTo(boltPoints[k].x, boltPoints[k].y);
+		}
 	}
 }
 
@@ -491,6 +590,132 @@ function spawnRain() {
 	}
 }
 // =====================================================================
+
+// ── Synthwave helper: retro sun (half below horizon) ──────────────────────
+function drawRetroSun(gfx) {
+	var cx = 650, cy = 400, R = 120;
+
+	// Atmospheric bloom
+	gfx.lineStyle(0);
+	gfx.beginFill(0xFF0066, 0.07);
+	gfx.drawCircle(cx, cy, R * 3.2);
+	gfx.endFill();
+	gfx.beginFill(0xFF2080, 0.12);
+	gfx.drawCircle(cx, cy, R * 2.0);
+	gfx.endFill();
+
+	// Sun disc — concentric rings simulate a hot-pink → amber → yellow gradient
+	var rings = [
+		[R * 2.0, 0x880044],
+		[R * 1.85,0xAA0055],
+		[R * 1.7, 0xCC0066],
+		[R * 1.55,0xDD1077],
+		[R * 1.4, 0xEE1888],
+		[R * 1.25,0xFF20AA],
+		[R * 1.1, 0xFF30BB],
+		[R * 1.0, 0xFF3090],
+		[R * 0.9, 0xFF5070],
+		[R * 0.8, 0xFF7050],
+		[R * 0.7, 0xFF9030],
+		[R * 0.6, 0xFFAA18],
+		[R * 0.5, 0xFFBB10],
+		[R * 0.4, 0xFFCC08],
+		[R * 0.28,0xFFDE04],
+		[R * 0.16,0xFFEE02],
+		[R * 0.07,0xFFF800]
+	];
+	for (var ri = 0; ri < rings.length; ri++) {
+		gfx.beginFill(rings[ri][1], 1.0);
+		gfx.drawCircle(cx, cy, rings[ri][0]);
+		gfx.endFill();
+	}
+
+	// Horizontal scan lines — drawn only in the visible top half
+	// Lines get denser (closer together) toward the horizon (perspective)
+	var numLines = 18;
+	for (var li = 0; li < numLines; li++) {
+		// t = 0 at top of sun, 1 at horizon
+		var t  = li / (numLines - 1);
+		var ly = (cy - R) + t * R;
+		var dx = Math.sqrt(Math.max(0, R * R - (ly - cy) * (ly - cy)));
+		if (dx < 2) continue;
+		var lineH = 2 + (1 - t) * 2; // thicker lines near top
+		gfx.beginFill(0x110022, 0.75);
+		gfx.drawRect(cx - dx * 0.97, ly - lineH * 0.5, dx * 1.94, lineH);
+		gfx.endFill();
+	}
+
+	// Thin bright rim
+	gfx.lineStyle(1.5, 0xFF80FF, 0.7);
+	gfx.beginFill(0, 0);
+	gfx.drawCircle(cx, cy, R * 2.0);
+	gfx.endFill();
+}
+
+// ── Synthwave helper: perspective grid on the ground ─────────────────────
+function drawPerspectiveGrid(gfx) {
+	gfx.clear();
+	if (!SYNTHWAVE_MODE) return;
+
+	var vx = 650, vy = 400, bY = 710;
+	var numV    = 18;
+	var spreadW = 1300;
+
+	// Radiating lines from vanishing point
+	for (var vi = 0; vi <= numV; vi++) {
+		var bx   = vx + (vi - numV / 2) * (spreadW / numV);
+		var prog = Math.abs(vi - numV / 2) / (numV / 2); // 0=center, 1=edge
+		var alpha = 0.55 - prog * 0.3;
+		gfx.lineStyle(1, 0xFF1493, alpha);
+		gfx.moveTo(vx, vy);
+		gfx.lineTo(bx, bY);
+	}
+
+	// Horizontal lines – exponentially crowded toward horizon
+	var numH = 12;
+	for (var hi = 1; hi <= numH; hi++) {
+		var t     = Math.pow(hi / numH, 2.2);
+		var lineY = vy + t * (bY - vy);
+		var lineW = t * spreadW;
+		var alpha  = 0.15 + t * 0.45;
+		gfx.lineStyle(1, 0xFF1493, alpha);
+		gfx.moveTo(vx - lineW / 2, lineY);
+		gfx.lineTo(vx + lineW / 2, lineY);
+	}
+}
+
+// ── Synthwave theme toggle ─────────────────────────────────────────────────
+function toggleTheme() {
+	SYNTHWAVE_MODE = !SYNTHWAVE_MODE;
+	var btn = document.getElementById('themeBtn');
+	if (SYNTHWAVE_MODE) {
+		btn.textContent   = '\u25C8';
+		btn.style.background   = 'rgba(180,0,255,0.18)';
+		btn.style.borderColor  = 'rgba(255,20,180,0.65)';
+		btn.style.color        = '#FF14B4';
+		hudText.fill           = '#FF14B4';
+		hudText.stroke         = '#220033';
+		piCounterText.fill     = '#00E6FF';
+		piCounterText.stroke   = '#110022';
+		starsLayer.tint        = 0xFFCCEE;
+	} else {
+		btn.textContent   = '\u2600';
+		btn.style.background   = 'rgba(255,255,255,0.15)';
+		btn.style.borderColor  = 'rgba(255,255,255,0.45)';
+		btn.style.color        = '#fff';
+		hudText.fill           = '#FFFFFF';
+		hudText.stroke         = '#000000';
+		piCounterText.fill     = '#ffffff';
+		piCounterText.stroke   = '#001133';
+		starsLayer.tint        = 0xFFFFFF;
+	}
+	// Update histogram digit labels
+	for (var hl = 0; hl < histLabels.length; hl++) {
+		histLabels[hl].fill   = SYNTHWAVE_MODE ? SW_DIGIT_CSS_COLORS[hl]  : DIGIT_CSS_COLORS[hl];
+		histLabels[hl].stroke = SYNTHWAVE_MODE ? '#110022' : '#000000';
+	}
+}
+// ──────────────────────────────────────────────────────────────────────────
 
 function preload() {
 	game.load.image('nuage','nuage.png');
@@ -526,6 +751,9 @@ function create() {
 	celestialLayer = game.add.graphics(0, 0);
 
 	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
+
+	// Synthwave perspective grid – drawn on the ground, above fond2
+	gridLayer = game.add.graphics(0, 0);
 	fond2.alpha = 0.9;
 
 	order0 = game.add.group();
@@ -614,26 +842,36 @@ function update() {
 
 	// ── Day / Night Cycle ───────────────────────────────────────────────
 	dayNightTimer++;
-	var phase = (dayNightTimer % CYCLE_FRAMES) / CYCLE_FRAMES;
-	var tint  = getDayNightTint(phase);
-	currentTintHex = rgbToPhaser(tint.r, tint.g, tint.b);
+	var phase, nightAlpha;
 
-	// Tint the sky and water backgrounds
-	fond.tint  = currentTintHex;
-	fond2.tint = currentTintHex;
+	if (SYNTHWAVE_MODE) {
+		phase      = 0.22;     // frozen at dusk – permanent synthwave sky
+		nightAlpha = 0.38;     // stars faintly visible at all times
 
-	// Stars fade in during the night half of the cycle (phase 0.25 – 0.75)
-	var nightAlpha = 0;
-	if (phase > 0.25 && phase < 0.75) {
-		nightAlpha = Math.sin((phase - 0.25) / 0.5 * Math.PI);
+		fond.tint  = rgbToPhaser(90, 10, 110);   // deep purple sky
+		fond2.tint = rgbToPhaser(30, 4,  50);    // near-black ground
+
+		starsLayer.alpha = nightAlpha;
+		game.stage.backgroundColor = rgbToCSS(10, 3, 22);
+	} else {
+		phase = (dayNightTimer % CYCLE_FRAMES) / CYCLE_FRAMES;
+		var tint  = getDayNightTint(phase);
+		currentTintHex = rgbToPhaser(tint.r, tint.g, tint.b);
+
+		fond.tint  = currentTintHex;
+		fond2.tint = currentTintHex;
+
+		nightAlpha = 0;
+		if (phase > 0.25 && phase < 0.75) {
+			nightAlpha = Math.sin((phase - 0.25) / 0.5 * Math.PI);
+		}
+		starsLayer.alpha = nightAlpha;
+
+		var bgR = Math.floor(lerp(67,  5,  nightAlpha));
+		var bgG = Math.floor(lerp(169, 5,  nightAlpha));
+		var bgB = Math.floor(lerp(223, 30, nightAlpha));
+		game.stage.backgroundColor = rgbToCSS(bgR, bgG, bgB);
 	}
-	starsLayer.alpha = nightAlpha;
-
-	// Darken the stage background at night
-	var bgR = Math.floor(lerp(67,  5,  nightAlpha));
-	var bgG = Math.floor(lerp(169, 5,  nightAlpha));
-	var bgB = Math.floor(lerp(223, 30, nightAlpha));
-	game.stage.backgroundColor = rgbToCSS(bgR, bgG, bgB);
 	// ────────────────────────────────────────────────────────────────────
 
 	// ── Shooting Stars ───────────────────────────────────────────────────────
@@ -661,20 +899,22 @@ function update() {
 		var visible = fadeOut * nightAlpha;
 
 		if (visible > 0.02 && star.trail.length > 1) {
+			var swGlow = SYNTHWAVE_MODE ? 0xFF00CC : 0xCCE0FF;
+			var swCore = SYNTHWAVE_MODE ? 0x00FFEE : 0xFFFFFF;
 			for (var ti = 1; ti < star.trail.length; ti++) {
 				var progress = ti / star.trail.length;
-				// Soft blue-white glow
-				shootingStarGfx.lineStyle(4, 0xCCE0FF, progress * visible * 0.35);
+				// Glow pass
+				shootingStarGfx.lineStyle(4, swGlow, progress * visible * 0.35);
 				shootingStarGfx.moveTo(star.trail[ti - 1].x, star.trail[ti - 1].y);
 				shootingStarGfx.lineTo(star.trail[ti].x,     star.trail[ti].y);
-				// Bright white core
-				shootingStarGfx.lineStyle(1, 0xFFFFFF, progress * visible * 0.95);
+				// Core pass
+				shootingStarGfx.lineStyle(1, swCore, progress * visible * 0.95);
 				shootingStarGfx.moveTo(star.trail[ti - 1].x, star.trail[ti - 1].y);
 				shootingStarGfx.lineTo(star.trail[ti].x,     star.trail[ti].y);
 			}
-			// Bright head dot (no stroke)
+			// Head dot
 			shootingStarGfx.lineStyle(0);
-			shootingStarGfx.beginFill(0xFFFFFF, visible);
+			shootingStarGfx.beginFill(swCore, visible);
 			shootingStarGfx.drawCircle(star.x, star.y, 3);
 			shootingStarGfx.endFill();
 		}
@@ -687,40 +927,41 @@ function update() {
 	}
 	// ─────────────────────────────────────────────────────────────────────────
 
-	// ── Sun & Moon ───────────────────────────────────────────────────────────
-	// Day  = phase 0.75 → 1.0 → 0.0 → 0.25 (wraps through 0)
-	// Night = phase 0.25 → 0.75
+	// ── Sun & Moon / Retro Sun ───────────────────────────────────────────────
 	celestialLayer.clear();
-	var isDaytime = (phase < 0.25 || phase > 0.75);
 
-	if (isDaytime) {
-		// dayNorm: 0 = sunrise (left), 0.5 = noon (zenith), 1 = sunset (right)
-		var dayNorm = phase > 0.75 ? (phase - 0.75) / 0.5 : (phase + 0.25) / 0.5;
-		var sunX    = dayNorm * 1200 + 50;
-		var sunY    = 370 - Math.sin(dayNorm * Math.PI) * 300;
-		// Fade in/out near horizons
-		var sunVis  = Math.min(dayNorm / 0.12, (1.0 - dayNorm) / 0.12, 1.0);
-		// Outer halo
-		celestialLayer.beginFill(0xFFEE88, sunVis * 0.22);
-		celestialLayer.drawCircle(sunX, sunY, 90);
-		celestialLayer.endFill();
-		// Core disc
-		celestialLayer.beginFill(0xFFDD44, sunVis);
-		celestialLayer.drawCircle(sunX, sunY, 46);
-		celestialLayer.endFill();
+	if (SYNTHWAVE_MODE) {
+		// Retro synthwave sun: stationary at horizon center, half below
+		drawRetroSun(celestialLayer);
+		drawPerspectiveGrid(gridLayer);
 	} else {
-		// moonNorm: 0 = moonrise (left), 0.5 = midnight (zenith), 1 = moonset (right)
-		var moonNorm = (phase - 0.25) / 0.5;
-		var moonX    = moonNorm * 1200 + 50;
-		var moonY    = 370 - Math.sin(moonNorm * Math.PI) * 290;
-		// Soft outer glow
-		celestialLayer.beginFill(0xCCDDFF, nightAlpha * 0.18);
-		celestialLayer.drawCircle(moonX, moonY, 62);
-		celestialLayer.endFill();
-		// Core disc
-		celestialLayer.beginFill(0xF0F5FF, nightAlpha);
-		celestialLayer.drawCircle(moonX, moonY, 30);
-		celestialLayer.endFill();
+		// Day  = phase 0.75 → 1.0 → 0.0 → 0.25 (wraps through 0)
+		// Night = phase 0.25 → 0.75
+		var isDaytime = (phase < 0.25 || phase > 0.75);
+		gridLayer.clear();
+
+		if (isDaytime) {
+			var dayNorm = phase > 0.75 ? (phase - 0.75) / 0.5 : (phase + 0.25) / 0.5;
+			var sunX    = dayNorm * 1200 + 50;
+			var sunY    = 370 - Math.sin(dayNorm * Math.PI) * 300;
+			var sunVis  = Math.min(dayNorm / 0.12, (1.0 - dayNorm) / 0.12, 1.0);
+			celestialLayer.beginFill(0xFFEE88, sunVis * 0.22);
+			celestialLayer.drawCircle(sunX, sunY, 90);
+			celestialLayer.endFill();
+			celestialLayer.beginFill(0xFFDD44, sunVis);
+			celestialLayer.drawCircle(sunX, sunY, 46);
+			celestialLayer.endFill();
+		} else {
+			var moonNorm = (phase - 0.25) / 0.5;
+			var moonX    = moonNorm * 1200 + 50;
+			var moonY    = 370 - Math.sin(moonNorm * Math.PI) * 290;
+			celestialLayer.beginFill(0xCCDDFF, nightAlpha * 0.18);
+			celestialLayer.drawCircle(moonX, moonY, 62);
+			celestialLayer.endFill();
+			celestialLayer.beginFill(0xF0F5FF, nightAlpha);
+			celestialLayer.drawCircle(moonX, moonY, 30);
+			celestialLayer.endFill();
+		}
 	}
 	// ─────────────────────────────────────────────────────────────────────────
 
@@ -851,8 +1092,10 @@ function update() {
 	game.world.bringToTop(order9);
 	rainGraphics.bringToTop();   // rain in front of clouds
 	fond2.bringToTop();          // ground always on top of rain
+	gridLayer.bringToTop();      // SW grid drawn on top of ground
 
 	// ── Rain rendering ────────────────────────────────────────────────
+	var rainColor = SYNTHWAVE_MODE ? 0xFF44CC : 0xAADDFF;
 	rainGraphics.clear();
 	for (var ri = rainDrops.length - 1; ri >= 0; ri--) {
 		var drop = rainDrops[ri];
@@ -868,7 +1111,7 @@ function update() {
 		if (drop.life > fadeStart) {
 			dropAlpha *= 1 - (drop.life - fadeStart) / (drop.maxLife - fadeStart);
 		}
-		rainGraphics.lineStyle(1.5, 0xAADDFF, dropAlpha);
+		rainGraphics.lineStyle(1.5, rainColor, dropAlpha);
 		rainGraphics.moveTo(drop.x, drop.y);
 		rainGraphics.lineTo(drop.x - drop.vx * drop.len * 0.4, drop.y - drop.len);
 	}
@@ -901,7 +1144,9 @@ function update() {
 	if (flashAlpha > 0) {
 		flashAlpha = Math.max(0, flashAlpha - 0.055);
 		flashGraphics.clear();
-		flashGraphics.beginFill(0xFFFFFF, flashAlpha);
+		var flashColor = SYNTHWAVE_MODE ? 0xFF0099 : 0xFFFFFF;
+		var flashStrength = SYNTHWAVE_MODE ? flashAlpha * 0.7 : flashAlpha;
+		flashGraphics.beginFill(flashColor, flashStrength);
 		flashGraphics.drawRect(0, 0, 1300, 700);
 		flashGraphics.endFill();
 	} else {
@@ -919,7 +1164,7 @@ function update() {
 
 
 </head>
-<body style="background-color: rgb(67,169,223);">
+<body style="background-color: rgb(67,169,223); margin:0; overflow:hidden;">
 
 	<!-- Sound toggle -->
 	<button id="soundBtn" onclick="toggleSound()" title="Toggle Pi sonification" style="
@@ -932,6 +1177,18 @@ function update() {
 		backdrop-filter: blur(4px);
 		opacity: 0.55;
 		transition: opacity 0.2s, background 0.2s;">&#9834;</button>
+
+	<!-- Synthwave theme toggle -->
+	<button id="themeBtn" onclick="toggleTheme()" title="Toggle Synthwave theme" style="
+		position: fixed; bottom: 14px; right: 70px;
+		background: rgba(255,255,255,0.15);
+		border: 1px solid rgba(255,255,255,0.45);
+		color: #fff; font-size: 20px; cursor: pointer;
+		padding: 6px 11px; border-radius: 7px;
+		font-family: sans-serif; z-index: 999;
+		backdrop-filter: blur(4px);
+		opacity: 0.75;
+		transition: opacity 0.2s, background 0.2s, color 0.2s, border-color 0.2s;">&#9728;</button>
 
 	<div id="game" style="
 		cursor: none;
