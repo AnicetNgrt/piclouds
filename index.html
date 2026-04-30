@@ -137,7 +137,6 @@ function randInt(min, max) {
 
 for (var i = 0; i<10000; i++) {
 	pi.push(randInt(0,9));
-	console.log(pi[886+i]);
 }
 
 var timer = 0;
@@ -641,15 +640,12 @@ function update() {
 	game.stage.backgroundColor = rgbToCSS(bgR, bgG, bgB);
 	// ────────────────────────────────────────────────────────────────────
 
-	// ── Shooting Stars ───────────────────────────────────────────────────────
-	// Spawn a new star only while the night phase is visible
-	if (nightAlpha > 0.05) {
-		shootingStarTimer++;
-		var spawnInterval = (pi[shootingStarPiIdx % (pi.length - 10)] + 1) * 15;
-		if (shootingStarTimer >= spawnInterval) {
-			shootingStarTimer = 0;
-			shootingStars.push(spawnShootingStar());
-		}
+	// ── Shooting Stars (bioluminescent creatures — always active in deep ocean) ──
+	shootingStarTimer++;
+	var spawnInterval = (pi[shootingStarPiIdx % (pi.length - 10)] + 1) * 15;
+	if (shootingStarTimer >= spawnInterval) {
+		shootingStarTimer = 0;
+		shootingStars.push(spawnShootingStar());
 	}
 
 	// Advance and draw every active shooting star
@@ -797,9 +793,6 @@ function update() {
 			order9.add(nuages2[decimal]);
 			break;
 		}
-
-		// Play the note for this Pi digit
-		playDigitNote(pi[decimal]);
 	}
 
 	while (jj <= decimal ) {
