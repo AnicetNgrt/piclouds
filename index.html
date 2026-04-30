@@ -190,6 +190,9 @@ function playDigitNote(digit) {
 
 	osc.start(audioCtx.currentTime);
 	osc.stop(audioCtx.currentTime + duration);
+
+	// Light up the matching piano key in the HUD
+	activeKeyTimer[digit] = KEY_LIT_FRAMES;
 }
 // ──────────────────────────────────────────────────────────────────────────────
 
