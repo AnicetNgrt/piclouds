@@ -95,25 +95,25 @@ function drawKeyboard() {
         // Glow halo behind lit key
         if (lit) {
             keyGfx.lineStyle(0);
-            keyGfx.beginFill(0xFFDD22, 0.28);
+            keyGfx.beginFill(0x00CC66, 0.35);
             keyGfx.drawRoundedRect(x - 5, KY - 5, KW + 10, KH + 10, 9);
             keyGfx.endFill();
         }
 
         // Key body
-        keyGfx.lineStyle(1, 0x4466AA, 0.55);
+        keyGfx.lineStyle(1, 0x003322, 0.75);
         if (lit) {
-            keyGfx.beginFill(0xFFEE77, 0.97);
+            keyGfx.beginFill(0x00FF88, 0.95);
         } else if (i % 2 === 1) {
-            keyGfx.beginFill(0x7A9DBB, 0.72);   // alternate shade
+            keyGfx.beginFill(0x0A1828, 0.88);   // alternate shade
         } else {
-            keyGfx.beginFill(0xCCE0F0, 0.72);
+            keyGfx.beginFill(0x071220, 0.88);
         }
         keyGfx.drawRoundedRect(x, KY, KW, KH, 5);
         keyGfx.endFill();
 
         // Update label colour to match key state
-        keyLabels[i].fill = lit ? '#221100' : '#335577';
+        keyLabels[i].fill = lit ? '#002200' : '#00AAAA';
         if (activeKeyTimer[i] > 0) activeKeyTimer[i]--;
     }
 }
@@ -141,6 +141,46 @@ for (var i = 0; i<10000; i++) {
 }
 
 var timer = 0;
+
+// ── AURORA MODE ───────────────────────────────────────────────────────────────
+// Replaces the day/night sky with a permanent deep-night aurora borealis scene.
+// Clouds are tinted with aurora hues and drawn semi-transparent so the aurora
+// bands behind them bleed through, creating shimmering curtain layers.
+var AURORA_MODE = true;
+var auroraGfx;
+var auroraTime = 0;
+
+// Five overlapping sine-wave curtain bands, each at a slightly different speed
+var AURORA_BANDS = [
+	{ color: 0x00FF88, alpha: 0.18, baseY:  28, amp: 38, freq: 0.0050, phase: 0.0, height: 80 },
+	{ color: 0x00DDCC, alpha: 0.15, baseY:  90, amp: 32, freq: 0.0065, phase: 1.4, height: 68 },
+	{ color: 0xFF00CC, alpha: 0.11, baseY: 155, amp: 26, freq: 0.0058, phase: 2.7, height: 58 },
+	{ color: 0x8800FF, alpha: 0.09, baseY: 195, amp: 20, freq: 0.0080, phase: 1.0, height: 50 },
+	{ color: 0x00FFEE, alpha: 0.10, baseY:  10, amp: 16, freq: 0.0042, phase: 3.6, height: 38 },
+];
+
+function drawAurora() {
+	auroraGfx.clear();
+	auroraTime += 0.006;
+	for (var b = 0; b < AURORA_BANDS.length; b++) {
+		var band = AURORA_BANDS[b];
+		var t    = auroraTime * (0.8 + b * 0.15);  // each band drifts at a slightly different rate
+		auroraGfx.lineStyle(0);
+		auroraGfx.beginFill(band.color, band.alpha);
+		// Top edge: sine wave left → right
+		auroraGfx.moveTo(0, band.baseY + Math.sin(t + band.phase) * band.amp);
+		for (var x = 10; x <= 1300; x += 10) {
+			auroraGfx.lineTo(x, band.baseY + Math.sin(x * band.freq + t + band.phase) * band.amp);
+		}
+		// Bottom edge: different phase, right → left, closes the filled polygon
+		for (var x = 1300; x >= 0; x -= 10) {
+			auroraGfx.lineTo(x, band.baseY + band.height +
+				Math.sin(x * band.freq + t + band.phase + 1.1) * (band.amp * 0.55));
+		}
+		auroraGfx.endFill();
+	}
+}
+// ──────────────────────────────────────────────────────────────────────────────
 
 // ── Shooting Stars (Pi-digit driven, night only) ───────────────────────────
 var shootingStarGfx;
@@ -211,16 +251,16 @@ function rgbToPhaser(r, g, b) { return (Math.round(r) << 16) | (Math.round(g) <<
 // persists visibly through dusk, becomes muted moonlit pastels at midnight,
 // and blooms back to full saturation at dawn.
 var DIGIT_COLORS = [
-	{ r: 187, g: 143, b: 206 }, // 0 – lavender
-	{ r: 126, g: 200, b: 227 }, // 1 – sky blue
-	{ r:  72, g: 201, b: 176 }, // 2 – teal
-	{ r:  88, g: 214, b: 141 }, // 3 – mint
-	{ r: 247, g: 220, b: 111 }, // 4 – yellow
-	{ r: 240, g: 165, b:   0 }, // 5 – amber
-	{ r: 235, g: 116, b:  52 }, // 6 – orange
-	{ r: 231, g:  76, b:  60 }, // 7 – tomato
-	{ r: 175, g: 122, b: 197 }, // 8 – violet
-	{ r: 241, g: 148, b: 138 }, // 9 – salmon
+	{ r:   0, g: 255, b: 136 }, // 0 – aurora green
+	{ r:   0, g: 210, b: 210 }, // 1 – teal
+	{ r:  40, g: 200, b: 255 }, // 2 – cyan-blue
+	{ r:  80, g: 255, b: 200 }, // 3 – mint
+	{ r:   0, g: 240, b: 220 }, // 4 – aqua
+	{ r: 200, g:  20, b: 255 }, // 5 – violet
+	{ r: 255, g:   0, b: 210 }, // 6 – magenta
+	{ r: 160, g:  20, b: 255 }, // 7 – purple
+	{ r: 100, g:  60, b: 220 }, // 8 – indigo
+	{ r:  60, g: 220, b: 255 }, // 9 – sky-teal
 ];
 
 // Returns a packed tint that blends digit hue with the current night factor.
@@ -267,16 +307,16 @@ function getDayNightTint(phase) {
 // ── Pi Digit Ticker & Click-to-Reveal ─────────────────────────────────────
 // 10 vivid colours, one per digit 0-9
 var DIGIT_CSS_COLORS = [
-	'#FF5252', // 0  red
-	'#FF9100', // 1  orange
-	'#FFD740', // 2  yellow
-	'#69F0AE', // 3  green
-	'#40C4FF', // 4  sky-blue
-	'#00E5FF', // 5  cyan
-	'#7C4DFF', // 6  purple
-	'#FF4081', // 7  pink
-	'#CCFF90', // 8  lime
-	'#FF6D00'  // 9  deep-orange
+	'#00FF88', // 0 – aurora green
+	'#00DDCC', // 1 – teal
+	'#40C8FF', // 2 – cyan
+	'#44FFD0', // 3 – mint
+	'#00FFDD', // 4 – aqua
+	'#CC00FF', // 5 – violet
+	'#FF00CC', // 6 – magenta
+	'#9944FF', // 7 – purple
+	'#6644EE', // 8 – indigo
+	'#44DDFF'  // 9 – sky-blue
 ];
 
 var tickerItems  = [];   // Phaser.Text refs for the scrolling ticker
@@ -295,8 +335,8 @@ var histLabels = [];     // 10 static Phaser.Text labels ("0".."9") below bars
 
 // Phaser integer colours matching DIGIT_CSS_COLORS above
 var DIGIT_PHASER_COLORS = [
-	0xFF5252, 0xFF9100, 0xFFD740, 0x69F0AE, 0x40C4FF,
-	0x00E5FF, 0x7C4DFF, 0xFF4081, 0xCCFF90, 0xFF6D00
+	0x00FF88, 0x00DDCC, 0x40C8FF, 0x44FFD0, 0x00FFDD,
+	0xCC00FF, 0xFF00CC, 0x9944FF, 0x6644EE, 0x44DDFF
 ];
 
 // Panel geometry (bottom-right, clear of keyboard strip which starts at y=626)
@@ -309,8 +349,8 @@ function drawHistogram() {
 	histGfx.clear();
 
 	// Semi-transparent panel background
-	histGfx.lineStyle(1, 0xFFFFFF, 0.18);
-	histGfx.beginFill(0x000000, 0.48);
+	histGfx.lineStyle(1, 0x00FFAA, 0.32);
+	histGfx.beginFill(0x000000, 0.70);
 	histGfx.drawRoundedRect(HX, HY, HW, HH, 5);
 	histGfx.endFill();
 
@@ -326,7 +366,7 @@ function drawHistogram() {
 		var expectedH = Math.min(HBARMAXH,
 			Math.round((total / 10 / maxCount) * HBARMAXH));
 		var expectedY = HBARBASE - expectedH;
-		histGfx.lineStyle(1, 0xFFFFFF, 0.38);
+		histGfx.lineStyle(1, 0x00FFAA, 0.48);
 		histGfx.moveTo(HX + 5, expectedY);
 		histGfx.lineTo(HX + HW - 5, expectedY);
 	}
@@ -450,14 +490,14 @@ function buildBolt(pidx) {
 function drawBolt() {
 	lightningGraphics.clear();
 	if (boltPoints.length < 2) { return; }
-	// Glow pass — thick soft yellow-white halo
-	lightningGraphics.lineStyle(5, 0xFFFF99, 0.35);
+	// Glow pass — thick blue-white halo (electric discharge through aurora)
+	lightningGraphics.lineStyle(5, 0x44AAFF, 0.45);
 	lightningGraphics.moveTo(boltPoints[0].x, boltPoints[0].y);
 	for (var k = 1; k < boltPoints.length; k++) {
 		lightningGraphics.lineTo(boltPoints[k].x, boltPoints[k].y);
 	}
-	// Core pass — thin bright white
-	lightningGraphics.lineStyle(2, 0xFFFFFF, 1.0);
+	// Core pass — thin bright white-blue
+	lightningGraphics.lineStyle(2, 0xCCEEFF, 1.0);
 	lightningGraphics.moveTo(boltPoints[0].x, boltPoints[0].y);
 	for (var k = 1; k < boltPoints.length; k++) {
 		lightningGraphics.lineTo(boltPoints[k].x, boltPoints[k].y);
@@ -525,6 +565,9 @@ function create() {
 	// Celestial layer: sun during day, moon during night (behind clouds)
 	celestialLayer = game.add.graphics(0, 0);
 
+	// Aurora bands layer — above stars and celestial, behind all cloud groups
+	auroraGfx = game.add.graphics(0, 0);
+
 	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
 	fond2.alpha = 0.9;
 
@@ -547,7 +590,7 @@ function create() {
 		var kx  = KX0 + ki * (KW + KGAP) + Math.floor(KW / 2);
 		var lbl = game.add.text(kx, KY + 9, ki + '\n' + noteNames[ki], {
 			font:  'bold 10px monospace',
-			fill:  '#335577',
+			fill:  '#00AAAA',
 			align: 'center'
 		}, uiGroup);
 		lbl.anchor.setTo(0.5, 0);
@@ -563,7 +606,7 @@ function create() {
 	// Pi digit counter – top-left, shows current index and value in real time
 	piCounterText = game.add.text(8, 10, '\u03C0[0] = 3', {
 		font:            'bold 14px monospace',
-		fill:            '#ffffff',
+		fill:            '#00FFAA',
 		stroke:          '#001133',
 		strokeThickness: 3
 	}, uiGroup);
@@ -591,7 +634,7 @@ function create() {
 
 	// Dark band at the very top behind the ticker
 	tickerBgGfx = game.add.graphics(0, 0);
-	tickerBgGfx.beginFill(0x000000, 0.42);
+	tickerBgGfx.beginFill(0x000A18, 0.78);
 	tickerBgGfx.drawRect(0, 0, 1300, 28);
 	tickerBgGfx.endFill();
 
@@ -601,8 +644,8 @@ function create() {
 	// HUD: top-left Pi counter (inside the ticker band)
 	hudText = game.add.text(8, TICKER_Y, '\u03C0[0] = 3', {
 		font: 'bold 13px monospace',
-		fill: '#FFFFFF',
-		stroke: '#000000',
+		fill: '#00FFAA',
+		stroke: '#001133',
 		strokeThickness: 2
 	});
 	hudText.anchor.setTo(0, 0.5);
@@ -615,25 +658,31 @@ function update() {
 	// ── Day / Night Cycle ───────────────────────────────────────────────
 	dayNightTimer++;
 	var phase = (dayNightTimer % CYCLE_FRAMES) / CYCLE_FRAMES;
-	var tint  = getDayNightTint(phase);
-	currentTintHex = rgbToPhaser(tint.r, tint.g, tint.b);
 
-	// Tint the sky and water backgrounds
-	fond.tint  = currentTintHex;
-	fond2.tint = currentTintHex;
-
-	// Stars fade in during the night half of the cycle (phase 0.25 – 0.75)
-	var nightAlpha = 0;
-	if (phase > 0.25 && phase < 0.75) {
-		nightAlpha = Math.sin((phase - 0.25) / 0.5 * Math.PI);
+	// Aurora mode: lock to permanent deep midnight — skip the day/night transition
+	var nightAlpha;
+	if (AURORA_MODE) {
+		phase      = 0.5;        // always midnight phase
+		nightAlpha = 1.0;
+		fond.tint  = 0x060A1A;  // deep navy sky
+		fond2.tint = 0x030510;  // near-black ground
+		starsLayer.alpha = 1.0;
+		game.stage.backgroundColor = '#020510';
+	} else {
+		var tint = getDayNightTint(phase);
+		currentTintHex = rgbToPhaser(tint.r, tint.g, tint.b);
+		fond.tint  = currentTintHex;
+		fond2.tint = currentTintHex;
+		nightAlpha = 0;
+		if (phase > 0.25 && phase < 0.75) {
+			nightAlpha = Math.sin((phase - 0.25) / 0.5 * Math.PI);
+		}
+		starsLayer.alpha = nightAlpha;
+		var bgR = Math.floor(lerp(67,  5,  nightAlpha));
+		var bgG = Math.floor(lerp(169, 5,  nightAlpha));
+		var bgB = Math.floor(lerp(223, 30, nightAlpha));
+		game.stage.backgroundColor = rgbToCSS(bgR, bgG, bgB);
 	}
-	starsLayer.alpha = nightAlpha;
-
-	// Darken the stage background at night
-	var bgR = Math.floor(lerp(67,  5,  nightAlpha));
-	var bgG = Math.floor(lerp(169, 5,  nightAlpha));
-	var bgB = Math.floor(lerp(223, 30, nightAlpha));
-	game.stage.backgroundColor = rgbToCSS(bgR, bgG, bgB);
 	// ────────────────────────────────────────────────────────────────────
 
 	// ── Shooting Stars ───────────────────────────────────────────────────────
@@ -688,39 +737,42 @@ function update() {
 	// ─────────────────────────────────────────────────────────────────────────
 
 	// ── Sun & Moon ───────────────────────────────────────────────────────────
-	// Day  = phase 0.75 → 1.0 → 0.0 → 0.25 (wraps through 0)
-	// Night = phase 0.25 → 0.75
 	celestialLayer.clear();
-	var isDaytime = (phase < 0.25 || phase > 0.75);
-
-	if (isDaytime) {
-		// dayNorm: 0 = sunrise (left), 0.5 = noon (zenith), 1 = sunset (right)
-		var dayNorm = phase > 0.75 ? (phase - 0.75) / 0.5 : (phase + 0.25) / 0.5;
-		var sunX    = dayNorm * 1200 + 50;
-		var sunY    = 370 - Math.sin(dayNorm * Math.PI) * 300;
-		// Fade in/out near horizons
-		var sunVis  = Math.min(dayNorm / 0.12, (1.0 - dayNorm) / 0.12, 1.0);
-		// Outer halo
-		celestialLayer.beginFill(0xFFEE88, sunVis * 0.22);
-		celestialLayer.drawCircle(sunX, sunY, 90);
+	if (AURORA_MODE) {
+		// Aurora: a fixed, subtle moon in the upper-right corner
+		var moonX = 940, moonY = 70;
+		celestialLayer.beginFill(0xCCDDFF, 0.10);
+		celestialLayer.drawCircle(moonX, moonY, 52);
 		celestialLayer.endFill();
-		// Core disc
-		celestialLayer.beginFill(0xFFDD44, sunVis);
-		celestialLayer.drawCircle(sunX, sunY, 46);
+		celestialLayer.beginFill(0xEAEEFF, 0.90);
+		celestialLayer.drawCircle(moonX, moonY, 24);
 		celestialLayer.endFill();
 	} else {
-		// moonNorm: 0 = moonrise (left), 0.5 = midnight (zenith), 1 = moonset (right)
-		var moonNorm = (phase - 0.25) / 0.5;
-		var moonX    = moonNorm * 1200 + 50;
-		var moonY    = 370 - Math.sin(moonNorm * Math.PI) * 290;
-		// Soft outer glow
-		celestialLayer.beginFill(0xCCDDFF, nightAlpha * 0.18);
-		celestialLayer.drawCircle(moonX, moonY, 62);
-		celestialLayer.endFill();
-		// Core disc
-		celestialLayer.beginFill(0xF0F5FF, nightAlpha);
-		celestialLayer.drawCircle(moonX, moonY, 30);
-		celestialLayer.endFill();
+		// Day  = phase 0.75 → 1.0 → 0.0 → 0.25 (wraps through 0)
+		// Night = phase 0.25 → 0.75
+		var isDaytime = (phase < 0.25 || phase > 0.75);
+		if (isDaytime) {
+			var dayNorm = phase > 0.75 ? (phase - 0.75) / 0.5 : (phase + 0.25) / 0.5;
+			var sunX    = dayNorm * 1200 + 50;
+			var sunY    = 370 - Math.sin(dayNorm * Math.PI) * 300;
+			var sunVis  = Math.min(dayNorm / 0.12, (1.0 - dayNorm) / 0.12, 1.0);
+			celestialLayer.beginFill(0xFFEE88, sunVis * 0.22);
+			celestialLayer.drawCircle(sunX, sunY, 90);
+			celestialLayer.endFill();
+			celestialLayer.beginFill(0xFFDD44, sunVis);
+			celestialLayer.drawCircle(sunX, sunY, 46);
+			celestialLayer.endFill();
+		} else {
+			var moonNorm = (phase - 0.25) / 0.5;
+			var moonX    = moonNorm * 1200 + 50;
+			var moonY    = 370 - Math.sin(moonNorm * Math.PI) * 290;
+			celestialLayer.beginFill(0xCCDDFF, nightAlpha * 0.18);
+			celestialLayer.drawCircle(moonX, moonY, 62);
+			celestialLayer.endFill();
+			celestialLayer.beginFill(0xF0F5FF, nightAlpha);
+			celestialLayer.drawCircle(moonX, moonY, 30);
+			celestialLayer.endFill();
+		}
 	}
 	// ─────────────────────────────────────────────────────────────────────────
 
@@ -735,12 +787,13 @@ function update() {
 		nuages[decimal].anchor.x = 0.7;
 		nuages[decimal].anchor.y = 0.5;
 		nuages[decimal].scale.setTo((pi[decimal])/10, (pi[decimal])/10);
-		nuages[decimal].alpha = 0.9;
+		nuages[decimal].alpha = AURORA_MODE ? 0.55 : 0.9;
 		nuages2.push(game.add.tileSprite(-200, 400+(pi[decimal]*34-15), 768, 312, 'nuage2'));
 		nuages2[decimal].anchor.x = 0.7;
 		nuages2[decimal].anchor.y = 0.5;
 		nuages2[decimal].scale.setTo((pi[decimal])/10, (pi[decimal])/10);
-		nuages[decimal].alpha = 0.99;
+		nuages[decimal].alpha  = AURORA_MODE ? 0.55 : 0.99;
+		nuages2[decimal].alpha = AURORA_MODE ? 0.45 : 0.90;
 
 		// Enable click-to-reveal on this cloud
 		nuages[decimal].inputEnabled = true;
@@ -814,8 +867,8 @@ function update() {
 		}
 		nuages[jj].x  += (pi[jj])/Math.abs(velocityDivider);
 		nuages2[jj].x += (pi[jj])/Math.abs(velocityDivider);
-		// Chromatic tint: each digit's hue, dimmed by the night factor
-		var ct = digitTint(pi[jj], nightAlpha);
+		// Chromatic tint: each digit's aurora hue at full brightness (no night dimming in aurora mode)
+		var ct = digitTint(pi[jj], AURORA_MODE ? 0 : nightAlpha);
 		nuages[jj].tint  = ct;
 		nuages2[jj].tint = ct;
 		jj++;
@@ -824,6 +877,14 @@ function update() {
 
 	// Place celestial layer above stars but below all cloud groups
 	celestialLayer.bringToTop();
+
+	// Aurora bands: above celestial, behind all cloud groups
+	if (AURORA_MODE) {
+		drawAurora();
+		auroraGfx.bringToTop();
+	} else {
+		auroraGfx.clear();
+	}
 
 	// Scroll ticker items leftward; remove those that exit the canvas
 	for (var ti = tickerItems.length - 1; ti >= 0; ti--) {
@@ -868,7 +929,7 @@ function update() {
 		if (drop.life > fadeStart) {
 			dropAlpha *= 1 - (drop.life - fadeStart) / (drop.maxLife - fadeStart);
 		}
-		rainGraphics.lineStyle(1.5, 0xAADDFF, dropAlpha);
+		rainGraphics.lineStyle(1.5, AURORA_MODE ? 0x44FFCC : 0xAADDFF, dropAlpha);
 		rainGraphics.moveTo(drop.x, drop.y);
 		rainGraphics.lineTo(drop.x - drop.vx * drop.len * 0.4, drop.y - drop.len);
 	}
@@ -901,7 +962,7 @@ function update() {
 	if (flashAlpha > 0) {
 		flashAlpha = Math.max(0, flashAlpha - 0.055);
 		flashGraphics.clear();
-		flashGraphics.beginFill(0xFFFFFF, flashAlpha);
+		flashGraphics.beginFill(AURORA_MODE ? 0xAADDFF : 0xFFFFFF, flashAlpha);
 		flashGraphics.drawRect(0, 0, 1300, 700);
 		flashGraphics.endFill();
 	} else {
@@ -919,7 +980,7 @@ function update() {
 
 
 </head>
-<body style="background-color: rgb(67,169,223);">
+<body style="background-color: #020510;">
 
 	<!-- Sound toggle -->
 	<button id="soundBtn" onclick="toggleSound()" title="Toggle Pi sonification" style="
