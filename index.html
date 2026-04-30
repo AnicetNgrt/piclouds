@@ -315,12 +315,13 @@ function update() {
 
 		nuages.push(game.add.tileSprite(-200, 400 - (d * 34 - 15), 768, 312, 'nuage'));
 		nuages[decimal].anchor.setTo(0.7, 0.5);
-		nuages[decimal].scale.setTo(d / 10, d / 10);
+		var scale = Math.max(d, 1) / 10;
+		nuages[decimal].scale.setTo(scale, scale);
 		nuages[decimal].alpha = 0.99;
 
 		nuages2.push(game.add.tileSprite(-200, 400 + (d * 34 - 15), 768, 312, 'nuage2'));
 		nuages2[decimal].anchor.setTo(0.7, 0.5);
-		nuages2[decimal].scale.setTo(d / 10, d / 10);
+		nuages2[decimal].scale.setTo(scale, scale);
 
 		orders[d].add(nuages[decimal]);
 		orders[d].add(nuages2[decimal]);
@@ -335,9 +336,14 @@ function update() {
 
 	// ── Cloud Movement & Tinting ──────────────────────────────────────────
 	while (jj <= decimal) {
-		if (nuages[jj].x > 1800) nuages[jj].destroy();
-		nuages[jj].x  += pi[jj] / VELOCITY;
-		nuages2[jj].x += pi[jj] / VELOCITY;
+		if (nuages[jj].x > 1800) {
+			nuages[jj].destroy();
+			nuages2[jj].destroy();
+			jj++;
+			continue;
+		}
+		nuages[jj].x  += (pi[jj] || 1) / VELOCITY;
+		nuages2[jj].x += (pi[jj] || 1) / VELOCITY;
 		var ct = digitTint(pi[jj], nightAlpha);
 		nuages[jj].tint  = ct;
 		nuages2[jj].tint = ct;
