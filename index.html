@@ -176,49 +176,28 @@ var shootingStars     = [];
 var shootingStarTimer = 0;
 var shootingStarPiIdx = 200;   // read Pi from offset 200 (independent of cloud range)
 
-// ── Pi Digit Sonification ─────────────────────────────────────────────────
-var audioCtx    = null;
-var soundEnabled = false;
-
-// Two-octave pentatonic scale: digits 0–9 → C4 D4 E4 G4 A4 C5 D5 E5 G5 A5
-var noteFreqs = [261.63, 293.66, 329.63, 392.00, 440.00,
-                 523.25, 587.33, 659.25, 783.99, 880.00];
-
-function initAudio() {
-	if (!audioCtx) {
-		audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-	}
-}
-
+// ── Sound toggle button ────────────────────────────────────────────────────
 function toggleSound() {
-	initAudio();
-	soundEnabled = !soundEnabled;
-	var btn = document.getElementById('soundBtn');
-	btn.textContent   = soundEnabled ? '\u266B' : '\u266A';
-	btn.style.opacity = soundEnabled ? '1' : '0.55';
-}
-
-function playDigitNote(digit) {
-	if (!soundEnabled || !audioCtx) return;
-
-	var freq     = noteFreqs[digit];
-	var volume   = 0.04 + digit * 0.018;   // 0.04–0.202
-	var duration = 0.4  + digit * 0.07;    // 0.4–1.03 s
-
-	var osc  = audioCtx.createOscillator();
-	var gain = audioCtx.createGain();
-
-	osc.type = 'sine';
-	osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-
-	gain.gain.setValueAtTime(volume, audioCtx.currentTime);
-	gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
-
-	osc.connect(gain);
-	gain.connect(audioCtx.destination);
-
-	osc.start(audioCtx.currentTime);
-	osc.stop(audioCtx.currentTime + duration);
+    if (!audioCtx) {
+        try {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            audioEnabled = true;
+            if (audioHint) {
+                audioHint.text = '\u266a sound on';
+                game.add.tween(audioHint).to({ alpha: 0 }, 1200,
+                    Phaser.Easing.Linear.None, true, 700);
+            }
+        } catch(e) {
+            if (audioHint) audioHint.text = 'audio n/a';
+            return;
+        }
+    } else {
+        audioEnabled = !audioEnabled;
+    }
+    if (audioEnabled && audioCtx.state === 'suspended') audioCtx.resume();
+    var btn = document.getElementById('soundBtn');
+    btn.textContent   = audioEnabled ? '\u266B' : '\u266A';
+    btn.style.opacity = audioEnabled ? '1' : '0.55';
 }
 // ──────────────────────────────────────────────────────────────────────────────
 
