@@ -124,7 +124,7 @@ var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds',
     { preload: preload, create: create, update: update }, false, false);
 
 var nuages = []; var densityDivider = 4; var velocityDivider = 0.6;
-var nuages2 = []; var field; var fond; var fond2;
+var nuages2 = []; var field; var fond; var forest; var fond2;
 var nn = 0; var jj = 0; var sum = 0; var lock = 0;
 var decimal = -1;
 var order0, order1, order2, order3, order4, order5, order6, order7, order8, order9;
@@ -497,6 +497,7 @@ function preload() {
 	game.load.image('nuage2','nuage2.png');
 	game.load.image('field','field.png');
 	game.load.image('fond','fond.png');
+	game.load.image('forest','forest.png');
 	game.load.image('fond2','fond2.png');
 }
 
@@ -524,6 +525,9 @@ function create() {
 
 	// Celestial layer: sun during day, moon during night (behind clouds)
 	celestialLayer = game.add.graphics(0, 0);
+
+	forest = game.add.tileSprite(0, 315, 1300, 230, 'forest');
+	forest.alpha = 0.95;
 
 	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
 	fond2.alpha = 0.9;
@@ -620,6 +624,7 @@ function update() {
 
 	// Tint the sky and water backgrounds
 	fond.tint  = currentTintHex;
+	forest.tint = currentTintHex;
 	fond2.tint = currentTintHex;
 
 	// Stars fade in during the night half of the cycle (phase 0.25 – 0.75)
