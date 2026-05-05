@@ -82,6 +82,7 @@ function playDigitNote(digit) {
 
 function drawKeyboard() {
     keyGfx.clear();
+    var theme = THEMES[currentTheme];
 
     // Subtle separator line above the strip
     keyGfx.lineStyle(1, 0xFFFFFF, 0.18);
@@ -101,19 +102,19 @@ function drawKeyboard() {
         }
 
         // Key body
-        keyGfx.lineStyle(1, 0x4466AA, 0.55);
+        keyGfx.lineStyle(1, theme.keyOutline, 0.55);
         if (lit) {
             keyGfx.beginFill(0xFFEE77, 0.97);
         } else if (i % 2 === 1) {
-            keyGfx.beginFill(0x7A9DBB, 0.72);   // alternate shade
+            keyGfx.beginFill(theme.keyAltFill, 0.72);   // alternate shade
         } else {
-            keyGfx.beginFill(0xCCE0F0, 0.72);
+            keyGfx.beginFill(theme.keyBaseFill, 0.72);
         }
         keyGfx.drawRoundedRect(x, KY, KW, KH, 5);
         keyGfx.endFill();
 
         // Update label colour to match key state
-        keyLabels[i].fill = lit ? '#221100' : '#335577';
+        keyLabels[i].fill = lit ? theme.keyLitLabel : theme.keyLabel;
         if (activeKeyTimer[i] > 0) activeKeyTimer[i]--;
     }
 }
@@ -200,6 +201,43 @@ var CYCLE_FRAMES  = 3600;   // one full cycle every 2 minutes at 30 fps
 var starsLayer;
 var celestialLayer; // sun and moon
 var currentTintHex = 0xFFFFFF;
+var themeButton;
+var currentTheme = 'sky';
+
+var THEMES = {
+	sky: {
+		backgroundColor: '#4488AA',
+		fondKey: 'fond',
+		fond2Key: 'fond2',
+		keyOutline: 0x4466AA,
+		keyAltFill: 0x7A9DBB,
+		keyBaseFill: 0xCCE0F0,
+		keyLabel: '#335577',
+		keyLitLabel: '#221100',
+		audioHint: '#FFFFFF',
+		counterStroke: '#001133',
+		tickerBand: 0x000000,
+		tickerBandAlpha: 0.42,
+		histPanel: 0x000000,
+		histPanelAlpha: 0.48
+	},
+	desert: {
+		backgroundColor: '#d8b26b',
+		fondKey: 'fond_desert',
+		fond2Key: 'fond2_desert',
+		keyOutline: 0x8B5A2B,
+		keyAltFill: 0xD5A25E,
+		keyBaseFill: 0xEBC98D,
+		keyLabel: '#5F3B1B',
+		keyLitLabel: '#2A1606',
+		audioHint: '#FFF2D8',
+		counterStroke: '#4A2A14',
+		tickerBand: 0x5B3210,
+		tickerBandAlpha: 0.30,
+		histPanel: 0x6B3D17,
+		histPanelAlpha: 0.38
+	}
+};
 
 function lerp(a, b, t) { return a + (b - a) * t; }
 
@@ -307,10 +345,11 @@ var HBARBASE  = HY + HH - 14;      // y-baseline just above digit labels
 
 function drawHistogram() {
 	histGfx.clear();
+	var theme = THEMES[currentTheme];
 
 	// Semi-transparent panel background
 	histGfx.lineStyle(1, 0xFFFFFF, 0.18);
-	histGfx.beginFill(0x000000, 0.48);
+	histGfx.beginFill(theme.histPanel, theme.histPanelAlpha);
 	histGfx.drawRoundedRect(HX, HY, HW, HH, 5);
 	histGfx.endFill();
 
@@ -498,11 +537,38 @@ function preload() {
 	game.load.image('field','field.png');
 	game.load.image('fond','fond.png');
 	game.load.image('fond2','fond2.png');
+	game.load.image('fond_desert','fond_desert.png');
+	game.load.image('fond2_desert','fond2_desert.png');
+}
+
+function applyTheme() {
+	var theme = THEMES[currentTheme];
+	game.stage.backgroundColor = theme.backgroundColor;
+	fond.loadTexture(theme.fondKey);
+	fond2.loadTexture(theme.fond2Key);
+	if (audioHint) { audioHint.fill = theme.audioHint; }
+	if (piCounterText) { piCounterText.stroke = theme.counterStroke; }
+	if (tickerBgGfx) {
+		tickerBgGfx.clear();
+		tickerBgGfx.beginFill(theme.tickerBand, theme.tickerBandAlpha);
+		tickerBgGfx.drawRect(0, 0, 1300, 28);
+		tickerBgGfx.endFill();
+	}
+	if (themeButton) {
+		themeButton.text = 'Theme: ' + (currentTheme === 'desert' ? 'Desert' : 'Sky');
+	}
+	drawKeyboard();
+	drawHistogram();
+}
+
+function toggleTheme() {
+	currentTheme = currentTheme === 'sky' ? 'desert' : 'sky';
+	applyTheme();
 }
 
 function create() {
 	game.time.desiredFps = 30;
-	game.stage.backgroundColor = "#4488AA";
+	game.stage.backgroundColor = THEMES[currentTheme].backgroundColor;
 	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
 
 	// Stars layer – drawn once, positioned by Pi digits, revealed at night
@@ -556,7 +622,7 @@ function create() {
 
 	audioHint = game.add.text(1285, 10, '\u266a click for sound', {
 		font:  '13px monospace',
-		fill:  '#FFFFFF'
+		fill:  THEMES[currentTheme].audioHint
 	}, uiGroup);
 	audioHint.anchor.setTo(1, 0);
 
@@ -564,7 +630,7 @@ function create() {
 	piCounterText = game.add.text(8, 10, '\u03C0[0] = 3', {
 		font:            'bold 14px monospace',
 		fill:            '#ffffff',
-		stroke:          '#001133',
+		stroke:          THEMES[currentTheme].counterStroke,
 		strokeThickness: 3
 	}, uiGroup);
 
@@ -591,7 +657,7 @@ function create() {
 
 	// Dark band at the very top behind the ticker
 	tickerBgGfx = game.add.graphics(0, 0);
-	tickerBgGfx.beginFill(0x000000, 0.42);
+	tickerBgGfx.beginFill(THEMES[currentTheme].tickerBand, THEMES[currentTheme].tickerBandAlpha);
 	tickerBgGfx.drawRect(0, 0, 1300, 28);
 	tickerBgGfx.endFill();
 
@@ -607,6 +673,20 @@ function create() {
 	});
 	hudText.anchor.setTo(0, 0.5);
 	hudText.alpha = 0.85;
+
+	themeButton = game.add.text(1288, 34, 'Theme: Sky', {
+		font: 'bold 13px monospace',
+		fill: '#FFF5E1',
+		stroke: '#000000',
+		strokeThickness: 3
+	});
+	themeButton.anchor.setTo(1, 0);
+	themeButton.inputEnabled = true;
+	themeButton.events.onInputDown.add(toggleTheme);
+	themeButton.events.onInputOver.add(function() { themeButton.alpha = 1; });
+	themeButton.events.onInputOut.add(function() { themeButton.alpha = 0.82; });
+	themeButton.alpha = 0.82;
+	applyTheme();
 	// ──────────────────────────────────────────────────────────
 }
 
