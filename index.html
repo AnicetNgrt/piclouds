@@ -2,7 +2,6 @@
 <html>
 <head>
 	<title>Nuages de Pi</title>
-	<link href="stylesheet.css" rel="stylesheet">
 	<meta charset="utf-8"/>
 	<script type="text/javascript" src="phaser.min.js"></script>
 	<script>
@@ -95,25 +94,25 @@ function drawKeyboard() {
         // Glow halo behind lit key
         if (lit) {
             keyGfx.lineStyle(0);
-            keyGfx.beginFill(0xFFDD22, 0.28);
+            keyGfx.beginFill(0x9CFBFF, 0.32);
             keyGfx.drawRoundedRect(x - 5, KY - 5, KW + 10, KH + 10, 9);
             keyGfx.endFill();
         }
 
         // Key body
-        keyGfx.lineStyle(1, 0x4466AA, 0.55);
+        keyGfx.lineStyle(1, 0x0E5C7B, 0.6);
         if (lit) {
-            keyGfx.beginFill(0xFFEE77, 0.97);
+            keyGfx.beginFill(0xC8FFF4, 0.97);
         } else if (i % 2 === 1) {
-            keyGfx.beginFill(0x7A9DBB, 0.72);   // alternate shade
+            keyGfx.beginFill(0x4C96AE, 0.78);   // alternate shade
         } else {
-            keyGfx.beginFill(0xCCE0F0, 0.72);
+            keyGfx.beginFill(0x9FD5E4, 0.78);
         }
         keyGfx.drawRoundedRect(x, KY, KW, KH, 5);
         keyGfx.endFill();
 
         // Update label colour to match key state
-        keyLabels[i].fill = lit ? '#221100' : '#335577';
+        keyLabels[i].fill = lit ? '#05303d' : '#114d65';
         if (activeKeyTimer[i] > 0) activeKeyTimer[i]--;
     }
 }
@@ -502,7 +501,7 @@ function preload() {
 
 function create() {
 	game.time.desiredFps = 30;
-	game.stage.backgroundColor = "#4488AA";
+	game.stage.backgroundColor = "#0d5c82";
 	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
 
 	// Stars layer – drawn once, positioned by Pi digits, revealed at night
@@ -547,7 +546,7 @@ function create() {
 		var kx  = KX0 + ki * (KW + KGAP) + Math.floor(KW / 2);
 		var lbl = game.add.text(kx, KY + 9, ki + '\n' + noteNames[ki], {
 			font:  'bold 10px monospace',
-			fill:  '#335577',
+			fill:  '#114d65',
 			align: 'center'
 		}, uiGroup);
 		lbl.anchor.setTo(0.5, 0);
@@ -556,7 +555,7 @@ function create() {
 
 	audioHint = game.add.text(1285, 10, '\u266a click for sound', {
 		font:  '13px monospace',
-		fill:  '#FFFFFF'
+		fill:  '#D8F8FF'
 	}, uiGroup);
 	audioHint.anchor.setTo(1, 0);
 
@@ -564,7 +563,7 @@ function create() {
 	piCounterText = game.add.text(8, 10, '\u03C0[0] = 3', {
 		font:            'bold 14px monospace',
 		fill:            '#ffffff',
-		stroke:          '#001133',
+		stroke:          '#02263a',
 		strokeThickness: 3
 	}, uiGroup);
 
@@ -601,7 +600,7 @@ function create() {
 	// HUD: top-left Pi counter (inside the ticker band)
 	hudText = game.add.text(8, TICKER_Y, '\u03C0[0] = 3', {
 		font: 'bold 13px monospace',
-		fill: '#FFFFFF',
+		fill: '#E8FCFF',
 		stroke: '#000000',
 		strokeThickness: 2
 	});
@@ -630,9 +629,9 @@ function update() {
 	starsLayer.alpha = nightAlpha;
 
 	// Darken the stage background at night
-	var bgR = Math.floor(lerp(67,  5,  nightAlpha));
-	var bgG = Math.floor(lerp(169, 5,  nightAlpha));
-	var bgB = Math.floor(lerp(223, 30, nightAlpha));
+	var bgR = Math.floor(lerp(13,  3,  nightAlpha));
+	var bgG = Math.floor(lerp(92,  19, nightAlpha));
+	var bgB = Math.floor(lerp(130, 44, nightAlpha));
 	game.stage.backgroundColor = rgbToCSS(bgR, bgG, bgB);
 	// ────────────────────────────────────────────────────────────────────
 
@@ -919,14 +918,14 @@ function update() {
 
 
 </head>
-<body style="background-color: rgb(67,169,223);">
+<body style="background-color: rgb(13,92,130);">
 
 	<!-- Sound toggle -->
 	<button id="soundBtn" onclick="toggleSound()" title="Toggle Pi sonification" style="
 		position: fixed; bottom: 14px; right: 14px;
-		background: rgba(255,255,255,0.15);
-		border: 1px solid rgba(255,255,255,0.45);
-		color: #fff; font-size: 20px; cursor: pointer;
+		background: rgba(5,42,60,0.38);
+		border: 1px solid rgba(174,240,255,0.42);
+		color: #f0feff; font-size: 20px; cursor: pointer;
 		padding: 6px 11px; border-radius: 7px;
 		font-family: sans-serif; z-index: 999;
 		backdrop-filter: blur(4px);
