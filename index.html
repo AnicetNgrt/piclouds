@@ -125,6 +125,13 @@ var game = new Phaser.Game(1300, 700, Phaser.CANVAS, 'PIclouds',
 
 var nuages = []; var densityDivider = 4; var velocityDivider = 0.6;
 var nuages2 = []; var field; var fond; var fond2;
+var cursors;
+var seaGroup, boatLayer, boatGraphics, wakeGraphics;
+var sailor = null;
+var seaTop = 405;
+var seaBottom = 618;
+var seaLeft = 34;
+var seaRight = 1266;
 var nn = 0; var jj = 0; var sum = 0; var lock = 0;
 var decimal = -1;
 var order0, order1, order2, order3, order4, order5, order6, order7, order8, order9;
@@ -492,6 +499,160 @@ function spawnRain() {
 }
 // =====================================================================
 
+function createSailor() {
+	return {
+		x: 220,
+		y: 520,
+		vx: 0,
+		vy: 0,
+		facing: 1,
+		bob: 0,
+		hullWidth: 74,
+		hullHeight: 18,
+		speed: 0,
+		maxSpeed: 4.4,
+		accel: 0.22,
+		drag: 0.9,
+		turnSpeed: 0.12,
+		wakeSeed: 0
+	};
+}
+
+function updateSailor(nightAlpha) {
+	if (!sailor) { return; }
+
+	var left  = cursors.left.isDown;
+	var right = cursors.right.isDown;
+	var up    = cursors.up.isDown;
+	var down  = cursors.down.isDown;
+
+	if (left)  { sailor.vx -= sailor.accel; }
+	if (right) { sailor.vx += sailor.accel; }
+	if (up)    { sailor.vy -= sailor.accel * 0.75; }
+	if (down)  { sailor.vy += sailor.accel * 0.75; }
+
+	sailor.vx *= sailor.drag;
+	sailor.vy *= sailor.drag;
+
+	sailor.vx = Math.max(-sailor.maxSpeed, Math.min(sailor.maxSpeed, sailor.vx));
+	sailor.vy = Math.max(-sailor.maxSpeed * 0.55, Math.min(sailor.maxSpeed * 0.55, sailor.vy));
+
+	sailor.x += sailor.vx;
+	sailor.y += sailor.vy;
+	sailor.x = Math.max(seaLeft, Math.min(seaRight, sailor.x));
+	sailor.y = Math.max(seaTop, Math.min(seaBottom, sailor.y));
+
+	if (Math.abs(sailor.vx) > 0.05) {
+		sailor.facing = sailor.vx > 0 ? 1 : -1;
+	}
+
+	sailor.speed = Math.sqrt(sailor.vx * sailor.vx + sailor.vy * sailor.vy);
+	sailor.bob += 0.05 + sailor.speed * 0.018;
+	sailor.wakeSeed += sailor.speed * 0.14 + 0.03;
+
+	drawWake(nightAlpha);
+	drawSailor(nightAlpha);
+}
+
+function drawWake(nightAlpha) {
+	wakeGraphics.clear();
+	if (!sailor || sailor.speed < 0.18) { return; }
+
+	var wakeAlpha = Math.min(0.42, 0.12 + sailor.speed * 0.06) * (0.75 + nightAlpha * 0.25);
+	var wakeColor = nightAlpha > 0.45 ? 0xD8EAFF : 0xF8FCFF;
+	var dirX = sailor.speed > 0 ? sailor.vx / sailor.speed : sailor.facing;
+	var dirY = sailor.speed > 0 ? sailor.vy / sailor.speed : 0;
+	var sternX = sailor.x - dirX * 34;
+	var sternY = sailor.y - dirY * 9 + 11;
+
+	for (var w = 0; w < 3; w++) {
+		var spread = 10 + w * 8;
+		var length = 18 + w * 12;
+		var drift = Math.sin(sailor.wakeSeed + w * 0.9) * 3;
+		wakeGraphics.lineStyle(Math.max(1, 2 - w * 0.35), wakeColor, wakeAlpha - w * 0.08);
+		wakeGraphics.moveTo(sternX - drift, sternY + w * 2);
+		wakeGraphics.lineTo(sternX - dirX * length - dirY * spread, sternY - dirY * length + dirX * spread);
+		wakeGraphics.moveTo(sternX + drift, sternY + w * 2);
+		wakeGraphics.lineTo(sternX - dirX * length + dirY * spread, sternY - dirY * length - dirX * spread);
+	}
+}
+
+function drawSailor(nightAlpha) {
+	boatGraphics.clear();
+	if (!sailor) { return; }
+
+	var bobY = Math.sin(sailor.bob) * 3;
+	var heel = Math.max(-0.18, Math.min(0.18, sailor.vx / sailor.maxSpeed * 0.22));
+	var x = sailor.x;
+	var y = sailor.y + bobY;
+	var hw = sailor.hullWidth / 2;
+	var hh = sailor.hullHeight;
+	var mastX = x + sailor.facing * 4;
+	var sailLean = sailor.facing * (8 + sailor.speed * 0.8);
+	var moonlit = Math.min(1, nightAlpha * 1.25);
+	var hullColor = moonlit > 0.35 ? 0x63495B : 0x875A3A;
+	var trimColor = moonlit > 0.35 ? 0xE6DCCF : 0xFFF6DD;
+	var sailColor = moonlit > 0.35 ? 0xD9E8FF : 0xFFF7E1;
+	var skinColor = moonlit > 0.35 ? 0xF1C9A6 : 0xF6D1A8;
+	var shirtColor = moonlit > 0.35 ? 0xF2C14D : 0xE47B54;
+
+	boatGraphics.lineStyle(2, 0x1A1F2B, 0.28);
+	boatGraphics.beginFill(0x000000, 0.12);
+	boatGraphics.drawEllipse(x, y + 17, 72, 12);
+	boatGraphics.endFill();
+
+	boatGraphics.lineStyle(2, 0x35251B, 0.85);
+	boatGraphics.beginFill(hullColor, 0.97);
+	boatGraphics.moveTo(x - hw, y + heel * 8);
+	boatGraphics.lineTo(x - hw * 0.34, y + hh + heel * 4);
+	boatGraphics.lineTo(x + hw * 0.6, y + hh + heel * 3);
+	boatGraphics.lineTo(x + hw, y + hh * 0.2);
+	boatGraphics.lineTo(x + hw * 0.18, y - hh * 0.36);
+	boatGraphics.lineTo(x - hw * 0.82, y - hh * 0.2);
+	boatGraphics.endFill();
+
+	boatGraphics.lineStyle(2, trimColor, 0.9);
+	boatGraphics.moveTo(x - hw * 0.72, y + 1);
+	boatGraphics.lineTo(x + hw * 0.18, y - 2);
+
+	boatGraphics.lineStyle(3, 0x6E4B2A, 0.95);
+	boatGraphics.moveTo(mastX, y - 8);
+	boatGraphics.lineTo(mastX, y - 58);
+
+	boatGraphics.lineStyle(1, 0xB78D55, 0.9);
+	boatGraphics.beginFill(sailColor, 0.94);
+	boatGraphics.moveTo(mastX, y - 52);
+	boatGraphics.lineTo(mastX, y - 10);
+	boatGraphics.lineTo(mastX + sailLean, y - 28);
+	boatGraphics.endFill();
+
+	boatGraphics.lineStyle(1, 0x6E4B2A, 0.8);
+	boatGraphics.moveTo(mastX, y - 42);
+	boatGraphics.lineTo(mastX + sailLean, y - 28);
+	boatGraphics.moveTo(mastX, y - 10);
+	boatGraphics.lineTo(mastX + sailLean, y - 28);
+
+	boatGraphics.lineStyle(0);
+	boatGraphics.beginFill(skinColor, 1);
+	boatGraphics.drawCircle(x - sailor.facing * 5, y - 26, 12);
+	boatGraphics.endFill();
+
+	boatGraphics.beginFill(shirtColor, 1);
+	boatGraphics.moveTo(x - sailor.facing * 13, y - 2);
+	boatGraphics.lineTo(x + sailor.facing * 1, y - 6);
+	boatGraphics.lineTo(x + sailor.facing * 11, y + 11);
+	boatGraphics.lineTo(x - sailor.facing * 10, y + 12);
+	boatGraphics.endFill();
+
+	boatGraphics.lineStyle(2, 0x3F2A21, 0.9);
+	boatGraphics.moveTo(x - sailor.facing * 2, y - 8);
+	boatGraphics.lineTo(mastX, y - 28);
+	boatGraphics.moveTo(x - sailor.facing * 10, y + 10);
+	boatGraphics.lineTo(x - sailor.facing * 20, y + 18);
+	boatGraphics.moveTo(x + sailor.facing * 7, y + 8);
+	boatGraphics.lineTo(x + sailor.facing * 18, y + 18);
+}
+
 function preload() {
 	game.load.image('nuage','nuage.png');
 	game.load.image('nuage2','nuage2.png');
@@ -527,6 +688,12 @@ function create() {
 
 	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
 	fond2.alpha = 0.9;
+	seaGroup = game.add.group();
+	wakeGraphics = game.add.graphics(0, 0, seaGroup);
+	boatLayer = game.add.group();
+	boatGraphics = game.add.graphics(0, 0, boatLayer);
+	sailor = createSailor();
+	cursors = game.input.keyboard.createCursorKeys();
 
 	order0 = game.add.group();
 	order1 = game.add.group();
@@ -608,6 +775,15 @@ function create() {
 	hudText.anchor.setTo(0, 0.5);
 	hudText.alpha = 0.85;
 	// ──────────────────────────────────────────────────────────
+
+	var boatHint = game.add.text(650, 677, 'arrow keys to sail the pi boat', {
+		font: 'bold 13px monospace',
+		fill: '#EAF6FF',
+		stroke: '#18344B',
+		strokeThickness: 3
+	}, uiGroup);
+	boatHint.anchor.setTo(0.5, 1);
+	boatHint.alpha = 0.88;
 }
 
 function update() {
@@ -635,6 +811,7 @@ function update() {
 	var bgB = Math.floor(lerp(223, 30, nightAlpha));
 	game.stage.backgroundColor = rgbToCSS(bgR, bgG, bgB);
 	// ────────────────────────────────────────────────────────────────────
+	updateSailor(nightAlpha);
 
 	// ── Shooting Stars ───────────────────────────────────────────────────────
 	// Spawn a new star only while the night phase is visible
@@ -851,6 +1028,8 @@ function update() {
 	game.world.bringToTop(order9);
 	rainGraphics.bringToTop();   // rain in front of clouds
 	fond2.bringToTop();          // ground always on top of rain
+	seaGroup.bringToTop();
+	boatLayer.bringToTop();
 
 	// ── Rain rendering ────────────────────────────────────────────────
 	rainGraphics.clear();
@@ -909,6 +1088,7 @@ function update() {
 	}
 	lightningGraphics.bringToTop();
 	flashGraphics.bringToTop();
+	uiGroup.bringToTop();
 	// ──────────────────────────────────────────────────────────────────────
 }
 
