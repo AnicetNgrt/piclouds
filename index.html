@@ -22,6 +22,129 @@ var noteFreqs = [261.63, 293.66, 329.63, 392.00, 440.00,
                  523.25, 587.33, 659.25, 783.99, 880.00];
 var noteNames = ['C4','D4','E4','G4','A4','C5','D5','E5','G5','A5'];
 
+var THEMES = {
+	classic: {
+		id: 'classic',
+		name: 'Classic',
+		bodyBackground: 'rgb(67,169,223)',
+		stageDay: { r: 67, g: 169, b: 223 },
+		stageNight: { r: 5, g: 5, b: 30 },
+		tintStops: [
+			{ r: 255, g: 255, b: 255 },
+			{ r: 255, g: 130, b: 50  },
+			{ r: 18,  g: 22,  b: 75  },
+			{ r: 255, g: 165, b: 110 }
+		],
+		digitColors: [
+			{ r: 187, g: 143, b: 206 },
+			{ r: 126, g: 200, b: 227 },
+			{ r:  72, g: 201, b: 176 },
+			{ r:  88, g: 214, b: 141 },
+			{ r: 247, g: 220, b: 111 },
+			{ r: 240, g: 165, b:   0 },
+			{ r: 235, g: 116, b:  52 },
+			{ r: 231, g:  76, b:  60 },
+			{ r: 175, g: 122, b: 197 },
+			{ r: 241, g: 148, b: 138 }
+		],
+		tickerCssColors: ['#FF5252','#FF9100','#FFD740','#69F0AE','#40C4FF','#00E5FF','#7C4DFF','#FF4081','#CCFF90','#FF6D00'],
+		keyLine: 0x4466AA,
+		keyBaseA: 0xCCE0F0,
+		keyBaseB: 0x7A9DBB,
+		keyLitFill: 0xFFEE77,
+		keyLitGlow: 0xFFDD22,
+		keyLabel: '#335577',
+		keyLabelLit: '#221100',
+		keySeparator: 0xFFFFFF,
+		audioHint: '#FFFFFF',
+		piCounterStroke: '#001133',
+		hudStroke: '#000000',
+		tickerBandFill: 0x000000,
+		tickerBandAlpha: 0.42,
+		histPanelFill: 0x000000,
+		histPanelBorder: 0xFFFFFF,
+		histExpectedLine: 0xFFFFFF,
+		histLabelStroke: '#000000',
+		rainColor: 0xAADDFF,
+		lightningGlow: 0xFFFF99,
+		lightningCore: 0xFFFFFF,
+		flashColor: 0xFFFFFF,
+		starColor: 0xFFFFFF,
+		shootingStarGlow: 0xCCE0FF,
+		shootingStarCore: 0xFFFFFF,
+		sunHalo: 0xFFEE88,
+		sunCore: 0xFFDD44,
+		moonHalo: 0xCCDDFF,
+		moonCore: 0xF0F5FF,
+		buttonBg: 'rgba(255,255,255,0.15)',
+		buttonBorder: 'rgba(255,255,255,0.45)',
+		buttonColor: '#FFFFFF',
+		buttonShadow: 'none',
+		buttonHoverBg: 'rgba(255,255,255,0.24)'
+	},
+	neon: {
+		id: 'neon',
+		name: 'Neon',
+		bodyBackground: 'rgb(6,8,24)',
+		stageDay: { r: 6, g: 8, b: 24 },
+		stageNight: { r: 1, g: 1, b: 12 },
+		tintStops: [
+			{ r:  40, g: 255, b: 244 },
+			{ r: 255, g:  65, b: 199 },
+			{ r:   9, g:   7, b:  44 },
+			{ r:  98, g:  45, b: 255 }
+		],
+		digitColors: [
+			{ r: 255, g:  62, b: 181 },
+			{ r:  68, g: 255, b: 247 },
+			{ r: 160, g: 104, b: 255 },
+			{ r: 167, g: 255, b:  91 },
+			{ r: 255, g: 214, b:  64 },
+			{ r: 255, g: 120, b: 245 },
+			{ r:  77, g: 163, b: 255 },
+			{ r: 255, g: 108, b:  58 },
+			{ r:  53, g: 255, b: 139 },
+			{ r: 255, g:  56, b: 110 }
+		],
+		tickerCssColors: ['#FF3EB5','#44FFF7','#A068FF','#A7FF5B','#FFD640','#FF78F5','#4DA3FF','#FF6C3A','#35FF8B','#FF386E'],
+		keyLine: 0x36D7FF,
+		keyBaseA: 0x120F2F,
+		keyBaseB: 0x1D1748,
+		keyLitFill: 0x7BFFFB,
+		keyLitGlow: 0xFF3EB5,
+		keyLabel: '#73F9FF',
+		keyLabelLit: '#16051D',
+		keySeparator: 0x44FFF7,
+		audioHint: '#8CFBFF',
+		piCounterStroke: '#13001D',
+		hudStroke: '#16051D',
+		tickerBandFill: 0x070316,
+		tickerBandAlpha: 0.78,
+		histPanelFill: 0x070316,
+		histPanelBorder: 0x44FFF7,
+		histExpectedLine: 0xFF3EB5,
+		histLabelStroke: '#16051D',
+		rainColor: 0x44FFF7,
+		lightningGlow: 0xFF5CF4,
+		lightningCore: 0xFFFFFF,
+		flashColor: 0x7A4DFF,
+		starColor: 0x53F7FF,
+		shootingStarGlow: 0xFF5CF4,
+		shootingStarCore: 0xFFFFFF,
+		sunHalo: 0xFF4EDB,
+		sunCore: 0x5CFFF3,
+		moonHalo: 0x8C5BFF,
+		moonCore: 0xF2D7FF,
+		buttonBg: 'rgba(18,12,48,0.88)',
+		buttonBorder: 'rgba(68,255,247,0.65)',
+		buttonColor: '#8CFBFF',
+		buttonShadow: '0 0 14px rgba(68,255,247,0.35), 0 0 28px rgba(255,62,181,0.18)',
+		buttonHoverBg: 'rgba(34,24,78,0.96)'
+	}
+};
+
+var activeTheme = THEMES.classic;
+
 // Piano-strip layout (bottom-centre of the 1300×700 canvas)
 var KW  = 44, KH = 58, KGAP = 3;
 var KX0 = Math.round((1300 - 10 * (KW + KGAP)) / 2);
@@ -81,41 +204,42 @@ function playDigitNote(digit) {
 }
 
 function drawKeyboard() {
-    keyGfx.clear();
+	keyGfx.clear();
+	var theme = activeTheme;
 
-    // Subtle separator line above the strip
-    keyGfx.lineStyle(1, 0xFFFFFF, 0.18);
-    keyGfx.moveTo(KX0 - 8, KY - 8);
-    keyGfx.lineTo(KX0 + 10 * (KW + KGAP) - KGAP + 8, KY - 8);
+	// Subtle separator line above the strip
+	keyGfx.lineStyle(1, theme.keySeparator, 0.18);
+	keyGfx.moveTo(KX0 - 8, KY - 8);
+	keyGfx.lineTo(KX0 + 10 * (KW + KGAP) - KGAP + 8, KY - 8);
 
     for (var i = 0; i < 10; i++) {
         var x   = KX0 + i * (KW + KGAP);
         var lit = activeKeyTimer[i] > 0;
 
-        // Glow halo behind lit key
-        if (lit) {
-            keyGfx.lineStyle(0);
-            keyGfx.beginFill(0xFFDD22, 0.28);
-            keyGfx.drawRoundedRect(x - 5, KY - 5, KW + 10, KH + 10, 9);
-            keyGfx.endFill();
-        }
+		// Glow halo behind lit key
+		if (lit) {
+			keyGfx.lineStyle(0);
+			keyGfx.beginFill(theme.keyLitGlow, 0.28);
+			keyGfx.drawRoundedRect(x - 5, KY - 5, KW + 10, KH + 10, 9);
+			keyGfx.endFill();
+		}
 
-        // Key body
-        keyGfx.lineStyle(1, 0x4466AA, 0.55);
-        if (lit) {
-            keyGfx.beginFill(0xFFEE77, 0.97);
-        } else if (i % 2 === 1) {
-            keyGfx.beginFill(0x7A9DBB, 0.72);   // alternate shade
-        } else {
-            keyGfx.beginFill(0xCCE0F0, 0.72);
-        }
-        keyGfx.drawRoundedRect(x, KY, KW, KH, 5);
-        keyGfx.endFill();
+		// Key body
+		keyGfx.lineStyle(1, theme.keyLine, 0.75);
+		if (lit) {
+			keyGfx.beginFill(theme.keyLitFill, 0.97);
+		} else if (i % 2 === 1) {
+			keyGfx.beginFill(theme.keyBaseB, 0.84);
+		} else {
+			keyGfx.beginFill(theme.keyBaseA, 0.84);
+		}
+		keyGfx.drawRoundedRect(x, KY, KW, KH, 5);
+		keyGfx.endFill();
 
-        // Update label colour to match key state
-        keyLabels[i].fill = lit ? '#221100' : '#335577';
-        if (activeKeyTimer[i] > 0) activeKeyTimer[i]--;
-    }
+		// Update label colour to match key state
+		keyLabels[i].fill = lit ? theme.keyLabelLit : theme.keyLabel;
+		if (activeKeyTimer[i] > 0) activeKeyTimer[i]--;
+	}
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -170,6 +294,10 @@ function toggleSound() {
 	btn.style.opacity = soundEnabled ? '1' : '0.55';
 }
 
+function handleThemeChange(value) {
+	setTheme(value);
+}
+
 function playDigitNote(digit) {
 	if (!soundEnabled || !audioCtx) return;
 
@@ -205,29 +333,70 @@ function lerp(a, b, t) { return a + (b - a) * t; }
 
 function rgbToPhaser(r, g, b) { return (Math.round(r) << 16) | (Math.round(g) << 8) | Math.round(b); }
 
-// ── Chromatic Pi: per-digit rainbow colours ───────────────────────────────
-// Each of the 10 Pi digits maps to a distinct hue. Clouds inherit this
-// colour and it dims gracefully as the night cycle deepens, so the rainbow
-// persists visibly through dusk, becomes muted moonlit pastels at midnight,
-// and blooms back to full saturation at dawn.
-var DIGIT_COLORS = [
-	{ r: 187, g: 143, b: 206 }, // 0 – lavender
-	{ r: 126, g: 200, b: 227 }, // 1 – sky blue
-	{ r:  72, g: 201, b: 176 }, // 2 – teal
-	{ r:  88, g: 214, b: 141 }, // 3 – mint
-	{ r: 247, g: 220, b: 111 }, // 4 – yellow
-	{ r: 240, g: 165, b:   0 }, // 5 – amber
-	{ r: 235, g: 116, b:  52 }, // 6 – orange
-	{ r: 231, g:  76, b:  60 }, // 7 – tomato
-	{ r: 175, g: 122, b: 197 }, // 8 – violet
-	{ r: 241, g: 148, b: 138 }, // 9 – salmon
-];
+function toCssHex(value) {
+	return '#' + ('000000' + value.toString(16)).slice(-6);
+}
+
+function buildDigitPhaserColors(theme) {
+	var colors = [];
+	for (var i = 0; i < theme.digitColors.length; i++) {
+		var dc = theme.digitColors[i];
+		colors.push(rgbToPhaser(dc.r, dc.g, dc.b));
+	}
+	return colors;
+}
+
+function applyThemeControls() {
+	document.body.style.backgroundColor = activeTheme.bodyBackground;
+
+	var soundBtn = document.getElementById('soundBtn');
+	if (soundBtn) {
+		soundBtn.style.background = activeTheme.buttonBg;
+		soundBtn.style.borderColor = activeTheme.buttonBorder;
+		soundBtn.style.color = activeTheme.buttonColor;
+		soundBtn.style.boxShadow = activeTheme.buttonShadow;
+	}
+
+	var themeSelect = document.getElementById('themeSelect');
+	if (themeSelect) {
+		themeSelect.style.background = activeTheme.buttonBg;
+		themeSelect.style.borderColor = activeTheme.buttonBorder;
+		themeSelect.style.color = activeTheme.buttonColor;
+		themeSelect.style.boxShadow = activeTheme.buttonShadow;
+	}
+}
+
+function setTheme(themeId) {
+	if (!THEMES[themeId]) return;
+	activeTheme = THEMES[themeId];
+	DIGIT_CSS_COLORS = activeTheme.tickerCssColors.slice();
+	DIGIT_PHASER_COLORS = buildDigitPhaserColors(activeTheme);
+	applyThemeControls();
+
+	if (audioHint) audioHint.fill = activeTheme.audioHint;
+	if (piCounterText) piCounterText.stroke = activeTheme.piCounterStroke;
+	if (hudText) hudText.stroke = activeTheme.hudStroke;
+	if (tickerBgGfx) {
+		tickerBgGfx.clear();
+		tickerBgGfx.beginFill(activeTheme.tickerBandFill, activeTheme.tickerBandAlpha);
+		tickerBgGfx.drawRect(0, 0, 1300, 28);
+		tickerBgGfx.endFill();
+	}
+	for (var i = 0; i < histLabels.length; i++) {
+		histLabels[i].fill = DIGIT_CSS_COLORS[i];
+		histLabels[i].stroke = activeTheme.histLabelStroke;
+	}
+}
+
+// ── Chromatic Pi: per-digit palette comes from the active theme ───────────
+var DIGIT_CSS_COLORS = THEMES.classic.tickerCssColors.slice();
+var DIGIT_PHASER_COLORS = buildDigitPhaserColors(THEMES.classic);
 
 // Returns a packed tint that blends digit hue with the current night factor.
 // nightFactor 0 = full day (vivid), 1 = full night (dim but hued).
 function digitTint(digit, nightFactor) {
-	var dc = DIGIT_COLORS[digit];
-	var f  = lerp(1.0, 0.22, nightFactor);
+	var dc = activeTheme.digitColors[digit];
+	var f  = lerp(1.0, activeTheme.id === 'neon' ? 0.4 : 0.22, nightFactor);
 	return rgbToPhaser(dc.r * f, dc.g * f, dc.b * f);
 }
 
@@ -242,15 +411,8 @@ function rgbToCSS(r, g, b) {
 		('0' + b.toString(16)).slice(-2);
 }
 
-// Four colour stops around the cycle (phase 0 = noon, 0.5 = midnight)
-var tintStops = [
-	{ r: 255, g: 255, b: 255 },  // 0.00 noon  – no tint
-	{ r: 255, g: 130, b: 50  },  // 0.25 dusk  – warm orange
-	{ r: 18,  g: 22,  b: 75  },  // 0.50 night – deep indigo
-	{ r: 255, g: 165, b: 110 },  // 0.75 dawn  – peach
-];
-
 function getDayNightTint(phase) {
+	var tintStops = activeTheme.tintStops;
 	var n  = tintStops.length;
 	var sc = phase * n;
 	var i  = Math.floor(sc) % n;
@@ -265,19 +427,6 @@ function getDayNightTint(phase) {
 // ──────────────────────────────────────────────────────────────────────────
 
 // ── Pi Digit Ticker & Click-to-Reveal ─────────────────────────────────────
-// 10 vivid colours, one per digit 0-9
-var DIGIT_CSS_COLORS = [
-	'#FF5252', // 0  red
-	'#FF9100', // 1  orange
-	'#FFD740', // 2  yellow
-	'#69F0AE', // 3  green
-	'#40C4FF', // 4  sky-blue
-	'#00E5FF', // 5  cyan
-	'#7C4DFF', // 6  purple
-	'#FF4081', // 7  pink
-	'#CCFF90', // 8  lime
-	'#FF6D00'  // 9  deep-orange
-];
 
 var tickerItems  = [];   // Phaser.Text refs for the scrolling ticker
 var tickerGroup;         // Phaser.Group (z-ordered above fond2)
@@ -293,12 +442,6 @@ var digitCounts = [0,0,0,0,0,0,0,0,0,0];
 var histGfx;             // Graphics layer, cleared & redrawn each frame
 var histLabels = [];     // 10 static Phaser.Text labels ("0".."9") below bars
 
-// Phaser integer colours matching DIGIT_CSS_COLORS above
-var DIGIT_PHASER_COLORS = [
-	0xFF5252, 0xFF9100, 0xFFD740, 0x69F0AE, 0x40C4FF,
-	0x00E5FF, 0x7C4DFF, 0xFF4081, 0xCCFF90, 0xFF6D00
-];
-
 // Panel geometry (bottom-right, clear of keyboard strip which starts at y=626)
 var HX = 1140, HY = 536, HW = 150, HH = 78;
 var HBARW = 10, HBARGAP = 4;
@@ -307,10 +450,11 @@ var HBARBASE  = HY + HH - 14;      // y-baseline just above digit labels
 
 function drawHistogram() {
 	histGfx.clear();
+	var theme = activeTheme;
 
 	// Semi-transparent panel background
-	histGfx.lineStyle(1, 0xFFFFFF, 0.18);
-	histGfx.beginFill(0x000000, 0.48);
+	histGfx.lineStyle(1, theme.histPanelBorder, 0.4);
+	histGfx.beginFill(theme.histPanelFill, theme.id === 'neon' ? 0.74 : 0.48);
 	histGfx.drawRoundedRect(HX, HY, HW, HH, 5);
 	histGfx.endFill();
 
@@ -326,7 +470,7 @@ function drawHistogram() {
 		var expectedH = Math.min(HBARMAXH,
 			Math.round((total / 10 / maxCount) * HBARMAXH));
 		var expectedY = HBARBASE - expectedH;
-		histGfx.lineStyle(1, 0xFFFFFF, 0.38);
+		histGfx.lineStyle(1, theme.histExpectedLine, 0.5);
 		histGfx.moveTo(HX + 5, expectedY);
 		histGfx.lineTo(HX + HW - 5, expectedY);
 	}
@@ -354,7 +498,7 @@ function addTickerItem(digit) {
 	var item = game.add.text(startX, TICKER_Y, '' + digit, {
 		font: 'bold 15px monospace',
 		fill: DIGIT_CSS_COLORS[digit],
-		stroke: '#111111',
+		stroke: activeTheme.hudStroke,
 		strokeThickness: 3
 	});
 	item.anchor.setTo(0.5, 0.5);
@@ -366,14 +510,14 @@ function showDigitPopup(x, y, digit, index) {
 	var bigLabel = game.add.text(x, y, '' + digit, {
 		font: 'bold 80px monospace',
 		fill: DIGIT_CSS_COLORS[digit],
-		stroke: '#000000',
+		stroke: activeTheme.hudStroke,
 		strokeThickness: 6
 	});
 	bigLabel.anchor.setTo(0.5, 0.5);
 	var subLabel = game.add.text(x, y + 55, '\u03C0[' + index + ']', {
 		font: 'bold 18px monospace',
 		fill: '#FFFFFF',
-		stroke: '#000000',
+		stroke: activeTheme.hudStroke,
 		strokeThickness: 3
 	});
 	subLabel.anchor.setTo(0.5, 0.5);
@@ -451,13 +595,13 @@ function drawBolt() {
 	lightningGraphics.clear();
 	if (boltPoints.length < 2) { return; }
 	// Glow pass — thick soft yellow-white halo
-	lightningGraphics.lineStyle(5, 0xFFFF99, 0.35);
+	lightningGraphics.lineStyle(5, activeTheme.lightningGlow, 0.35);
 	lightningGraphics.moveTo(boltPoints[0].x, boltPoints[0].y);
 	for (var k = 1; k < boltPoints.length; k++) {
 		lightningGraphics.lineTo(boltPoints[k].x, boltPoints[k].y);
 	}
 	// Core pass — thin bright white
-	lightningGraphics.lineStyle(2, 0xFFFFFF, 1.0);
+	lightningGraphics.lineStyle(2, activeTheme.lightningCore, 1.0);
 	lightningGraphics.moveTo(boltPoints[0].x, boltPoints[0].y);
 	for (var k = 1; k < boltPoints.length; k++) {
 		lightningGraphics.lineTo(boltPoints[k].x, boltPoints[k].y);
@@ -502,7 +646,7 @@ function preload() {
 
 function create() {
 	game.time.desiredFps = 30;
-	game.stage.backgroundColor = "#4488AA";
+	game.stage.backgroundColor = activeTheme.bodyBackground;
 	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
 
 	// Stars layer – drawn once, positioned by Pi digits, revealed at night
@@ -513,7 +657,7 @@ function create() {
 		var sy       = (pi[px] * 33  + pi[px+1] * 4  + 5)             % 330;
 		var starSize = (pi[px] % 2) + 1;           // radius 1 or 2 px
 		var starAlpha = 0.35 + (pi[px+2] / 14.0); // 0.35 – 0.99
-		starsLayer.beginFill(0xFFFFFF, starAlpha);
+		starsLayer.beginFill(activeTheme.starColor, starAlpha);
 		starsLayer.drawCircle(sx, sy, starSize * 2);
 		starsLayer.endFill();
 	}
@@ -547,7 +691,7 @@ function create() {
 		var kx  = KX0 + ki * (KW + KGAP) + Math.floor(KW / 2);
 		var lbl = game.add.text(kx, KY + 9, ki + '\n' + noteNames[ki], {
 			font:  'bold 10px monospace',
-			fill:  '#335577',
+			fill:  activeTheme.keyLabel,
 			align: 'center'
 		}, uiGroup);
 		lbl.anchor.setTo(0.5, 0);
@@ -556,7 +700,7 @@ function create() {
 
 	audioHint = game.add.text(1285, 10, '\u266a click for sound', {
 		font:  '13px monospace',
-		fill:  '#FFFFFF'
+		fill:  activeTheme.audioHint
 	}, uiGroup);
 	audioHint.anchor.setTo(1, 0);
 
@@ -564,7 +708,7 @@ function create() {
 	piCounterText = game.add.text(8, 10, '\u03C0[0] = 3', {
 		font:            'bold 14px monospace',
 		fill:            '#ffffff',
-		stroke:          '#001133',
+		stroke:          activeTheme.piCounterStroke,
 		strokeThickness: 3
 	}, uiGroup);
 
@@ -582,7 +726,7 @@ function create() {
 			HBARBASE + 2,
 			'' + hd,
 			{ font: 'bold 8px monospace', fill: DIGIT_CSS_COLORS[hd],
-			  stroke: '#000000', strokeThickness: 1 }
+			  stroke: activeTheme.histLabelStroke, strokeThickness: 1 }
 		);
 		hlabel.anchor.setTo(0.5, 0);
 		histLabels.push(hlabel);
@@ -591,7 +735,7 @@ function create() {
 
 	// Dark band at the very top behind the ticker
 	tickerBgGfx = game.add.graphics(0, 0);
-	tickerBgGfx.beginFill(0x000000, 0.42);
+	tickerBgGfx.beginFill(activeTheme.tickerBandFill, activeTheme.tickerBandAlpha);
 	tickerBgGfx.drawRect(0, 0, 1300, 28);
 	tickerBgGfx.endFill();
 
@@ -602,11 +746,12 @@ function create() {
 	hudText = game.add.text(8, TICKER_Y, '\u03C0[0] = 3', {
 		font: 'bold 13px monospace',
 		fill: '#FFFFFF',
-		stroke: '#000000',
+		stroke: activeTheme.hudStroke,
 		strokeThickness: 2
 	});
 	hudText.anchor.setTo(0, 0.5);
 	hudText.alpha = 0.85;
+	setTheme(activeTheme.id);
 	// ──────────────────────────────────────────────────────────
 }
 
@@ -630,9 +775,9 @@ function update() {
 	starsLayer.alpha = nightAlpha;
 
 	// Darken the stage background at night
-	var bgR = Math.floor(lerp(67,  5,  nightAlpha));
-	var bgG = Math.floor(lerp(169, 5,  nightAlpha));
-	var bgB = Math.floor(lerp(223, 30, nightAlpha));
+	var bgR = Math.floor(lerp(activeTheme.stageDay.r, activeTheme.stageNight.r, nightAlpha));
+	var bgG = Math.floor(lerp(activeTheme.stageDay.g, activeTheme.stageNight.g, nightAlpha));
+	var bgB = Math.floor(lerp(activeTheme.stageDay.b, activeTheme.stageNight.b, nightAlpha));
 	game.stage.backgroundColor = rgbToCSS(bgR, bgG, bgB);
 	// ────────────────────────────────────────────────────────────────────
 
@@ -664,17 +809,17 @@ function update() {
 			for (var ti = 1; ti < star.trail.length; ti++) {
 				var progress = ti / star.trail.length;
 				// Soft blue-white glow
-				shootingStarGfx.lineStyle(4, 0xCCE0FF, progress * visible * 0.35);
+				shootingStarGfx.lineStyle(4, activeTheme.shootingStarGlow, progress * visible * 0.35);
 				shootingStarGfx.moveTo(star.trail[ti - 1].x, star.trail[ti - 1].y);
 				shootingStarGfx.lineTo(star.trail[ti].x,     star.trail[ti].y);
 				// Bright white core
-				shootingStarGfx.lineStyle(1, 0xFFFFFF, progress * visible * 0.95);
+				shootingStarGfx.lineStyle(1, activeTheme.shootingStarCore, progress * visible * 0.95);
 				shootingStarGfx.moveTo(star.trail[ti - 1].x, star.trail[ti - 1].y);
 				shootingStarGfx.lineTo(star.trail[ti].x,     star.trail[ti].y);
 			}
 			// Bright head dot (no stroke)
 			shootingStarGfx.lineStyle(0);
-			shootingStarGfx.beginFill(0xFFFFFF, visible);
+			shootingStarGfx.beginFill(activeTheme.shootingStarCore, visible);
 			shootingStarGfx.drawCircle(star.x, star.y, 3);
 			shootingStarGfx.endFill();
 		}
@@ -701,11 +846,11 @@ function update() {
 		// Fade in/out near horizons
 		var sunVis  = Math.min(dayNorm / 0.12, (1.0 - dayNorm) / 0.12, 1.0);
 		// Outer halo
-		celestialLayer.beginFill(0xFFEE88, sunVis * 0.22);
+		celestialLayer.beginFill(activeTheme.sunHalo, sunVis * 0.22);
 		celestialLayer.drawCircle(sunX, sunY, 90);
 		celestialLayer.endFill();
 		// Core disc
-		celestialLayer.beginFill(0xFFDD44, sunVis);
+		celestialLayer.beginFill(activeTheme.sunCore, sunVis);
 		celestialLayer.drawCircle(sunX, sunY, 46);
 		celestialLayer.endFill();
 	} else {
@@ -714,11 +859,11 @@ function update() {
 		var moonX    = moonNorm * 1200 + 50;
 		var moonY    = 370 - Math.sin(moonNorm * Math.PI) * 290;
 		// Soft outer glow
-		celestialLayer.beginFill(0xCCDDFF, nightAlpha * 0.18);
+		celestialLayer.beginFill(activeTheme.moonHalo, nightAlpha * 0.18);
 		celestialLayer.drawCircle(moonX, moonY, 62);
 		celestialLayer.endFill();
 		// Core disc
-		celestialLayer.beginFill(0xF0F5FF, nightAlpha);
+		celestialLayer.beginFill(activeTheme.moonCore, nightAlpha);
 		celestialLayer.drawCircle(moonX, moonY, 30);
 		celestialLayer.endFill();
 	}
@@ -868,7 +1013,7 @@ function update() {
 		if (drop.life > fadeStart) {
 			dropAlpha *= 1 - (drop.life - fadeStart) / (drop.maxLife - fadeStart);
 		}
-		rainGraphics.lineStyle(1.5, 0xAADDFF, dropAlpha);
+		rainGraphics.lineStyle(1.5, activeTheme.rainColor, dropAlpha);
 		rainGraphics.moveTo(drop.x, drop.y);
 		rainGraphics.lineTo(drop.x - drop.vx * drop.len * 0.4, drop.y - drop.len);
 	}
@@ -901,7 +1046,7 @@ function update() {
 	if (flashAlpha > 0) {
 		flashAlpha = Math.max(0, flashAlpha - 0.055);
 		flashGraphics.clear();
-		flashGraphics.beginFill(0xFFFFFF, flashAlpha);
+		flashGraphics.beginFill(activeTheme.flashColor, flashAlpha);
 		flashGraphics.drawRect(0, 0, 1300, 700);
 		flashGraphics.endFill();
 	} else {
@@ -932,6 +1077,19 @@ function update() {
 		backdrop-filter: blur(4px);
 		opacity: 0.55;
 		transition: opacity 0.2s, background 0.2s;">&#9834;</button>
+
+	<select id="themeSelect" onchange="handleThemeChange(this.value)" title="Switch visual theme" style="
+		position: fixed; bottom: 14px; right: 68px;
+		background: rgba(255,255,255,0.15);
+		border: 1px solid rgba(255,255,255,0.45);
+		color: #fff; font-size: 13px; cursor: pointer;
+		padding: 8px 10px; border-radius: 7px;
+		font-family: monospace; z-index: 999;
+		backdrop-filter: blur(4px);
+		transition: background 0.2s;">
+		<option value="classic">classic</option>
+		<option value="neon">neon</option>
+	</select>
 
 	<div id="game" style="
 		cursor: none;
