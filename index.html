@@ -81,10 +81,10 @@ function playDigitNote(digit) {
 }
 
 function drawKeyboard() {
-    keyGfx.clear();
+	keyGfx.clear();
 
-    // Subtle separator line above the strip
-    keyGfx.lineStyle(1, 0xFFFFFF, 0.18);
+	// Subtle separator line above the strip
+	keyGfx.lineStyle(1, 0xFFFFFF, 0.18);
     keyGfx.moveTo(KX0 - 8, KY - 8);
     keyGfx.lineTo(KX0 + 10 * (KW + KGAP) - KGAP + 8, KY - 8);
 
@@ -92,30 +92,30 @@ function drawKeyboard() {
         var x   = KX0 + i * (KW + KGAP);
         var lit = activeKeyTimer[i] > 0;
 
-        // Glow halo behind lit key
-        if (lit) {
-            keyGfx.lineStyle(0);
-            keyGfx.beginFill(0xFFDD22, 0.28);
-            keyGfx.drawRoundedRect(x - 5, KY - 5, KW + 10, KH + 10, 9);
-            keyGfx.endFill();
-        }
+		// Glow halo behind lit key
+		if (lit) {
+			keyGfx.lineStyle(0);
+			keyGfx.beginFill(currentTheme.keyGlow.color, currentTheme.keyGlow.alpha);
+			keyGfx.drawRoundedRect(x - 5, KY - 5, KW + 10, KH + 10, 9);
+			keyGfx.endFill();
+		}
 
-        // Key body
-        keyGfx.lineStyle(1, 0x4466AA, 0.55);
-        if (lit) {
-            keyGfx.beginFill(0xFFEE77, 0.97);
-        } else if (i % 2 === 1) {
-            keyGfx.beginFill(0x7A9DBB, 0.72);   // alternate shade
-        } else {
-            keyGfx.beginFill(0xCCE0F0, 0.72);
-        }
-        keyGfx.drawRoundedRect(x, KY, KW, KH, 5);
-        keyGfx.endFill();
+		// Key body
+		keyGfx.lineStyle(1, currentTheme.keyLine.color, currentTheme.keyLine.alpha);
+		if (lit) {
+			keyGfx.beginFill(currentTheme.keyLitFill.color, currentTheme.keyLitFill.alpha);
+		} else if (i % 2 === 1) {
+			keyGfx.beginFill(currentTheme.keyOddFill.color, currentTheme.keyOddFill.alpha);
+		} else {
+			keyGfx.beginFill(currentTheme.keyEvenFill.color, currentTheme.keyEvenFill.alpha);
+		}
+		keyGfx.drawRoundedRect(x, KY, KW, KH, 5);
+		keyGfx.endFill();
 
-        // Update label colour to match key state
-        keyLabels[i].fill = lit ? '#221100' : '#335577';
-        if (activeKeyTimer[i] > 0) activeKeyTimer[i]--;
-    }
+		// Update label colour to match key state
+		keyLabels[i].fill = lit ? currentTheme.keyLabelLit : currentTheme.keyLabel;
+		if (activeKeyTimer[i] > 0) activeKeyTimer[i]--;
+	}
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -223,10 +223,112 @@ var DIGIT_COLORS = [
 	{ r: 241, g: 148, b: 138 }, // 9 – salmon
 ];
 
+var THEMES = {
+	sky: {
+		id: 'sky',
+		label: 'Sky',
+		backgroundKey: 'fond',
+		groundKey: 'fond2',
+		bodyBg: 'rgb(67,169,223)',
+		buttonBg: 'rgba(255,255,255,0.15)',
+		buttonBorder: 'rgba(255,255,255,0.45)',
+		buttonColor: '#ffffff',
+		tickerBg: { color: 0x000000, alpha: 0.42 },
+		histBg: { color: 0x000000, alpha: 0.48 },
+		histLine: { color: 0xFFFFFF, alpha: 0.18 },
+		histRef: { color: 0xFFFFFF, alpha: 0.38 },
+		keyLine: { color: 0x4466AA, alpha: 0.55 },
+		keyEvenFill: { color: 0xCCE0F0, alpha: 0.72 },
+		keyOddFill: { color: 0x7A9DBB, alpha: 0.72 },
+		keyLitFill: { color: 0xFFEE77, alpha: 0.97 },
+		keyGlow: { color: 0xFFDD22, alpha: 0.28 },
+		keyLabel: '#335577',
+		keyLabelLit: '#221100',
+		audioHintFill: '#FFFFFF',
+		piCounterStroke: '#001133',
+		hudTextStroke: '#000000',
+		popupSubFill: '#FFFFFF',
+		popupStroke: '#000000',
+		rainColor: 0xAADDFF,
+		shootingGlow: 0xCCE0FF,
+		shootingCore: 0xFFFFFF,
+		starColor: 0xFFFFFF,
+		sunGlow: 0xFFEE88,
+		sunCore: 0xFFDD44,
+		moonGlow: 0xCCDDFF,
+		moonCore: 0xF0F5FF,
+		tintStops: [
+			{ r: 255, g: 255, b: 255 },
+			{ r: 255, g: 130, b: 50  },
+			{ r: 18,  g: 22,  b: 75  },
+			{ r: 255, g: 165, b: 110 }
+		],
+		stageDay:   { r: 67,  g: 169, b: 223 },
+		stageNight: { r: 5,   g: 5,   b: 30  },
+		digitColors: DIGIT_COLORS
+	},
+	desert: {
+		id: 'desert',
+		label: 'Desert',
+		backgroundKey: 'fond-desert',
+		groundKey: 'fond2-desert',
+		bodyBg: 'rgb(225,166,98)',
+		buttonBg: 'rgba(79,40,12,0.22)',
+		buttonBorder: 'rgba(255,233,196,0.45)',
+		buttonColor: '#fff3dd',
+		tickerBg: { color: 0x4B220A, alpha: 0.44 },
+		histBg: { color: 0x4B220A, alpha: 0.46 },
+		histLine: { color: 0xFFE0A6, alpha: 0.20 },
+		histRef: { color: 0xFFE7BF, alpha: 0.35 },
+		keyLine: { color: 0x8F5D2C, alpha: 0.6 },
+		keyEvenFill: { color: 0xF1D29A, alpha: 0.84 },
+		keyOddFill: { color: 0xDEB777, alpha: 0.84 },
+		keyLitFill: { color: 0xFFF1B0, alpha: 0.98 },
+		keyGlow: { color: 0xFFD36B, alpha: 0.30 },
+		keyLabel: '#6B3F14',
+		keyLabelLit: '#3A210A',
+		audioHintFill: '#FFF3DD',
+		piCounterStroke: '#4B220A',
+		hudTextStroke: '#4B220A',
+		popupSubFill: '#FFF3DD',
+		popupStroke: '#4B220A',
+		rainColor: 0xDCC7A1,
+		shootingGlow: 0xFFE0A3,
+		shootingCore: 0xFFF5DC,
+		starColor: 0xFFE4B0,
+		sunGlow: 0xFFD07A,
+		sunCore: 0xFFF0B3,
+		moonGlow: 0xE5D0B3,
+		moonCore: 0xFFF1D8,
+		tintStops: [
+			{ r: 255, g: 246, b: 230 },
+			{ r: 255, g: 150, b: 84  },
+			{ r: 37,  g: 20,  b: 43  },
+			{ r: 255, g: 182, b: 122 }
+		],
+		stageDay:   { r: 225, g: 166, b: 98  },
+		stageNight: { r: 28,  g: 14,  b: 34  },
+		digitColors: [
+			{ r: 205, g: 136, b: 68  },
+			{ r: 224, g: 163, b: 88  },
+			{ r: 239, g: 194, b: 107 },
+			{ r: 173, g: 140, b: 78  },
+			{ r: 196, g: 108, b: 72  },
+			{ r: 202, g: 111, b: 39  },
+			{ r: 156, g: 92,  b: 53  },
+			{ r: 124, g: 71,  b: 43  },
+			{ r: 203, g: 149, b: 107 },
+			{ r: 241, g: 182, b: 121 }
+		]
+	}
+};
+
+var currentTheme = THEMES.sky;
+
 // Returns a packed tint that blends digit hue with the current night factor.
 // nightFactor 0 = full day (vivid), 1 = full night (dim but hued).
 function digitTint(digit, nightFactor) {
-	var dc = DIGIT_COLORS[digit];
+	var dc = currentTheme.digitColors[digit];
 	var f  = lerp(1.0, 0.22, nightFactor);
 	return rgbToPhaser(dc.r * f, dc.g * f, dc.b * f);
 }
@@ -243,14 +345,8 @@ function rgbToCSS(r, g, b) {
 }
 
 // Four colour stops around the cycle (phase 0 = noon, 0.5 = midnight)
-var tintStops = [
-	{ r: 255, g: 255, b: 255 },  // 0.00 noon  – no tint
-	{ r: 255, g: 130, b: 50  },  // 0.25 dusk  – warm orange
-	{ r: 18,  g: 22,  b: 75  },  // 0.50 night – deep indigo
-	{ r: 255, g: 165, b: 110 },  // 0.75 dawn  – peach
-];
-
 function getDayNightTint(phase) {
+	var tintStops = currentTheme.tintStops;
 	var n  = tintStops.length;
 	var sc = phase * n;
 	var i  = Math.floor(sc) % n;
@@ -284,6 +380,7 @@ var tickerGroup;         // Phaser.Group (z-ordered above fond2)
 var tickerBgGfx;         // dark band at the top behind the ticker
 var hudText;             // left-corner "π[N] = D" counter
 var TICKER_Y = 14;       // vertical centre of the top ticker strip
+var themeSelect;
 
 // ── Digit Frequency Histogram ──────────────────────────────────────────────
 // Tracks how often each Pi digit (0-9) has appeared and renders a live
@@ -309,8 +406,8 @@ function drawHistogram() {
 	histGfx.clear();
 
 	// Semi-transparent panel background
-	histGfx.lineStyle(1, 0xFFFFFF, 0.18);
-	histGfx.beginFill(0x000000, 0.48);
+	histGfx.lineStyle(1, currentTheme.histLine.color, currentTheme.histLine.alpha);
+	histGfx.beginFill(currentTheme.histBg.color, currentTheme.histBg.alpha);
 	histGfx.drawRoundedRect(HX, HY, HW, HH, 5);
 	histGfx.endFill();
 
@@ -326,7 +423,7 @@ function drawHistogram() {
 		var expectedH = Math.min(HBARMAXH,
 			Math.round((total / 10 / maxCount) * HBARMAXH));
 		var expectedY = HBARBASE - expectedH;
-		histGfx.lineStyle(1, 0xFFFFFF, 0.38);
+		histGfx.lineStyle(1, currentTheme.histRef.color, currentTheme.histRef.alpha);
 		histGfx.moveTo(HX + 5, expectedY);
 		histGfx.lineTo(HX + HW - 5, expectedY);
 	}
@@ -366,14 +463,14 @@ function showDigitPopup(x, y, digit, index) {
 	var bigLabel = game.add.text(x, y, '' + digit, {
 		font: 'bold 80px monospace',
 		fill: DIGIT_CSS_COLORS[digit],
-		stroke: '#000000',
+		stroke: currentTheme.popupStroke,
 		strokeThickness: 6
 	});
 	bigLabel.anchor.setTo(0.5, 0.5);
 	var subLabel = game.add.text(x, y + 55, '\u03C0[' + index + ']', {
 		font: 'bold 18px monospace',
-		fill: '#FFFFFF',
-		stroke: '#000000',
+		fill: currentTheme.popupSubFill,
+		stroke: currentTheme.popupStroke,
 		strokeThickness: 3
 	});
 	subLabel.anchor.setTo(0.5, 0.5);
@@ -498,25 +595,80 @@ function preload() {
 	game.load.image('field','field.png');
 	game.load.image('fond','fond.png');
 	game.load.image('fond2','fond2.png');
+	game.load.image('fond-desert','fond-desert.png');
+	game.load.image('fond2-desert','fond2-desert.png');
+}
+
+function applyThemeToDom() {
+	document.body.style.backgroundColor = currentTheme.bodyBg;
+	var soundBtn = document.getElementById('soundBtn');
+	if (soundBtn) {
+		soundBtn.style.background = currentTheme.buttonBg;
+		soundBtn.style.borderColor = currentTheme.buttonBorder;
+		soundBtn.style.color = currentTheme.buttonColor;
+	}
+	if (themeSelect) {
+		themeSelect.style.background = currentTheme.buttonBg;
+		themeSelect.style.borderColor = currentTheme.buttonBorder;
+		themeSelect.style.color = currentTheme.buttonColor;
+	}
+}
+
+function redrawStars() {
+	if (!starsLayer) { return; }
+	starsLayer.clear();
+	for (var s = 0; s < 150; s++) {
+		var px = s * 3;
+		var sx = (pi[px] * 130 + pi[px+1] * 13 + pi[px+2] * 7) % 1300;
+		var sy = (pi[px] * 33 + pi[px+1] * 4 + 5) % 330;
+		var starSize = (pi[px] % 2) + 1;
+		var starAlpha = 0.35 + (pi[px+2] / 14.0);
+		starsLayer.beginFill(currentTheme.starColor, starAlpha);
+		starsLayer.drawCircle(sx, sy, starSize * 2);
+		starsLayer.endFill();
+	}
+}
+
+function redrawTickerBand() {
+	if (!tickerBgGfx) { return; }
+	tickerBgGfx.clear();
+	tickerBgGfx.beginFill(currentTheme.tickerBg.color, currentTheme.tickerBg.alpha);
+	tickerBgGfx.drawRect(0, 0, 1300, 28);
+	tickerBgGfx.endFill();
+}
+
+function refreshThemeVisuals() {
+	if (!fond || !fond2) { return; }
+	fond.loadTexture(currentTheme.backgroundKey);
+	fond2.loadTexture(currentTheme.groundKey);
+	redrawStars();
+	redrawTickerBand();
+	if (audioHint) { audioHint.fill = currentTheme.audioHintFill; }
+	if (piCounterText) { piCounterText.stroke = currentTheme.piCounterStroke; }
+	if (hudText) { hudText.stroke = currentTheme.hudTextStroke; }
+	for (var i = 0; i < keyLabels.length; i++) {
+		keyLabels[i].fill = currentTheme.keyLabel;
+	}
+	for (var h = 0; h < histLabels.length; h++) {
+		histLabels[h].fill = DIGIT_CSS_COLORS[h];
+	}
+	applyThemeToDom();
+}
+
+function setTheme(themeId) {
+	if (!THEMES[themeId]) { return; }
+	currentTheme = THEMES[themeId];
+	refreshThemeVisuals();
 }
 
 function create() {
 	game.time.desiredFps = 30;
-	game.stage.backgroundColor = "#4488AA";
-	fond = game.add.tileSprite(0, 0, 1300, 400, 'fond');
+	game.stage.backgroundColor = currentTheme.bodyBg;
+	fond = game.add.tileSprite(0, 0, 1300, 400, currentTheme.backgroundKey);
 
-	// Stars layer – drawn once, positioned by Pi digits, revealed at night
 	starsLayer = game.add.graphics(0, 0);
-	for (var s = 0; s < 150; s++) {
-		var px       = s * 3;
-		var sx       = (pi[px] * 130 + pi[px+1] * 13 + pi[px+2] * 7) % 1300;
-		var sy       = (pi[px] * 33  + pi[px+1] * 4  + 5)             % 330;
-		var starSize = (pi[px] % 2) + 1;           // radius 1 or 2 px
-		var starAlpha = 0.35 + (pi[px+2] / 14.0); // 0.35 – 0.99
-		starsLayer.beginFill(0xFFFFFF, starAlpha);
-		starsLayer.drawCircle(sx, sy, starSize * 2);
-		starsLayer.endFill();
-	}
+	// Stars layer – positioned by Pi digits, redrawn on theme changes
+	redrawStars();
 	starsLayer.alpha = 0; // invisible during the day
 
 	// Shooting star trails sit above the star-dot layer
@@ -525,7 +677,7 @@ function create() {
 	// Celestial layer: sun during day, moon during night (behind clouds)
 	celestialLayer = game.add.graphics(0, 0);
 
-	fond2 = game.add.tileSprite(0, 400, 1300, 300, 'fond2');
+	fond2 = game.add.tileSprite(0, 400, 1300, 300, currentTheme.groundKey);
 	fond2.alpha = 0.9;
 
 	order0 = game.add.group();
@@ -582,7 +734,7 @@ function create() {
 			HBARBASE + 2,
 			'' + hd,
 			{ font: 'bold 8px monospace', fill: DIGIT_CSS_COLORS[hd],
-			  stroke: '#000000', strokeThickness: 1 }
+			  stroke: currentTheme.popupStroke, strokeThickness: 1 }
 		);
 		hlabel.anchor.setTo(0.5, 0);
 		histLabels.push(hlabel);
@@ -591,9 +743,7 @@ function create() {
 
 	// Dark band at the very top behind the ticker
 	tickerBgGfx = game.add.graphics(0, 0);
-	tickerBgGfx.beginFill(0x000000, 0.42);
-	tickerBgGfx.drawRect(0, 0, 1300, 28);
-	tickerBgGfx.endFill();
+	redrawTickerBand();
 
 	// Group for scrolling digit badges
 	tickerGroup = game.add.group();
@@ -602,12 +752,19 @@ function create() {
 	hudText = game.add.text(8, TICKER_Y, '\u03C0[0] = 3', {
 		font: 'bold 13px monospace',
 		fill: '#FFFFFF',
-		stroke: '#000000',
+		stroke: currentTheme.hudTextStroke,
 		strokeThickness: 2
 	});
 	hudText.anchor.setTo(0, 0.5);
 	hudText.alpha = 0.85;
 	// ──────────────────────────────────────────────────────────
+
+	themeSelect = document.getElementById('themeSelect');
+	if (themeSelect) {
+		themeSelect.value = currentTheme.id;
+		themeSelect.onchange = function() { setTheme(this.value); };
+	}
+	refreshThemeVisuals();
 }
 
 function update() {
@@ -630,9 +787,9 @@ function update() {
 	starsLayer.alpha = nightAlpha;
 
 	// Darken the stage background at night
-	var bgR = Math.floor(lerp(67,  5,  nightAlpha));
-	var bgG = Math.floor(lerp(169, 5,  nightAlpha));
-	var bgB = Math.floor(lerp(223, 30, nightAlpha));
+	var bgR = Math.floor(lerp(currentTheme.stageDay.r, currentTheme.stageNight.r, nightAlpha));
+	var bgG = Math.floor(lerp(currentTheme.stageDay.g, currentTheme.stageNight.g, nightAlpha));
+	var bgB = Math.floor(lerp(currentTheme.stageDay.b, currentTheme.stageNight.b, nightAlpha));
 	game.stage.backgroundColor = rgbToCSS(bgR, bgG, bgB);
 	// ────────────────────────────────────────────────────────────────────
 
@@ -664,17 +821,17 @@ function update() {
 			for (var ti = 1; ti < star.trail.length; ti++) {
 				var progress = ti / star.trail.length;
 				// Soft blue-white glow
-				shootingStarGfx.lineStyle(4, 0xCCE0FF, progress * visible * 0.35);
+				shootingStarGfx.lineStyle(4, currentTheme.shootingGlow, progress * visible * 0.35);
 				shootingStarGfx.moveTo(star.trail[ti - 1].x, star.trail[ti - 1].y);
 				shootingStarGfx.lineTo(star.trail[ti].x,     star.trail[ti].y);
 				// Bright white core
-				shootingStarGfx.lineStyle(1, 0xFFFFFF, progress * visible * 0.95);
+				shootingStarGfx.lineStyle(1, currentTheme.shootingCore, progress * visible * 0.95);
 				shootingStarGfx.moveTo(star.trail[ti - 1].x, star.trail[ti - 1].y);
 				shootingStarGfx.lineTo(star.trail[ti].x,     star.trail[ti].y);
 			}
 			// Bright head dot (no stroke)
 			shootingStarGfx.lineStyle(0);
-			shootingStarGfx.beginFill(0xFFFFFF, visible);
+			shootingStarGfx.beginFill(currentTheme.shootingCore, visible);
 			shootingStarGfx.drawCircle(star.x, star.y, 3);
 			shootingStarGfx.endFill();
 		}
@@ -701,11 +858,11 @@ function update() {
 		// Fade in/out near horizons
 		var sunVis  = Math.min(dayNorm / 0.12, (1.0 - dayNorm) / 0.12, 1.0);
 		// Outer halo
-		celestialLayer.beginFill(0xFFEE88, sunVis * 0.22);
+		celestialLayer.beginFill(currentTheme.sunGlow, sunVis * 0.22);
 		celestialLayer.drawCircle(sunX, sunY, 90);
 		celestialLayer.endFill();
 		// Core disc
-		celestialLayer.beginFill(0xFFDD44, sunVis);
+		celestialLayer.beginFill(currentTheme.sunCore, sunVis);
 		celestialLayer.drawCircle(sunX, sunY, 46);
 		celestialLayer.endFill();
 	} else {
@@ -714,11 +871,11 @@ function update() {
 		var moonX    = moonNorm * 1200 + 50;
 		var moonY    = 370 - Math.sin(moonNorm * Math.PI) * 290;
 		// Soft outer glow
-		celestialLayer.beginFill(0xCCDDFF, nightAlpha * 0.18);
+		celestialLayer.beginFill(currentTheme.moonGlow, nightAlpha * 0.18);
 		celestialLayer.drawCircle(moonX, moonY, 62);
 		celestialLayer.endFill();
 		// Core disc
-		celestialLayer.beginFill(0xF0F5FF, nightAlpha);
+		celestialLayer.beginFill(currentTheme.moonCore, nightAlpha);
 		celestialLayer.drawCircle(moonX, moonY, 30);
 		celestialLayer.endFill();
 	}
@@ -868,7 +1025,7 @@ function update() {
 		if (drop.life > fadeStart) {
 			dropAlpha *= 1 - (drop.life - fadeStart) / (drop.maxLife - fadeStart);
 		}
-		rainGraphics.lineStyle(1.5, 0xAADDFF, dropAlpha);
+		rainGraphics.lineStyle(1.5, currentTheme.rainColor, dropAlpha);
 		rainGraphics.moveTo(drop.x, drop.y);
 		rainGraphics.lineTo(drop.x - drop.vx * drop.len * 0.4, drop.y - drop.len);
 	}
@@ -932,6 +1089,19 @@ function update() {
 		backdrop-filter: blur(4px);
 		opacity: 0.55;
 		transition: opacity 0.2s, background 0.2s;">&#9834;</button>
+
+	<select id="themeSelect" title="Choose visual theme" style="
+		position: fixed; bottom: 14px; right: 72px;
+		background: rgba(255,255,255,0.15);
+		border: 1px solid rgba(255,255,255,0.45);
+		color: #fff; font-size: 13px; cursor: pointer;
+		padding: 8px 10px; border-radius: 7px;
+		font-family: monospace; z-index: 999;
+		backdrop-filter: blur(4px);
+		opacity: 0.86;">
+		<option value="sky">Sky</option>
+		<option value="desert">Desert</option>
+	</select>
 
 	<div id="game" style="
 		cursor: none;
